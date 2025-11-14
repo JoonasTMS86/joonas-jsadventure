@@ -21,8 +21,9 @@ var playereSprite                = document.getElementById("playere");
 var sprite0Buffer                = document.getElementById("sprite0Buffer");
 var sprite0Ctx                   = sprite0Buffer.getContext("2d");
 var sprite0Sdata                 = sprite0Ctx.createImageData(66, 157);
-var playerX                      = 60;
-var playerY                      = 60;
+// The coordinates of the sprites are in these arrays.
+var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -165,6 +166,26 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 	givenbufferctx.putImageData(givenpic, 0, 0);
 }
 
+// Draw the given sprite on the screen.
+function drawSpriteOnScreen(spriteNumber) {
+	sprite0Ctx.putImageData(playereSdata, 0, 0);
+	sprite0Sdata = sprite0Ctx.getImageData(0, 0, sprite0Buffer.width, sprite0Buffer.height);
+	var spriterowstride = sprite0Buffer.width * 4;
+	// Mask out those pixels that are behind an object.
+	var depth;
+	var feetY = spriteYCoords[spriteNumber] + sprite0Buffer.height - 1;
+	for(var y = 0; y < sprite0Buffer.height; y++) {
+		for(var x = 0; x < sprite0Buffer.width; x++) {
+			depth = (depthBufferSdata.data[((y + spriteYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 1] * 256) + depthBufferSdata.data[((y + spriteYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 2];
+			if(feetY < depth) {
+				sprite0Sdata.data[(y * spriterowstride) + (x * 4) + 3] = 0;
+			}
+		}
+	}
+	sprite0Ctx.putImageData(sprite0Sdata, 0, 0);
+	ctx.drawImage(sprite0Buffer, spriteXCoords[spriteNumber], spriteYCoords[spriteNumber]);
+}
+
 window.onload = function() {
 	depthBufferCtx.drawImage(screen000depSprite, 0, 0);
 	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
@@ -178,35 +199,29 @@ window.onload = function() {
 function play(delta)
 {
     if(imgData != null) ctx.putImageData(imgData, 0, 0);
-	sprite0Ctx.putImageData(playereSdata, 0, 0);
-	sprite0Sdata = sprite0Ctx.getImageData(0, 0, sprite0Buffer.width, sprite0Buffer.height);
-	var spriterowstride = sprite0Buffer.width * 4;
-	// Mask out those pixels that are behind an object.
-	var depth;
-	var feetY = playerY + sprite0Buffer.height - 1;
-	for(var y = 0; y < sprite0Buffer.height; y++) {
-		for(var x = 0; x < sprite0Buffer.width; x++) {
-			depth = (depthBufferSdata.data[((y + playerY) * rowStride) + ((x + playerX) * 4) + 1] * 256) + depthBufferSdata.data[((y + playerY) * rowStride) + ((x + playerX) * 4) + 2];
-			if(feetY < depth) {
-				sprite0Sdata.data[(y * spriterowstride) + (x * 4) + 3] = 0;
-			}
-		}
-	}
+
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	sprite0Ctx.putImageData(sprite0Sdata, 0, 0);
-	ctx.drawImage(sprite0Buffer, playerX, playerY);
+
+	drawSpriteOnScreen(0);
+	drawSpriteOnScreen(1);
+	drawSpriteOnScreen(2);
+	drawSpriteOnScreen(3);
+	drawSpriteOnScreen(4);
+	drawSpriteOnScreen(5);
+	drawSpriteOnScreen(6);
+	drawSpriteOnScreen(7);
 
 	if(goingleft) {
-		playerX--;
+		spriteXCoords[0] = spriteXCoords[0] - 1;
 	}
 	if(goingright) {
-		playerX++;
+		spriteXCoords[0] = spriteXCoords[0] + 1;
 	}
 	if(goingup) {
-		playerY--;
+		spriteYCoords[0] = spriteYCoords[0] - 1;
 	}
 	if(goingdown) {
-		playerY++;
+		spriteYCoords[0] = spriteYCoords[0] + 1;
 	}
 
 }
