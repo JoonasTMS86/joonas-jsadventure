@@ -21,9 +21,17 @@ var playereSprite                = document.getElementById("playere");
 var sprite0Buffer                = document.getElementById("sprite0Buffer");
 var sprite0Ctx                   = sprite0Buffer.getContext("2d");
 var sprite0Sdata                 = sprite0Ctx.createImageData(66, 157);
+var mainFontBuffer               = document.getElementById("mainFontBuffer");
+var mainFontCtx                  = mainFontBuffer.getContext("2d");
+var mainFontSdata                = mainFontCtx.createImageData(672, 168);
+var mainFontSprite               = document.getElementById("mainFont");
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+var fontStartXIndex              = [];
+var fontStartYIndex              = [];
+var fontWidthIndex               = [];
+var fontHeightIndex              = [];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -186,7 +194,93 @@ function drawSpriteOnScreen(spriteNumber) {
 	ctx.drawImage(sprite0Buffer, spriteXCoords[spriteNumber], spriteYCoords[spriteNumber]);
 }
 
+function setIndicesAndTransparenciesForFont() {
+	var indexPos, x, y, restoreX, restoreY, width, height, highestHeight, fontRowStride, boundaryColorR, boundaryColorG, boundaryColorB, keyColorR, keyColorG, keyColorB, searching;
+	fontRowStride = mainFontBuffer.width * 4;
+	indexPos = 0;
+	x = 1;
+	y = 1;
+	highestHeight = 0;
+	while(indexPos < 256) {
+		boundaryColorR = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 0];
+		boundaryColorG = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 1];
+		boundaryColorB = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 2];
+		keyColorR = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 0];
+		keyColorG = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 1];
+		keyColorB = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 2];
+		searching = true;
+		width = 0;
+		height = 0;
+		restoreX = x;
+		restoreY = y;
+		// Get the width and the height for the currently inspected character.
+		while(searching) {
+			if(
+				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
+				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
+				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
+			) {
+				searching = false;
+			}
+			else {
+				x++;
+				width++;
+			}
+		}
+		searching = true;
+		x = restoreX;
+		y = restoreY;
+		while(searching) {
+			if(
+				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
+				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
+				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
+			) {
+				searching = false;
+			}
+			else {
+				y++;
+				height++;
+			}
+		}
+		if(height > highestHeight) highestHeight = height;
+		fontStartXIndex[indexPos] = restoreX;
+		fontStartYIndex[indexPos] = restoreY;
+		fontWidthIndex[indexPos] = width;
+		fontHeightIndex[indexPos] = height;
+
+		y = restoreY;
+		// Make those pixels of the font transparent that correspond to the given key RGB color.
+		while(y < (restoreY + height)) {
+			x = restoreX;
+			while(x < (restoreX + width)) {
+				if(
+					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == keyColorR &&
+					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == keyColorG &&
+					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == keyColorB
+				) {
+					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 3] = 0;
+				}
+				x++;
+			}
+			y++;
+		}
+
+		indexPos++;
+		y = restoreY;
+		x = restoreX + width + 2;
+		if(x >= mainFontBuffer.width) {
+			x = 1;
+			y += highestHeight + 2;
+			highestHeight = 0;
+		}
+	}
+	mainFontCtx.putImageData(mainFontSdata, 0, 0);
+}
+
 window.onload = function() {
+	mainFontCtx.drawImage(mainFontSprite, 0, 0);
+	mainFontSdata = mainFontCtx.getImageData(0, 0, mainFontBuffer.width, mainFontBuffer.height);
 	depthBufferCtx.drawImage(screen000depSprite, 0, 0);
 	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
 	ctx.drawImage(screen000picSprite, 0, 0);
@@ -194,6 +288,7 @@ window.onload = function() {
 	playereCtx.drawImage(playereSprite, 0, 0);
 	playereSdata = playereCtx.getImageData(0, 0, playereBuffer.width, playereBuffer.height);
 	doSpriteTransparency(playereCtx, playereBuffer, playereSdata, 52, 90, 72);
+	setIndicesAndTransparenciesForFont();
 };
 
 function play(delta)
