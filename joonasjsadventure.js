@@ -2,13 +2,19 @@ var imgData;
 const screenWidth                = 1910;
 const screenHeight               = 909;
 const rowStride                  = screenWidth * 4;
+const messageWindowMarginWidth   = 10; // Message window margin width in pixels.
+const messageWindowMarginHeight  = 10; // Message window margin height in pixels.
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
 var goingright                   = false;
 var spacePressed                 = false;
+var enterPressed                 = false;
+var enterTyped                   = false;
 var canvas                       = document.getElementById("myCanvas");
 var ctx                          = canvas.getContext("2d");
+var secondScreenBuffer           = document.getElementById("secondBuffer");
+var secondScreenCtx              = secondScreenBuffer.getContext("2d");
 var screen000picSprite           = document.getElementById("screen000pic");
 var depthBuffer                  = document.getElementById("depthBuffer");
 var depthBufferCtx               = depthBuffer.getContext("2d");
@@ -32,6 +38,8 @@ var fontStartXIndex              = [];
 var fontStartYIndex              = [];
 var fontWidthIndex               = [];
 var fontHeightIndex              = [];
+var waitingForEnterPress         = false;
+var startedGame                  = true;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -102,7 +110,18 @@ function setup()
 	up = keyboard(38),
 	right = keyboard(39),
 	down = keyboard(40),
+	enter = keyboard(13),
 	spacebar = keyboard(32);
+	// Enter
+	enter.press = () =>
+	{
+		enterPressed = true;
+	};
+	enter.release = () =>
+	{
+		enterTyped = true;
+		enterPressed = false;
+	};
 	// Space
 	spacebar.press = () =>
 	{
@@ -194,6 +213,17 @@ function drawSpriteOnScreen(spriteNumber) {
 	ctx.drawImage(sprite0Buffer, spriteXCoords[spriteNumber], spriteYCoords[spriteNumber]);
 }
 
+function drawAllSprites() {
+	drawSpriteOnScreen(0);
+	drawSpriteOnScreen(1);
+	drawSpriteOnScreen(2);
+	drawSpriteOnScreen(3);
+	drawSpriteOnScreen(4);
+	drawSpriteOnScreen(5);
+	drawSpriteOnScreen(6);
+	drawSpriteOnScreen(7);
+}
+
 function setIndicesAndTransparenciesForFont() {
 	var indexPos, x, y, restoreX, restoreY, width, height, highestHeight, fontRowStride, boundaryColorR, boundaryColorG, boundaryColorB, keyColorR, keyColorG, keyColorB, searching;
 	fontRowStride = mainFontBuffer.width * 4;
@@ -278,6 +308,132 @@ function setIndicesAndTransparenciesForFont() {
 	mainFontCtx.putImageData(mainFontSdata, 0, 0);
 }
 
+function messageWindow(message, isCentered, x, y) {
+	var widestWidth, highestHeightForCurrentRow, highestHeight, width, height, messageWindowWidth, messageWindowHeight;
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	secondScreenCtx.putImageData(imgData, 0, 0);
+	drawAllSprites();
+	waitingForEnterPress = true;
+	widestWidth = 0;
+	highestHeight = 0;
+	highestHeightForCurrentRow = 0;
+	width = 0;
+	height = 0;
+	for(var pos = 0; pos < message.length; pos++) {
+		if(message.charCodeAt(pos) == 10) {
+			if(highestHeightForCurrentRow == 0) highestHeightForCurrentRow = fontHeightIndex[32];
+			if(width > widestWidth) widestWidth = width;
+			highestHeight += highestHeightForCurrentRow;
+			width = 0;
+			height = 0;
+			highestHeightForCurrentRow = 0;
+		}
+		else {
+			width += fontWidthIndex[message.charCodeAt(pos)];
+			height = fontHeightIndex[message.charCodeAt(pos)];
+		}
+		if(height > highestHeightForCurrentRow) highestHeightForCurrentRow = height;
+	}
+	highestHeight += highestHeightForCurrentRow;
+	if(width > widestWidth) widestWidth = width;
+
+	// Add a bit of margin to the message window.
+	messageWindowWidth = widestWidth + (messageWindowMarginWidth * 2);
+	messageWindowHeight = highestHeight + (messageWindowMarginHeight * 2);
+
+	if(isCentered) {
+		// Center the message window.
+		x = Math.floor((screenWidth / 2)) - Math.floor((messageWindowWidth / 2));
+		y = Math.floor((screenHeight / 2)) - Math.floor((messageWindowHeight / 2));
+	}
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	var restoreX, restoreY, targetX, targetY;
+	restoreX = x;
+	restoreY = y;
+	targetX = x + messageWindowWidth;
+	targetY = y + messageWindowHeight;
+	while(y < targetY) {
+		x = restoreX;
+		while(x < targetX) {
+			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+			x++;
+		}
+		y++;
+	}
+	// Put a little border into the message window.
+	var origX, origY;
+	x = restoreX + Math.floor(messageWindowMarginWidth / 2);
+	y = restoreY + Math.floor(messageWindowMarginHeight / 2);
+	origX = x;
+	origY = y;
+	targetX = x + messageWindowWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+	targetY = y + messageWindowHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+	while(x < targetX) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		x++;
+	}
+	while(y < targetY) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		y++;
+	}
+	while(x > origX) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		x--;
+	}
+	while(y > origY) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		y--;
+	}
+
+	// Put the text to the message window.
+	x = restoreX + messageWindowMarginWidth;
+	y = restoreY + messageWindowMarginHeight;
+	ctx.putImageData(imgData, 0, 0);
+	var highestCharacter = 0;
+	var restoreX = x;
+	for(var pos = 0; pos < message.length; pos++) {
+		if(message.charCodeAt(pos) == 10) {
+			if(highestCharacter == 0) highestCharacter = fontHeightIndex[32];
+			x = restoreX;
+			y += highestCharacter;
+			highestCharacter = 0;
+		}
+		else {
+			ctx.drawImage(
+				mainFontBuffer, 
+				fontStartXIndex[message.charCodeAt(pos)], 
+				fontStartYIndex[message.charCodeAt(pos)], 
+				fontWidthIndex[message.charCodeAt(pos)], 
+				fontHeightIndex[message.charCodeAt(pos)], 
+				x, 
+				y, 
+				fontWidthIndex[message.charCodeAt(pos)], 
+				fontHeightIndex[message.charCodeAt(pos)]
+			);
+			x += fontWidthIndex[message.charCodeAt(pos)];
+			if(fontHeightIndex[message.charCodeAt(pos)] > highestCharacter) highestCharacter = fontHeightIndex[message.charCodeAt(pos)];
+		}
+	}
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.putImageData(imgData, 0, 0);
+}
+
+// Display a centered message window on the screen, meaning that the X,Y coordinates that are passed to messageWindow() are irrelevant
+// (ie. can be any arbitrary values).
+function messageWindowCentered(message) {
+	messageWindow(message, true, 0, 0);
+}
+
 window.onload = function() {
 	mainFontCtx.drawImage(mainFontSprite, 0, 0);
 	mainFontSdata = mainFontCtx.getImageData(0, 0, mainFontBuffer.width, mainFontBuffer.height);
@@ -297,26 +453,34 @@ function play(delta)
 
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-	drawSpriteOnScreen(0);
-	drawSpriteOnScreen(1);
-	drawSpriteOnScreen(2);
-	drawSpriteOnScreen(3);
-	drawSpriteOnScreen(4);
-	drawSpriteOnScreen(5);
-	drawSpriteOnScreen(6);
-	drawSpriteOnScreen(7);
-
-	if(goingleft) {
-		spriteXCoords[0] = spriteXCoords[0] - 1;
-	}
-	if(goingright) {
-		spriteXCoords[0] = spriteXCoords[0] + 1;
-	}
-	if(goingup) {
-		spriteYCoords[0] = spriteYCoords[0] - 1;
-	}
-	if(goingdown) {
-		spriteYCoords[0] = spriteYCoords[0] + 1;
+	if(startedGame) {
+		startedGame = false;
+		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nJAGI (Joonas Adventure Game Interpreter) is free and open source.\nFor the latest version of JAGI, please use the GitHub repository\nof this project:\ngithub.com/JoonasTMS86/joonas-jsadventure");
 	}
 
+	if(!waitingForEnterPress) {
+		drawAllSprites();
+
+		if(goingleft) {
+			spriteXCoords[0] = spriteXCoords[0] - 1;
+		}
+		if(goingright) {
+			spriteXCoords[0] = spriteXCoords[0] + 1;
+		}
+		if(goingup) {
+			spriteYCoords[0] = spriteYCoords[0] - 1;
+		}
+		if(goingdown) {
+			spriteYCoords[0] = spriteYCoords[0] + 1;
+		}
+	}
+	else {
+		if(enterTyped) {
+			console.log("enter pressed");
+			waitingForEnterPress = false;
+			enterTyped = false;
+			imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+			ctx.putImageData(imgData, 0, 0);
+		}
+	}
 }
