@@ -4,6 +4,8 @@ const screenHeight               = 909;
 const rowStride                  = screenWidth * 4;
 const messageWindowMarginWidth   = 10; // Message window margin width in pixels.
 const messageWindowMarginHeight  = 10; // Message window margin height in pixels.
+const STATE_GAME                 = 0;
+const STATE_INPUTWINDOW          = 1;
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
@@ -40,6 +42,10 @@ var fontWidthIndex               = [];
 var fontHeightIndex              = [];
 var waitingForEnterPress         = false;
 var startedGame                  = true;
+var canTypeKey;
+var typedKey                     = 0;
+var keyDown                      = false;
+var gameState                    = STATE_GAME;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -72,6 +78,8 @@ function keyboard(keyCode)
 	// The 'downHandler'.
 	key.downHandler = event =>
 	{
+		keyDown = true;
+		typedKey = event.keyCode;
 		if (event.keyCode === key.code)
 		{
 			if (key.press)
@@ -86,6 +94,7 @@ function keyboard(keyCode)
 	// The 'upHandler'.
 	key.upHandler = event =>
 	{
+		keyDown = false;
 		if (event.keyCode === key.code)
 		{
 			if (key.isDown && key.release)
@@ -308,6 +317,84 @@ function setIndicesAndTransparenciesForFont() {
 	mainFontCtx.putImageData(mainFontSdata, 0, 0);
 }
 
+function drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY) {
+	var restoreX = x;
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	while(y < targetY) {
+		x = restoreX;
+		while(x < targetX) {
+			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+			x++;
+		}
+		y++;
+	}
+	// Put a little border into the message window.
+	var origX, origY;
+	x = borderStartX;
+	y = borderStartY;
+	origX = x;
+	origY = y;
+	targetX = borderTargetX;
+	targetY = borderTargetY;
+	while(x < targetX) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		x++;
+	}
+	while(y < targetY) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		y++;
+	}
+	while(x > origX) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		x--;
+	}
+	while(y > origY) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		y--;
+	}
+}
+
+function putTextOnScreen(x, y, message) {
+	ctx.putImageData(imgData, 0, 0);
+	var highestCharacter = 0;
+	var restoreX = x;
+	for(var pos = 0; pos < message.length; pos++) {
+		if(message.charCodeAt(pos) == 10) {
+			if(highestCharacter == 0) highestCharacter = fontHeightIndex[32];
+			x = restoreX;
+			y += highestCharacter;
+			highestCharacter = 0;
+		}
+		else {
+			ctx.drawImage(
+				mainFontBuffer, 
+				fontStartXIndex[message.charCodeAt(pos)], 
+				fontStartYIndex[message.charCodeAt(pos)], 
+				fontWidthIndex[message.charCodeAt(pos)], 
+				fontHeightIndex[message.charCodeAt(pos)], 
+				x, 
+				y, 
+				fontWidthIndex[message.charCodeAt(pos)], 
+				fontHeightIndex[message.charCodeAt(pos)]
+			);
+			x += fontWidthIndex[message.charCodeAt(pos)];
+			if(fontHeightIndex[message.charCodeAt(pos)] > highestCharacter) highestCharacter = fontHeightIndex[message.charCodeAt(pos)];
+		}
+	}
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	ctx.putImageData(imgData, 0, 0);
+}
+
 function messageWindow(message, isCentered, x, y) {
 	var widestWidth, highestHeightForCurrentRow, highestHeight, width, height, messageWindowWidth, messageWindowHeight;
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -346,86 +433,21 @@ function messageWindow(message, isCentered, x, y) {
 		x = Math.floor((screenWidth / 2)) - Math.floor((messageWindowWidth / 2));
 		y = Math.floor((screenHeight / 2)) - Math.floor((messageWindowHeight / 2));
 	}
-	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	var restoreX, restoreY, targetX, targetY;
-	restoreX = x;
-	restoreY = y;
+	var restoreX, restoreY, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
 	targetX = x + messageWindowWidth;
 	targetY = y + messageWindowHeight;
-	while(y < targetY) {
-		x = restoreX;
-		while(x < targetX) {
-			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
-			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
-			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
-			x++;
-		}
-		y++;
-	}
-	// Put a little border into the message window.
-	var origX, origY;
-	x = restoreX + Math.floor(messageWindowMarginWidth / 2);
-	y = restoreY + Math.floor(messageWindowMarginHeight / 2);
-	origX = x;
-	origY = y;
-	targetX = x + messageWindowWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
-	targetY = y + messageWindowHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
-	while(x < targetX) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
-		x++;
-	}
-	while(y < targetY) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
-		y++;
-	}
-	while(x > origX) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
-		x--;
-	}
-	while(y > origY) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
-		y--;
-	}
+	borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + messageWindowWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+	borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + messageWindowHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+	borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+	borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+	restoreX = x;
+	restoreY = y;
+	drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
 
 	// Put the text to the message window.
 	x = restoreX + messageWindowMarginWidth;
 	y = restoreY + messageWindowMarginHeight;
-	ctx.putImageData(imgData, 0, 0);
-	var highestCharacter = 0;
-	var restoreX = x;
-	for(var pos = 0; pos < message.length; pos++) {
-		if(message.charCodeAt(pos) == 10) {
-			if(highestCharacter == 0) highestCharacter = fontHeightIndex[32];
-			x = restoreX;
-			y += highestCharacter;
-			highestCharacter = 0;
-		}
-		else {
-			ctx.drawImage(
-				mainFontBuffer, 
-				fontStartXIndex[message.charCodeAt(pos)], 
-				fontStartYIndex[message.charCodeAt(pos)], 
-				fontWidthIndex[message.charCodeAt(pos)], 
-				fontHeightIndex[message.charCodeAt(pos)], 
-				x, 
-				y, 
-				fontWidthIndex[message.charCodeAt(pos)], 
-				fontHeightIndex[message.charCodeAt(pos)]
-			);
-			x += fontWidthIndex[message.charCodeAt(pos)];
-			if(fontHeightIndex[message.charCodeAt(pos)] > highestCharacter) highestCharacter = fontHeightIndex[message.charCodeAt(pos)];
-		}
-	}
-	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	ctx.putImageData(imgData, 0, 0);
+	putTextOnScreen(x, y, message);
 }
 
 // Display a centered message window on the screen, meaning that the X,Y coordinates that are passed to messageWindow() are irrelevant
@@ -458,7 +480,9 @@ function play(delta)
 		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nJAGI (Joonas Adventure Game Interpreter) is free and open source.\nFor the latest version of JAGI, please use the GitHub repository\nof this project:\ngithub.com/JoonasTMS86/joonas-jsadventure");
 	}
 
-	if(!waitingForEnterPress) {
+	if(gameState == STATE_INPUTWINDOW) {
+	}
+	else if(!waitingForEnterPress) {
 		drawAllSprites();
 
 		if(goingleft) {
@@ -472,6 +496,36 @@ function play(delta)
 		}
 		if(goingdown) {
 			spriteYCoords[0] = spriteYCoords[0] + 1;
+		}
+
+		// Key codes:
+		// Up Arrow Key    = 38
+		// Down Arrow Key  = 40
+		// Left Arrow Key  = 37
+		// Right Arrow Key = 39
+		keyboard();
+		if(canTypeKey && keyDown && typedKey != 0 && typedKey != 13 && typedKey != 37 && typedKey != 38 && typedKey != 39 && typedKey != 40) {
+			console.log(typedKey);
+			gameState = STATE_INPUTWINDOW;
+			var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+			x = 15;
+			y = 822;
+			winWidth = 600;
+			winHeight = 75;
+			targetX = x + winWidth;
+			targetY = y + winHeight;
+			borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+			borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+			borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+			borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+			drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
+			x += messageWindowMarginWidth;
+			y += messageWindowMarginHeight;
+			putTextOnScreen(x, y, "Enter command:");
+		}
+		canTypeKey = false;
+		if(!keyDown) {
+			canTypeKey = true;
 		}
 	}
 	else {
