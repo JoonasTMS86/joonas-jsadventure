@@ -509,7 +509,7 @@ window.onload = function() {
 	}
 	ctx.putImageData(imgData, 0, 0);
 	putTextOnScreen(30, 0, "Score: 0 of 500");
-	putTextOnScreen(765, 0, "Joonas JS' Adventure");
+	putTextOnScreen(765, 0, "Joonas' JS Adventure");
 	document.addEventListener('keydown', indicateHeldDownKey);
 	function indicateHeldDownKey(e) {
 		keyDown = true;
