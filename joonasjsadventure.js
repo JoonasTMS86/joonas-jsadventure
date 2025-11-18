@@ -43,7 +43,8 @@ var fontHeightIndex              = [];
 var waitingForEnterPress         = false;
 var startedGame                  = true;
 var canTypeKey;
-var typedKey                     = 0;
+var typedKeyCode                 = 0;
+var typedKey                     = "";
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
 var textInputText;
@@ -81,8 +82,6 @@ function keyboard(keyCode)
 	// The 'downHandler'.
 	key.downHandler = event =>
 	{
-		keyDown = true;
-		typedKey = event.keyCode;
 		if (event.keyCode === key.code)
 		{
 			if (key.press)
@@ -97,7 +96,6 @@ function keyboard(keyCode)
 	// The 'upHandler'.
 	key.upHandler = event =>
 	{
-		keyDown = false;
 		if (event.keyCode === key.code)
 		{
 			if (key.isDown && key.release)
@@ -501,6 +499,12 @@ window.onload = function() {
 	playereSdata = playereCtx.getImageData(0, 0, playereBuffer.width, playereBuffer.height);
 	doSpriteTransparency(playereCtx, playereBuffer, playereSdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
+	document.addEventListener('keydown', indicateHeldDownKey);
+	function indicateHeldDownKey(e) {
+		keyDown = true;
+		typedKeyCode = e.keyCode;
+		typedKey = e.key;
+	}
 };
 
 function play(delta)
@@ -531,12 +535,12 @@ function play(delta)
 
 		// Key codes:
 		// Backspace       = 8
+		// Shift           = 16
 		// Up Arrow Key    = 38
 		// Down Arrow Key  = 40
 		// Left Arrow Key  = 37
 		// Right Arrow Key = 39
-		keyboard();
-		if(canTypeKey && keyDown && typedKey != 0 && typedKey != 13 && typedKey != 37 && typedKey != 38 && typedKey != 39 && typedKey != 40) {
+		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
 			waitingForEnterPress = true;
 			secondScreenCtx.putImageData(imgData, 0, 0);
 			gameState = STATE_INPUTWINDOW;
@@ -562,16 +566,16 @@ function play(delta)
 			drawCursor(textInputX, textInputY, textInputText);
 		}
 		canTypeKey = false;
+		keyDown = false;
 		if(!keyDown) {
 			canTypeKey = true;
 		}
 		enterTyped = false;
 	}
 	else {
-		keyboard();
-		if(canTypeKey && keyDown && typedKey != 0 && typedKey != 13 && typedKey != 37 && typedKey != 38 && typedKey != 39 && typedKey != 40) {
+		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
 			eraseCursor(textInputX, textInputY, textInputText);
-			if(typedKey == 8) {
+			if(typedKeyCode == 8) {
 				imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 				var x = textInputX;
 				var y = textInputY;
@@ -595,12 +599,13 @@ function play(delta)
 				textInputText = textInputText.slice(0, -1);
 			}
 			else {
-				textInputText += String.fromCharCode(typedKey);
+				textInputText += typedKey;
 			}
 			putTextOnScreen(textInputX, textInputY, textInputText);
 			drawCursor(textInputX, textInputY, textInputText);
 		}
 		canTypeKey = false;
+		keyDown = false;
 		if(!keyDown) {
 			canTypeKey = true;
 		}
