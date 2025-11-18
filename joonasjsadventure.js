@@ -547,11 +547,14 @@ function play(delta)
 		// Key codes:
 		// Backspace       = 8
 		// Shift           = 16
+		// Control         = 17
+		// Alt             = 18
+		// AltGr           = 225
 		// Up Arrow Key    = 38
 		// Down Arrow Key  = 40
 		// Left Arrow Key  = 37
 		// Right Arrow Key = 39
-		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
+		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 17 && typedKeyCode != 18 && typedKeyCode != 225 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
 			waitingForEnterPress = true;
 			secondScreenCtx.putImageData(imgData, 0, 0);
 			gameState = STATE_INPUTWINDOW;
@@ -584,7 +587,7 @@ function play(delta)
 		enterTyped = false;
 	}
 	else {
-		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
+		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 17 && typedKeyCode != 18 && typedKeyCode != 225 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
 			eraseCursor(textInputX, textInputY, textInputText);
 			if(typedKeyCode == 8) {
 				imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
