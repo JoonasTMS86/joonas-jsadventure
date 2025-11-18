@@ -627,6 +627,10 @@ function play(delta)
 			enterTyped = false;
 			imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
 			ctx.putImageData(imgData, 0, 0);
+			if(gameState == STATE_INPUTWINDOW) {
+				gameState = STATE_GAME;
+				messageWindowCentered("TO DO: The code that actually parses\nthe user's input.");
+			}
 		}
 	}
 }
