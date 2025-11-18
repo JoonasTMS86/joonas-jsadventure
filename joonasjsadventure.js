@@ -46,6 +46,9 @@ var canTypeKey;
 var typedKey                     = 0;
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
+var textInputText;
+var textInputX;
+var textInputY;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -317,34 +320,19 @@ function setIndicesAndTransparenciesForFont() {
 	mainFontCtx.putImageData(mainFontSdata, 0, 0);
 }
 
-function drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY) {
-	var restoreX = x;
-	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	while(y < targetY) {
-		x = restoreX;
-		while(x < targetX) {
-			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
-			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
-			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
-			x++;
-		}
-		y++;
-	}
-	// Put a little border into the message window.
+// Draw a border at the given X,Y coordinates on the screen.
+// Use this to draw the message window border, text input field border etc.
+function drawBorder(x, y, endX, endY) {
 	var origX, origY;
-	x = borderStartX;
-	y = borderStartY;
-	origX = x;
-	origY = y;
-	targetX = borderTargetX;
-	targetY = borderTargetY;
-	while(x < targetX) {
+	var origX = x;
+	var origY = y;
+	while(x < endX) {
 		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
 		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
 		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
 		x++;
 	}
-	while(y < targetY) {
+	while(y < endY) {
 		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
 		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
 		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
@@ -362,6 +350,23 @@ function drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, 
 		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
 		y--;
 	}
+}
+
+function drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY) {
+	var restoreX = x;
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	while(y < targetY) {
+		x = restoreX;
+		while(x < targetX) {
+			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+			x++;
+		}
+		y++;
+	}
+	// Put a little border into the message window.
+	drawBorder(borderStartX, borderStartY, borderTargetX, borderTargetY);
 }
 
 function putTextOnScreen(x, y, message) {
@@ -456,6 +461,35 @@ function messageWindowCentered(message) {
 	messageWindow(message, true, 0, 0);
 }
 
+// Draw the given RGB color at the given cursor X,Y coordinates.
+function drawColorAtCursorXY(x, y, r, g, b) {
+	var endY = y + 19;
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	while(y < endY) {
+		imgData.data[(y * rowStride) + (x * 4) + 0] = r;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = g;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = b;
+		y++;
+	}
+	ctx.putImageData(imgData, 0, 0);
+}
+
+// Draw the text cursor at the given X,Y coordinates on the screen.
+function drawCursor(x, y, text) {
+	for(var pos = 0; pos < text.length; pos++) {
+		x += fontWidthIndex[text.charCodeAt(pos)];
+	}
+	drawColorAtCursorXY(x, y, 0, 0, 0);
+}
+
+// Erase the text cursor at the given X,Y coordinates on the screen.
+function eraseCursor(x, y, text) {
+	for(var pos = 0; pos < text.length; pos++) {
+		x += fontWidthIndex[text.charCodeAt(pos)];
+	}
+	drawColorAtCursorXY(x, y, 255, 255, 255);
+}
+
 window.onload = function() {
 	mainFontCtx.drawImage(mainFontSprite, 0, 0);
 	mainFontSdata = mainFontCtx.getImageData(0, 0, mainFontBuffer.width, mainFontBuffer.height);
@@ -479,9 +513,6 @@ function play(delta)
 		startedGame = false;
 		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nJAGI (Joonas Adventure Game Interpreter) is free and open source.\nFor the latest version of JAGI, please use the GitHub repository\nof this project:\ngithub.com/JoonasTMS86/joonas-jsadventure");
 	}
-
-	if(gameState == STATE_INPUTWINDOW) {
-	}
 	else if(!waitingForEnterPress) {
 		drawAllSprites();
 
@@ -499,18 +530,20 @@ function play(delta)
 		}
 
 		// Key codes:
+		// Backspace       = 8
 		// Up Arrow Key    = 38
 		// Down Arrow Key  = 40
 		// Left Arrow Key  = 37
 		// Right Arrow Key = 39
 		keyboard();
 		if(canTypeKey && keyDown && typedKey != 0 && typedKey != 13 && typedKey != 37 && typedKey != 38 && typedKey != 39 && typedKey != 40) {
-			console.log(typedKey);
+			waitingForEnterPress = true;
+			secondScreenCtx.putImageData(imgData, 0, 0);
 			gameState = STATE_INPUTWINDOW;
 			var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
 			x = 15;
 			y = 822;
-			winWidth = 600;
+			winWidth = screenWidth - (x * 2);
 			winHeight = 75;
 			targetX = x + winWidth;
 			targetY = y + winHeight;
@@ -521,14 +554,57 @@ function play(delta)
 			drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
 			x += messageWindowMarginWidth;
 			y += messageWindowMarginHeight;
+			textInputText = "";
+			textInputX = x + 5;
+			textInputY = y + 27;
 			putTextOnScreen(x, y, "Enter command:");
+			drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25);
+			drawCursor(textInputX, textInputY, textInputText);
 		}
 		canTypeKey = false;
 		if(!keyDown) {
 			canTypeKey = true;
 		}
+		enterTyped = false;
 	}
 	else {
+		keyboard();
+		if(canTypeKey && keyDown && typedKey != 0 && typedKey != 13 && typedKey != 37 && typedKey != 38 && typedKey != 39 && typedKey != 40) {
+			eraseCursor(textInputX, textInputY, textInputText);
+			if(typedKey == 8) {
+				imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+				var x = textInputX;
+				var y = textInputY;
+				for(var pos = 0; pos < (textInputText.length - 1); pos++) {
+					x += fontWidthIndex[textInputText.charCodeAt(pos)];
+				}
+				var restoreX = x;
+				var endX = x + fontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
+				var endY = y + fontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
+				while(y < endY) {
+					x = restoreX;
+					while(x < endX) {
+						imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+						imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+						imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+						x++;
+					}
+					y++;
+				}
+				ctx.putImageData(imgData, 0, 0);
+				textInputText = textInputText.slice(0, -1);
+			}
+			else {
+				textInputText += String.fromCharCode(typedKey);
+			}
+			putTextOnScreen(textInputX, textInputY, textInputText);
+			drawCursor(textInputX, textInputY, textInputText);
+		}
+		canTypeKey = false;
+		if(!keyDown) {
+			canTypeKey = true;
+		}
+
 		if(enterTyped) {
 			console.log("enter pressed");
 			waitingForEnterPress = false;
