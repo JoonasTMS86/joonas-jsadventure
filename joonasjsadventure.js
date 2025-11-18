@@ -499,6 +499,17 @@ window.onload = function() {
 	playereSdata = playereCtx.getImageData(0, 0, playereBuffer.width, playereBuffer.height);
 	doSpriteTransparency(playereCtx, playereBuffer, playereSdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
+	// Put the status bar at the top of the screen.
+	for(var y = 0; y < 19; y++) {
+		for(var x = 0; x < screenWidth; x++) {
+			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+		}
+	}
+	ctx.putImageData(imgData, 0, 0);
+	putTextOnScreen(30, 0, "Score: 0 of 500");
+	putTextOnScreen(765, 0, "Joonas JS' Adventure");
 	document.addEventListener('keydown', indicateHeldDownKey);
 	function indicateHeldDownKey(e) {
 		keyDown = true;
