@@ -18,17 +18,21 @@ var ctx                          = canvas.getContext("2d");
 var secondScreenBuffer           = document.getElementById("secondBuffer");
 var secondScreenCtx              = secondScreenBuffer.getContext("2d");
 var screen000picSprite           = document.getElementById("screen000pic");
+var priorityBuffer               = document.getElementById("priorityBuffer");
+var priorityBufferCtx            = priorityBuffer.getContext("2d");
+var priorityBufferSdata          = priorityBufferCtx.createImageData(1910, 909);
+var screen000priSprite           = document.getElementById("screen000pri");
 var depthBuffer                  = document.getElementById("depthBuffer");
 var depthBufferCtx               = depthBuffer.getContext("2d");
 var depthBufferSdata             = depthBufferCtx.createImageData(1910, 909);
 var screen000depSprite           = document.getElementById("screen000dep");
 var playereBuffer                = document.getElementById("playereBuffer");
 var playereCtx                   = playereBuffer.getContext("2d");
-var playereSdata                 = playereCtx.createImageData(66, 157);
+var playereSdata                 = playereCtx.createImageData(26, 124);
 var playereSprite                = document.getElementById("playere");
 var sprite0Buffer                = document.getElementById("sprite0Buffer");
 var sprite0Ctx                   = sprite0Buffer.getContext("2d");
-var sprite0Sdata                 = sprite0Ctx.createImageData(66, 157);
+var sprite0Sdata                 = sprite0Ctx.createImageData(26, 124);
 var mainFontBuffer               = document.getElementById("mainFontBuffer");
 var mainFontCtx                  = mainFontBuffer.getContext("2d");
 var mainFontSdata                = mainFontCtx.createImageData(672, 168);
@@ -488,7 +492,27 @@ function eraseCursor(x, y, text) {
 	drawColorAtCursorXY(x, y, 255, 255, 255);
 }
 
+function checkBlockNS(objectX, objectY, objectWidth) {
+	var targetX = objectX + objectWidth;
+	while(objectX < targetX) {
+		if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] == 0) {
+			return false;
+		}
+		objectX++;
+	}
+	return true;
+}
+
+function checkBlockEW(objectX, objectY) {
+	if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] == 0) {
+		return false;
+	}
+	return true;
+}
+
 window.onload = function() {
+	priorityBufferCtx.drawImage(screen000priSprite, 0, 0);
+	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
 	mainFontCtx.drawImage(mainFontSprite, 0, 0);
 	mainFontSdata = mainFontCtx.getImageData(0, 0, mainFontBuffer.width, mainFontBuffer.height);
 	depthBufferCtx.drawImage(screen000depSprite, 0, 0);
@@ -532,16 +556,36 @@ function play(delta)
 		drawAllSprites();
 
 		if(goingleft) {
-			spriteXCoords[0] = spriteXCoords[0] - 1;
+			var playerFeetX = spriteXCoords[0] - 1;
+			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 1;
+			var canMove = checkBlockEW(playerFeetX, playerFeetY);
+			if(canMove) {
+				spriteXCoords[0] = spriteXCoords[0] - 1;
+			}
 		}
 		if(goingright) {
-			spriteXCoords[0] = spriteXCoords[0] + 1;
+			var playerFeetX = spriteXCoords[0] + playereBuffer.width;
+			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 1;
+			var canMove = checkBlockEW(playerFeetX, playerFeetY);
+			if(canMove) {
+				spriteXCoords[0] = spriteXCoords[0] + 1;
+			}
 		}
 		if(goingup) {
-			spriteYCoords[0] = spriteYCoords[0] - 1;
+			var playerFeetX = spriteXCoords[0];
+			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 2;
+			var canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+			if(canMove) {
+				spriteYCoords[0] = spriteYCoords[0] - 1;
+			}
 		}
 		if(goingdown) {
-			spriteYCoords[0] = spriteYCoords[0] + 1;
+			var playerFeetX = spriteXCoords[0];
+			var playerFeetY = spriteYCoords[0] + playereBuffer.height;
+			var canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+			if(canMove) {
+				spriteYCoords[0] = spriteYCoords[0] + 1;
+			}
 		}
 
 		// Key codes:
