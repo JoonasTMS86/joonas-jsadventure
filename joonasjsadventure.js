@@ -572,11 +572,12 @@ function play(delta)
 			drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
 			x += messageWindowMarginWidth;
 			y += messageWindowMarginHeight;
-			textInputText = "";
+			textInputText = typedKey;
 			textInputX = x + 5;
 			textInputY = y + 27;
 			putTextOnScreen(x, y, "Enter command:");
 			drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25);
+			putTextOnScreen(textInputX, textInputY, textInputText);
 			drawCursor(textInputX, textInputY, textInputText);
 		}
 		canTypeKey = false;
