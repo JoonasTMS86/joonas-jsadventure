@@ -228,14 +228,25 @@ function drawSpriteOnScreen(spriteNumber) {
 }
 
 function drawAllSprites() {
-	drawSpriteOnScreen(0);
-	drawSpriteOnScreen(1);
-	drawSpriteOnScreen(2);
-	drawSpriteOnScreen(3);
-	drawSpriteOnScreen(4);
-	drawSpriteOnScreen(5);
-	drawSpriteOnScreen(6);
-	drawSpriteOnScreen(7);
+	var spriteDrawOrder = [0, 1, 2, 3, 4, 5, 6, 7];
+	// Draw the sprite with the lowest Y value first and the one with the highest Y value last.
+	for(var placePos = 0; placePos < 8; placePos++) {
+		for(var checkPos = placePos + 1; checkPos < 8; checkPos++) {
+			if(spriteYCoords[spriteDrawOrder[checkPos]] < spriteYCoords[spriteDrawOrder[placePos]]) {
+				var temp = spriteDrawOrder[placePos];
+				spriteDrawOrder[placePos] = spriteDrawOrder[checkPos];
+				spriteDrawOrder[checkPos] = temp;
+			}
+		}
+	}
+	drawSpriteOnScreen(spriteDrawOrder[0]);
+	drawSpriteOnScreen(spriteDrawOrder[1]);
+	drawSpriteOnScreen(spriteDrawOrder[2]);
+	drawSpriteOnScreen(spriteDrawOrder[3]);
+	drawSpriteOnScreen(spriteDrawOrder[4]);
+	drawSpriteOnScreen(spriteDrawOrder[5]);
+	drawSpriteOnScreen(spriteDrawOrder[6]);
+	drawSpriteOnScreen(spriteDrawOrder[7]);
 }
 
 function setIndicesAndTransparenciesForFont() {
@@ -589,6 +600,7 @@ function play(delta)
 		}
 
 		// Key codes:
+		// F1              = 112
 		// Backspace       = 8
 		// Shift           = 16
 		// Control         = 17
@@ -598,7 +610,12 @@ function play(delta)
 		// Down Arrow Key  = 40
 		// Left Arrow Key  = 37
 		// Right Arrow Key = 39
-		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 17 && typedKeyCode != 18 && typedKeyCode != 225 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
+
+		if(!keyDown && typedKeyCode == 112) {
+			messageWindowCentered("Use this key for debugging purposes, for example.");
+		}
+
+		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 112 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 17 && typedKeyCode != 18 && typedKeyCode != 225 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
 			waitingForEnterPress = true;
 			secondScreenCtx.putImageData(imgData, 0, 0);
 			gameState = STATE_INPUTWINDOW;
