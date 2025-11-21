@@ -561,7 +561,7 @@ function play(delta)
 
 	if(startedGame) {
 		startedGame = false;
-		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nJAGI (Joonas Adventure Game Interpreter) is free and open source.\nFor the latest version of JAGI, please use the GitHub repository\nof this project:\ngithub.com/JoonasTMS86/joonas-jsadventure");
+		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nThis project is free and open source.\nFor the latest version of the project, please use the GitHub repository:\ngithub.com/JoonasTMS86/joonas-jsadventure");
 	}
 	else if(!waitingForEnterPress) {
 		drawAllSprites();
