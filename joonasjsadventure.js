@@ -566,34 +566,85 @@ function play(delta)
 	else if(!waitingForEnterPress) {
 		drawAllSprites();
 
+		/*
+		TODO: we need to store the width and height of each sprite somewhere.
+		In this case, all our sprites are 26 x 124, but depending on the sprite
+		that has been loaded, it can have a totally different width and height.
+		*/
 		if(goingleft) {
+			var canMove = true;
 			var playerFeetX = spriteXCoords[0] - 1;
 			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 1;
-			var canMove = checkBlockEW(playerFeetX, playerFeetY);
+			for(var pos = 1; pos < 8; pos++) {
+				if(
+					playerFeetX == (spriteXCoords[pos] + 26) && 
+					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+				) {
+					canMove = false;
+				}
+			}
+			if(canMove) {
+				canMove = checkBlockEW(playerFeetX, playerFeetY);
+			}
 			if(canMove) {
 				spriteXCoords[0] = spriteXCoords[0] - 1;
 			}
 		}
 		if(goingright) {
+			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + playereBuffer.width;
 			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 1;
-			var canMove = checkBlockEW(playerFeetX, playerFeetY);
+			for(var pos = 1; pos < 8; pos++) {
+				if(
+					playerFeetX == (spriteXCoords[pos] - 1) && 
+					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+				) {
+					canMove = false;
+				}
+			}
+			if(canMove) {
+				canMove = checkBlockEW(playerFeetX, playerFeetY);
+			}
 			if(canMove) {
 				spriteXCoords[0] = spriteXCoords[0] + 1;
 			}
 		}
 		if(goingup) {
+			var canMove = true;
 			var playerFeetX = spriteXCoords[0];
 			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 2;
-			var canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+			for(var pos = 1; pos < 8; pos++) {
+				if(
+					(playerFeetX + playereBuffer.width - 1) >= spriteXCoords[pos] && 
+					playerFeetX < (spriteXCoords[pos] + 26) &&
+					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+				) {
+					canMove = false;
+				}
+			}
+			if(canMove) {
+				canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] - 1;
 			}
 		}
 		if(goingdown) {
+			var canMove = true;
 			var playerFeetX = spriteXCoords[0];
 			var playerFeetY = spriteYCoords[0] + playereBuffer.height;
-			var canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+			for(var pos = 1; pos < 8; pos++) {
+				if(
+					(playerFeetX + playereBuffer.width - 1) >= spriteXCoords[pos] && 
+					playerFeetX < (spriteXCoords[pos] + 26) &&
+					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+				) {
+					canMove = false;
+				}
+			}
+			if(canMove) {
+				canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] + 1;
 			}
