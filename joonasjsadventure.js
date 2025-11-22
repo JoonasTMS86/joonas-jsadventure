@@ -30,9 +30,9 @@ var playereBuffer                = document.getElementById("playereBuffer");
 var playereCtx                   = playereBuffer.getContext("2d");
 var playereSdata                 = playereCtx.createImageData(26, 124);
 var playereSprite                = document.getElementById("playere");
-var sprite0Buffer                = document.getElementById("sprite0Buffer");
-var sprite0Ctx                   = sprite0Buffer.getContext("2d");
-var sprite0Sdata                 = sprite0Ctx.createImageData(26, 124);
+var spriteBuffer                 = document.getElementById("spriteBuffer");
+var spriteCtx                    = spriteBuffer.getContext("2d");
+var spriteSdata                  = spriteCtx.createImageData(400, 400);
 var mainFontBuffer               = document.getElementById("mainFontBuffer");
 var mainFontCtx                  = mainFontBuffer.getContext("2d");
 var mainFontSdata                = mainFontCtx.createImageData(672, 168);
@@ -40,6 +40,8 @@ var mainFontSprite               = document.getElementById("mainFont");
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+var spriteWidths                 = [26, 26, 26, 26, 26, 26, 26, 26];
+var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124];
 var fontStartXIndex              = [];
 var fontStartYIndex              = [];
 var fontWidthIndex               = [];
@@ -209,22 +211,22 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 
 // Draw the given sprite on the screen.
 function drawSpriteOnScreen(spriteNumber) {
-	sprite0Ctx.putImageData(playereSdata, 0, 0);
-	sprite0Sdata = sprite0Ctx.getImageData(0, 0, sprite0Buffer.width, sprite0Buffer.height);
-	var spriterowstride = sprite0Buffer.width * 4;
+	spriteCtx.putImageData(playereSdata, 0, 0);
+	spriteSdata = spriteCtx.getImageData(0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
+	var spriterowstride = spriteWidths[spriteNumber] * 4;
 	// Mask out those pixels that are behind an object.
 	var depth;
-	var feetY = spriteYCoords[spriteNumber] + sprite0Buffer.height - 1;
-	for(var y = 0; y < sprite0Buffer.height; y++) {
-		for(var x = 0; x < sprite0Buffer.width; x++) {
+	var feetY = spriteYCoords[spriteNumber] + spriteHeights[spriteNumber] - 1;
+	for(var y = 0; y < spriteHeights[spriteNumber]; y++) {
+		for(var x = 0; x < spriteWidths[spriteNumber]; x++) {
 			depth = (depthBufferSdata.data[((y + spriteYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 1] * 256) + depthBufferSdata.data[((y + spriteYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 2];
 			if(feetY < depth) {
-				sprite0Sdata.data[(y * spriterowstride) + (x * 4) + 3] = 0;
+				spriteSdata.data[(y * spriterowstride) + (x * 4) + 3] = 0;
 			}
 		}
 	}
-	sprite0Ctx.putImageData(sprite0Sdata, 0, 0);
-	ctx.drawImage(sprite0Buffer, spriteXCoords[spriteNumber], spriteYCoords[spriteNumber]);
+	spriteCtx.putImageData(spriteSdata, 0, 0);
+	ctx.drawImage(spriteBuffer, 0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber], spriteXCoords[spriteNumber], spriteYCoords[spriteNumber], spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
 }
 
 function drawAllSprites() {
@@ -566,19 +568,14 @@ function play(delta)
 	else if(!waitingForEnterPress) {
 		drawAllSprites();
 
-		/*
-		TODO: we need to store the width and height of each sprite somewhere.
-		In this case, all our sprites are 26 x 124, but depending on the sprite
-		that has been loaded, it can have a totally different width and height.
-		*/
 		if(goingleft) {
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] - 1;
-			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 1;
+			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					playerFeetX == (spriteXCoords[pos] + 26) && 
-					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+					playerFeetX == (spriteXCoords[pos] + spriteWidths[pos]) && 
+					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
 				}
@@ -592,12 +589,12 @@ function play(delta)
 		}
 		if(goingright) {
 			var canMove = true;
-			var playerFeetX = spriteXCoords[0] + playereBuffer.width;
-			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 1;
+			var playerFeetX = spriteXCoords[0] + spriteWidths[0];
+			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
 			for(var pos = 1; pos < 8; pos++) {
 				if(
 					playerFeetX == (spriteXCoords[pos] - 1) && 
-					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
 				}
@@ -612,18 +609,18 @@ function play(delta)
 		if(goingup) {
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0];
-			var playerFeetY = spriteYCoords[0] + playereBuffer.height - 2;
+			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					(playerFeetX + playereBuffer.width - 1) >= spriteXCoords[pos] && 
-					playerFeetX < (spriteXCoords[pos] + 26) &&
-					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+					(playerFeetX + spriteWidths[0] - 1) >= spriteXCoords[pos] && 
+					playerFeetX < (spriteXCoords[pos] + spriteWidths[pos]) &&
+					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
 				}
 			}
 			if(canMove) {
-				canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidths[0]);
 			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] - 1;
@@ -632,18 +629,18 @@ function play(delta)
 		if(goingdown) {
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0];
-			var playerFeetY = spriteYCoords[0] + playereBuffer.height;
+			var playerFeetY = spriteYCoords[0] + spriteHeights[0];
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					(playerFeetX + playereBuffer.width - 1) >= spriteXCoords[pos] && 
-					playerFeetX < (spriteXCoords[pos] + 26) &&
-					playerFeetY == (spriteYCoords[pos] + 124 - 1)
+					(playerFeetX + spriteWidths[0] - 1) >= spriteXCoords[pos] && 
+					playerFeetX < (spriteXCoords[pos] + spriteWidths[pos]) &&
+					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
 				}
 			}
 			if(canMove) {
-				canMove = checkBlockNS(playerFeetX, playerFeetY, playereBuffer.width);
+				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidths[0]);
 			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] + 1;
