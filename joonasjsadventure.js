@@ -26,14 +26,14 @@ var depthBuffer                  = document.getElementById("depthBuffer");
 var depthBufferCtx               = depthBuffer.getContext("2d");
 var depthBufferSdata             = depthBufferCtx.createImageData(1910, 909);
 var screen000depSprite           = document.getElementById("screen000dep");
-var playereBuffer                = document.getElementById("playereBuffer");
-var playereCtx                   = playereBuffer.getContext("2d");
-var playereSdata                 = playereCtx.createImageData(26, 124);
-var playereSprite                = document.getElementById("playere");
-var playere4Buffer               = document.getElementById("playere4Buffer");
-var playere4Ctx                  = playere4Buffer.getContext("2d");
-var playere4Sdata                = playere4Ctx.createImageData(85, 124);
-var playere4Sprite               = document.getElementById("playere4");
+var sprite000Buffer              = document.getElementById("sprite000Buffer");
+var sprite000Ctx                 = sprite000Buffer.getContext("2d");
+var sprite000Sdata               = sprite000Ctx.createImageData(26, 124);
+var sprite000Sprite              = document.getElementById("sprite000");
+var sprite003Buffer              = document.getElementById("sprite003Buffer");
+var sprite003Ctx                 = sprite003Buffer.getContext("2d");
+var sprite003Sdata               = sprite003Ctx.createImageData(85, 124);
+var sprite003Sprite              = document.getElementById("sprite003");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -215,7 +215,7 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 
 // Draw the given sprite on the screen.
 function drawSpriteOnScreen(spriteNumber) {
-	spriteCtx.putImageData(playere4Sdata, 0, 0);
+	spriteCtx.putImageData(sprite003Sdata, 0, 0);
 	spriteSdata = spriteCtx.getImageData(0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
 	var spriterowstride = spriteWidths[spriteNumber] * 4;
 	// Mask out those pixels that are behind an object.
@@ -537,14 +537,14 @@ window.onload = function() {
 	ctx.drawImage(screen000picSprite, 0, 0);
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	
-	playereCtx.drawImage(playereSprite, 0, 0);
-	playereSdata = playereCtx.getImageData(0, 0, playereBuffer.width, playereBuffer.height);
+	sprite000Ctx.drawImage(sprite000Sprite, 0, 0);
+	sprite000Sdata = sprite000Ctx.getImageData(0, 0, sprite000Buffer.width, sprite000Buffer.height);
 
-	playere4Ctx.drawImage(playere4Sprite, 0, 0);
-	playere4Sdata = playere4Ctx.getImageData(0, 0, playere4Buffer.width, playere4Buffer.height);
+	sprite003Ctx.drawImage(sprite003Sprite, 0, 0);
+	sprite003Sdata = sprite003Ctx.getImageData(0, 0, sprite003Buffer.width, sprite003Buffer.height);
 
-	doSpriteTransparency(playereCtx, playereBuffer, playereSdata, 52, 90, 72);
-	doSpriteTransparency(playere4Ctx, playere4Buffer, playere4Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite003Ctx, sprite003Buffer, sprite003Sdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
