@@ -28,12 +28,12 @@ var depthBufferSdata             = depthBufferCtx.createImageData(1910, 909);
 var screen000depSprite           = document.getElementById("screen000dep");
 var sprite000Buffer              = document.getElementById("sprite000Buffer");
 var sprite000Ctx                 = sprite000Buffer.getContext("2d");
-var sprite000Sdata               = sprite000Ctx.createImageData(26, 124);
+var sprite000Sdata               = sprite000Ctx.createImageData(85, 124);
 var sprite000Sprite              = document.getElementById("sprite000");
-var sprite003Buffer              = document.getElementById("sprite003Buffer");
-var sprite003Ctx                 = sprite003Buffer.getContext("2d");
-var sprite003Sdata               = sprite003Ctx.createImageData(85, 124);
-var sprite003Sprite              = document.getElementById("sprite003");
+var sprite002Buffer              = document.getElementById("sprite002Buffer");
+var sprite002Ctx                 = sprite002Buffer.getContext("2d");
+var sprite002Sdata               = sprite002Ctx.createImageData(85, 124);
+var sprite002Sprite              = document.getElementById("sprite002");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -215,7 +215,7 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 
 // Draw the given sprite on the screen.
 function drawSpriteOnScreen(spriteNumber) {
-	spriteCtx.putImageData(sprite003Sdata, 0, 0);
+	spriteCtx.putImageData(sprite002Sdata, 0, 0);
 	spriteSdata = spriteCtx.getImageData(0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
 	var spriterowstride = spriteWidths[spriteNumber] * 4;
 	// Mask out those pixels that are behind an object.
@@ -540,11 +540,11 @@ window.onload = function() {
 	sprite000Ctx.drawImage(sprite000Sprite, 0, 0);
 	sprite000Sdata = sprite000Ctx.getImageData(0, 0, sprite000Buffer.width, sprite000Buffer.height);
 
-	sprite003Ctx.drawImage(sprite003Sprite, 0, 0);
-	sprite003Sdata = sprite003Ctx.getImageData(0, 0, sprite003Buffer.width, sprite003Buffer.height);
+	sprite002Ctx.drawImage(sprite002Sprite, 0, 0);
+	sprite002Sdata = sprite002Ctx.getImageData(0, 0, sprite002Buffer.width, sprite002Buffer.height);
 
 	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
-	doSpriteTransparency(sprite003Ctx, sprite003Buffer, sprite003Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite002Ctx, sprite002Buffer, sprite002Sdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
