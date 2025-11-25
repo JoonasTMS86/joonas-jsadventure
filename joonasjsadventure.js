@@ -6,7 +6,7 @@ const messageWindowMarginHeight  = 10; // Message window margin height in pixels
 const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
 const playerAnimDelay            = 8;
-var imgData;
+var imgData, canTypeKey, textInputText, textInputX, textInputY;
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
@@ -64,14 +64,10 @@ var fontWidthIndex               = [];
 var fontHeightIndex              = [];
 var waitingForEnterPress         = false;
 var startedGame                  = true;
-var canTypeKey;
 var typedKeyCode                 = 0;
 var typedKey                     = "";
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
-var textInputText;
-var textInputX;
-var textInputY;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
