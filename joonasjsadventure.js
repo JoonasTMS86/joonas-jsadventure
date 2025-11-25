@@ -53,8 +53,16 @@ var mainFontSprite               = document.getElementById("mainFont");
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+// Width and heights of the sprite images.
 var spriteWidths                 = [85, 85, 85, 85, 85, 85, 85, 85];
 var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124];
+// Width of sprite when facing N or S.
+var spriteWidthsNS               = [26, 26, 26, 26, 26, 26, 26, 26];
+// When we check for collisions, we only wish to check those pixels of the sprite that are not transparent.
+// The first solid pixels might not be at the leftmost side of the image but rather a few pixels away from it.
+var spriteCheckBlockOffsetsNS    = [29, 29, 29, 29, 29, 29, 29, 29];
+var spriteCheckBlockOffsetsE     = [55, 55, 55, 55, 55, 55, 55, 55];
+var spriteCheckBlockOffsetsW     = [28, 28, 28, 28, 28, 28, 28, 28];
 var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0];
 var playerAnimPos                = 0;
 var playerAnimFrame              = 0;
@@ -611,11 +619,11 @@ function play(delta)
 
 		if(goingleft) {
 			var canMove = true;
-			var playerFeetX = spriteXCoords[0] - 1;
+			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					playerFeetX == (spriteXCoords[pos] + spriteWidths[pos]) && 
+					playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
 					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
@@ -639,11 +647,11 @@ function play(delta)
 				spriteImages[0] = playerAnimFrame;
 			}
 			var canMove = true;
-			var playerFeetX = spriteXCoords[0] + spriteWidths[0];
+			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					playerFeetX == (spriteXCoords[pos] - 1) && 
+					playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
 					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
@@ -658,19 +666,19 @@ function play(delta)
 		}
 		if(goingup) {
 			var canMove = true;
-			var playerFeetX = spriteXCoords[0];
+			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					(playerFeetX + spriteWidths[0] - 1) >= spriteXCoords[pos] && 
-					playerFeetX < (spriteXCoords[pos] + spriteWidths[pos]) &&
+					(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+					playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
 					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
 				}
 			}
 			if(canMove) {
-				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidths[0]);
+				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
 			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] - 1;
@@ -678,19 +686,19 @@ function play(delta)
 		}
 		if(goingdown) {
 			var canMove = true;
-			var playerFeetX = spriteXCoords[0];
+			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0];
 			for(var pos = 1; pos < 8; pos++) {
 				if(
-					(playerFeetX + spriteWidths[0] - 1) >= spriteXCoords[pos] && 
-					playerFeetX < (spriteXCoords[pos] + spriteWidths[pos]) &&
+					(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+					playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
 					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 				) {
 					canMove = false;
 				}
 			}
 			if(canMove) {
-				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidths[0]);
+				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
 			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] + 1;
