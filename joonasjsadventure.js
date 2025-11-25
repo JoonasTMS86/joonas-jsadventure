@@ -59,6 +59,38 @@ var sprite007Buffer              = document.getElementById("sprite007Buffer");
 var sprite007Ctx                 = sprite007Buffer.getContext("2d");
 var sprite007Sdata               = sprite007Ctx.createImageData(85, 124);
 var sprite007Sprite              = document.getElementById("sprite007");
+var sprite008Buffer              = document.getElementById("sprite008Buffer");
+var sprite008Ctx                 = sprite008Buffer.getContext("2d");
+var sprite008Sdata               = sprite008Ctx.createImageData(85, 124);
+var sprite008Sprite              = document.getElementById("sprite008");
+var sprite009Buffer              = document.getElementById("sprite009Buffer");
+var sprite009Ctx                 = sprite009Buffer.getContext("2d");
+var sprite009Sdata               = sprite009Ctx.createImageData(85, 124);
+var sprite009Sprite              = document.getElementById("sprite009");
+var sprite010Buffer              = document.getElementById("sprite010Buffer");
+var sprite010Ctx                 = sprite010Buffer.getContext("2d");
+var sprite010Sdata               = sprite010Ctx.createImageData(85, 124);
+var sprite010Sprite              = document.getElementById("sprite010");
+var sprite011Buffer              = document.getElementById("sprite011Buffer");
+var sprite011Ctx                 = sprite011Buffer.getContext("2d");
+var sprite011Sdata               = sprite011Ctx.createImageData(85, 124);
+var sprite011Sprite              = document.getElementById("sprite011");
+var sprite012Buffer              = document.getElementById("sprite012Buffer");
+var sprite012Ctx                 = sprite012Buffer.getContext("2d");
+var sprite012Sdata               = sprite012Ctx.createImageData(85, 124);
+var sprite012Sprite              = document.getElementById("sprite012");
+var sprite013Buffer              = document.getElementById("sprite013Buffer");
+var sprite013Ctx                 = sprite013Buffer.getContext("2d");
+var sprite013Sdata               = sprite013Ctx.createImageData(85, 124);
+var sprite013Sprite              = document.getElementById("sprite013");
+var sprite014Buffer              = document.getElementById("sprite014Buffer");
+var sprite014Ctx                 = sprite014Buffer.getContext("2d");
+var sprite014Sdata               = sprite014Ctx.createImageData(85, 124);
+var sprite014Sprite              = document.getElementById("sprite014");
+var sprite015Buffer              = document.getElementById("sprite015Buffer");
+var sprite015Ctx                 = sprite015Buffer.getContext("2d");
+var sprite015Sdata               = sprite015Ctx.createImageData(85, 124);
+var sprite015Sprite              = document.getElementById("sprite015");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -272,6 +304,30 @@ function drawSpriteOnScreen(spriteNumber) {
 			break;
 		case 7:
 			sData = sprite007Sdata;
+			break;
+		case 8:
+			sData = sprite008Sdata;
+			break;
+		case 9:
+			sData = sprite009Sdata;
+			break;
+		case 10:
+			sData = sprite010Sdata;
+			break;
+		case 11:
+			sData = sprite011Sdata;
+			break;
+		case 12:
+			sData = sprite012Sdata;
+			break;
+		case 13:
+			sData = sprite013Sdata;
+			break;
+		case 14:
+			sData = sprite014Sdata;
+			break;
+		case 15:
+			sData = sprite015Sdata;
 			break;
 	}
 	spriteCtx.putImageData(sData, 0, 0);
@@ -620,6 +676,30 @@ window.onload = function() {
 	sprite007Ctx.drawImage(sprite007Sprite, 0, 0);
 	sprite007Sdata = sprite007Ctx.getImageData(0, 0, sprite007Buffer.width, sprite007Buffer.height);
 
+	sprite008Ctx.drawImage(sprite008Sprite, 0, 0);
+	sprite008Sdata = sprite008Ctx.getImageData(0, 0, sprite008Buffer.width, sprite008Buffer.height);
+
+	sprite009Ctx.drawImage(sprite009Sprite, 0, 0);
+	sprite009Sdata = sprite009Ctx.getImageData(0, 0, sprite009Buffer.width, sprite009Buffer.height);
+
+	sprite010Ctx.drawImage(sprite010Sprite, 0, 0);
+	sprite010Sdata = sprite010Ctx.getImageData(0, 0, sprite010Buffer.width, sprite010Buffer.height);
+
+	sprite011Ctx.drawImage(sprite011Sprite, 0, 0);
+	sprite011Sdata = sprite011Ctx.getImageData(0, 0, sprite011Buffer.width, sprite011Buffer.height);
+
+	sprite012Ctx.drawImage(sprite012Sprite, 0, 0);
+	sprite012Sdata = sprite012Ctx.getImageData(0, 0, sprite012Buffer.width, sprite012Buffer.height);
+
+	sprite013Ctx.drawImage(sprite013Sprite, 0, 0);
+	sprite013Sdata = sprite013Ctx.getImageData(0, 0, sprite013Buffer.width, sprite013Buffer.height);
+
+	sprite014Ctx.drawImage(sprite014Sprite, 0, 0);
+	sprite014Sdata = sprite014Ctx.getImageData(0, 0, sprite014Buffer.width, sprite014Buffer.height);
+
+	sprite015Ctx.drawImage(sprite015Sprite, 0, 0);
+	sprite015Sdata = sprite015Ctx.getImageData(0, 0, sprite015Buffer.width, sprite015Buffer.height);
+
 	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite001Ctx, sprite001Buffer, sprite001Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite002Ctx, sprite002Buffer, sprite002Sdata, 52, 90, 72);
@@ -628,6 +708,14 @@ window.onload = function() {
 	doSpriteTransparency(sprite005Ctx, sprite005Buffer, sprite005Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite006Ctx, sprite006Buffer, sprite006Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite007Ctx, sprite007Buffer, sprite007Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite008Ctx, sprite008Buffer, sprite008Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite009Ctx, sprite009Buffer, sprite009Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite010Ctx, sprite010Buffer, sprite010Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite011Ctx, sprite011Buffer, sprite011Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite012Ctx, sprite012Buffer, sprite012Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite013Ctx, sprite013Buffer, sprite013Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite014Ctx, sprite014Buffer, sprite014Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite015Ctx, sprite015Buffer, sprite015Sdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
@@ -718,6 +806,15 @@ function play(delta)
 			}
 		}
 		if(goingup) {
+			playerAnimPos++;
+			if(playerAnimPos >= playerAnimDelay) {
+				playerAnimPos = 0;
+				playerAnimFrame++;
+				if(playerAnimFrame >= 4) {
+					playerAnimFrame = 0;
+				}
+				spriteImages[0] = 8 + playerAnimFrame;
+			}
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
@@ -738,6 +835,15 @@ function play(delta)
 			}
 		}
 		if(goingdown) {
+			playerAnimPos++;
+			if(playerAnimPos >= playerAnimDelay) {
+				playerAnimPos = 0;
+				playerAnimFrame++;
+				if(playerAnimFrame >= 4) {
+					playerAnimFrame = 0;
+				}
+				spriteImages[0] = 12 + playerAnimFrame;
+			}
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0];
