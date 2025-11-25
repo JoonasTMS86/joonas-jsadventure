@@ -43,6 +43,22 @@ var sprite003Buffer              = document.getElementById("sprite003Buffer");
 var sprite003Ctx                 = sprite003Buffer.getContext("2d");
 var sprite003Sdata               = sprite003Ctx.createImageData(85, 124);
 var sprite003Sprite              = document.getElementById("sprite003");
+var sprite004Buffer              = document.getElementById("sprite004Buffer");
+var sprite004Ctx                 = sprite004Buffer.getContext("2d");
+var sprite004Sdata               = sprite004Ctx.createImageData(85, 124);
+var sprite004Sprite              = document.getElementById("sprite004");
+var sprite005Buffer              = document.getElementById("sprite005Buffer");
+var sprite005Ctx                 = sprite005Buffer.getContext("2d");
+var sprite005Sdata               = sprite005Ctx.createImageData(85, 124);
+var sprite005Sprite              = document.getElementById("sprite005");
+var sprite006Buffer              = document.getElementById("sprite006Buffer");
+var sprite006Ctx                 = sprite006Buffer.getContext("2d");
+var sprite006Sdata               = sprite006Ctx.createImageData(85, 124);
+var sprite006Sprite              = document.getElementById("sprite006");
+var sprite007Buffer              = document.getElementById("sprite007Buffer");
+var sprite007Ctx                 = sprite007Buffer.getContext("2d");
+var sprite007Sdata               = sprite007Ctx.createImageData(85, 124);
+var sprite007Sprite              = document.getElementById("sprite007");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -244,6 +260,18 @@ function drawSpriteOnScreen(spriteNumber) {
 			break;
 		case 3:
 			sData = sprite003Sdata;
+			break;
+		case 4:
+			sData = sprite004Sdata;
+			break;
+		case 5:
+			sData = sprite005Sdata;
+			break;
+		case 6:
+			sData = sprite006Sdata;
+			break;
+		case 7:
+			sData = sprite007Sdata;
 			break;
 	}
 	spriteCtx.putImageData(sData, 0, 0);
@@ -580,10 +608,26 @@ window.onload = function() {
 	sprite003Ctx.drawImage(sprite003Sprite, 0, 0);
 	sprite003Sdata = sprite003Ctx.getImageData(0, 0, sprite003Buffer.width, sprite003Buffer.height);
 
+	sprite004Ctx.drawImage(sprite004Sprite, 0, 0);
+	sprite004Sdata = sprite004Ctx.getImageData(0, 0, sprite004Buffer.width, sprite004Buffer.height);
+
+	sprite005Ctx.drawImage(sprite005Sprite, 0, 0);
+	sprite005Sdata = sprite005Ctx.getImageData(0, 0, sprite005Buffer.width, sprite005Buffer.height);
+
+	sprite006Ctx.drawImage(sprite006Sprite, 0, 0);
+	sprite006Sdata = sprite006Ctx.getImageData(0, 0, sprite006Buffer.width, sprite006Buffer.height);
+
+	sprite007Ctx.drawImage(sprite007Sprite, 0, 0);
+	sprite007Sdata = sprite007Ctx.getImageData(0, 0, sprite007Buffer.width, sprite007Buffer.height);
+
 	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite001Ctx, sprite001Buffer, sprite001Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite002Ctx, sprite002Buffer, sprite002Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite003Ctx, sprite003Buffer, sprite003Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite004Ctx, sprite004Buffer, sprite004Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite005Ctx, sprite005Buffer, sprite005Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite006Ctx, sprite006Buffer, sprite006Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite007Ctx, sprite007Buffer, sprite007Sdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
@@ -618,6 +662,15 @@ function play(delta)
 		drawAllSprites();
 
 		if(goingleft) {
+			playerAnimPos++;
+			if(playerAnimPos >= playerAnimDelay) {
+				playerAnimPos = 0;
+				playerAnimFrame++;
+				if(playerAnimFrame >= 4) {
+					playerAnimFrame = 0;
+				}
+				spriteImages[0] = 4 + playerAnimFrame;
+			}
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
