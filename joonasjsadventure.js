@@ -806,14 +806,16 @@ function play(delta)
 			}
 		}
 		if(goingup) {
-			playerAnimPos++;
-			if(playerAnimPos >= playerAnimDelay) {
-				playerAnimPos = 0;
-				playerAnimFrame++;
-				if(playerAnimFrame >= 4) {
-					playerAnimFrame = 0;
+			if(!goingleft && !goingright) {
+				playerAnimPos++;
+				if(playerAnimPos >= playerAnimDelay) {
+					playerAnimPos = 0;
+					playerAnimFrame++;
+					if(playerAnimFrame >= 4) {
+						playerAnimFrame = 0;
+					}
+					spriteImages[0] = 8 + playerAnimFrame;
 				}
-				spriteImages[0] = 8 + playerAnimFrame;
 			}
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
@@ -835,14 +837,16 @@ function play(delta)
 			}
 		}
 		if(goingdown) {
-			playerAnimPos++;
-			if(playerAnimPos >= playerAnimDelay) {
-				playerAnimPos = 0;
-				playerAnimFrame++;
-				if(playerAnimFrame >= 4) {
-					playerAnimFrame = 0;
+			if(!goingleft && !goingright) {
+				playerAnimPos++;
+				if(playerAnimPos >= playerAnimDelay) {
+					playerAnimPos = 0;
+					playerAnimFrame++;
+					if(playerAnimFrame >= 4) {
+						playerAnimFrame = 0;
+					}
+					spriteImages[0] = 12 + playerAnimFrame;
 				}
-				spriteImages[0] = 12 + playerAnimFrame;
 			}
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
