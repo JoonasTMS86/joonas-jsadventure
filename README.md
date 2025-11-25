@@ -1,2 +1,2 @@
 # joonas-jsadventure
-Joonas Adventure, a graphical adventure game in JavaScript.
+Joonas' JS Adventure, a graphical text parser adventure game in JavaScript.
