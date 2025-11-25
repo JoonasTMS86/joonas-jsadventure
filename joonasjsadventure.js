@@ -1,4 +1,3 @@
-var imgData;
 const screenWidth                = 1910;
 const screenHeight               = 909;
 const rowStride                  = screenWidth * 4;
@@ -6,6 +5,8 @@ const messageWindowMarginWidth   = 10; // Message window margin width in pixels.
 const messageWindowMarginHeight  = 10; // Message window margin height in pixels.
 const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
+const playerAnimDelay            = 8;
+var imgData;
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
@@ -30,10 +31,18 @@ var sprite000Buffer              = document.getElementById("sprite000Buffer");
 var sprite000Ctx                 = sprite000Buffer.getContext("2d");
 var sprite000Sdata               = sprite000Ctx.createImageData(85, 124);
 var sprite000Sprite              = document.getElementById("sprite000");
+var sprite001Buffer              = document.getElementById("sprite001Buffer");
+var sprite001Ctx                 = sprite001Buffer.getContext("2d");
+var sprite001Sdata               = sprite001Ctx.createImageData(85, 124);
+var sprite001Sprite              = document.getElementById("sprite001");
 var sprite002Buffer              = document.getElementById("sprite002Buffer");
 var sprite002Ctx                 = sprite002Buffer.getContext("2d");
 var sprite002Sdata               = sprite002Ctx.createImageData(85, 124);
 var sprite002Sprite              = document.getElementById("sprite002");
+var sprite003Buffer              = document.getElementById("sprite003Buffer");
+var sprite003Ctx                 = sprite003Buffer.getContext("2d");
+var sprite003Sdata               = sprite003Ctx.createImageData(85, 124);
+var sprite003Sprite              = document.getElementById("sprite003");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -46,6 +55,9 @@ var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 var spriteWidths                 = [85, 85, 85, 85, 85, 85, 85, 85];
 var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124];
+var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0];
+var playerAnimPos                = 0;
+var playerAnimFrame              = 0;
 var fontStartXIndex              = [];
 var fontStartYIndex              = [];
 var fontWidthIndex               = [];
@@ -215,7 +227,22 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 
 // Draw the given sprite on the screen.
 function drawSpriteOnScreen(spriteNumber) {
-	spriteCtx.putImageData(sprite002Sdata, 0, 0);
+	var sData;
+	switch(spriteImages[spriteNumber]) {
+		case 0:
+			sData = sprite000Sdata;
+			break;
+		case 1:
+			sData = sprite001Sdata;
+			break;
+		case 2:
+			sData = sprite002Sdata;
+			break;
+		case 3:
+			sData = sprite003Sdata;
+			break;
+	}
+	spriteCtx.putImageData(sData, 0, 0);
 	spriteSdata = spriteCtx.getImageData(0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
 	var spriterowstride = spriteWidths[spriteNumber] * 4;
 	// Mask out those pixels that are behind an object.
@@ -540,11 +567,19 @@ window.onload = function() {
 	sprite000Ctx.drawImage(sprite000Sprite, 0, 0);
 	sprite000Sdata = sprite000Ctx.getImageData(0, 0, sprite000Buffer.width, sprite000Buffer.height);
 
+	sprite001Ctx.drawImage(sprite001Sprite, 0, 0);
+	sprite001Sdata = sprite001Ctx.getImageData(0, 0, sprite001Buffer.width, sprite001Buffer.height);
+
 	sprite002Ctx.drawImage(sprite002Sprite, 0, 0);
 	sprite002Sdata = sprite002Ctx.getImageData(0, 0, sprite002Buffer.width, sprite002Buffer.height);
 
+	sprite003Ctx.drawImage(sprite003Sprite, 0, 0);
+	sprite003Sdata = sprite003Ctx.getImageData(0, 0, sprite003Buffer.width, sprite003Buffer.height);
+
 	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite001Ctx, sprite001Buffer, sprite001Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite002Ctx, sprite002Buffer, sprite002Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite003Ctx, sprite003Buffer, sprite003Sdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
@@ -598,6 +633,15 @@ function play(delta)
 			}
 		}
 		if(goingright) {
+			playerAnimPos++;
+			if(playerAnimPos >= playerAnimDelay) {
+				playerAnimPos = 0;
+				playerAnimFrame++;
+				if(playerAnimFrame >= 4) {
+					playerAnimFrame = 0;
+				}
+				spriteImages[0] = playerAnimFrame;
+			}
 			var canMove = true;
 			var playerFeetX = spriteXCoords[0] + spriteWidths[0];
 			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
