@@ -884,7 +884,7 @@ function play(delta)
 			messageWindowCentered("Use this key for debugging purposes, for example.");
 		}
 
-		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 112 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 17 && typedKeyCode != 18 && typedKeyCode != 225 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
+		if(canTypeKey && keyDown && typedKey.length == 1) {
 			waitingForEnterPress = true;
 			secondScreenCtx.putImageData(imgData, 0, 0);
 			gameState = STATE_INPUTWINDOW;
@@ -943,7 +943,7 @@ function play(delta)
 				ctx.putImageData(imgData, 0, 0);
 				textInputText = textInputText.slice(0, -1);
 			}
-			else {
+			if(typedKey.length == 1) {
 				textInputText += typedKey;
 			}
 			putTextOnScreen(textInputX, textInputY, textInputText);
