@@ -918,7 +918,7 @@ function play(delta)
 		enterTyped = false;
 	}
 	else {
-		if(canTypeKey && keyDown && typedKeyCode != 0 && typedKeyCode != 13 && typedKeyCode != 16 && typedKeyCode != 17 && typedKeyCode != 18 && typedKeyCode != 225 && typedKeyCode != 37 && typedKeyCode != 38 && typedKeyCode != 39 && typedKeyCode != 40) {
+		if(canTypeKey && keyDown && typedKeyCode != 13) {
 			eraseCursor(textInputX, textInputY, textInputText);
 			if(typedKeyCode == 8) {
 				imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
