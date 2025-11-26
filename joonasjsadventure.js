@@ -6,7 +6,7 @@ const messageWindowMarginHeight  = 10; // Message window margin height in pixels
 const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
 const playerAnimDelay            = 8;
-var imgData, canTypeKey, textInputText, textInputX, textInputY;
+var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, textInputY;
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
@@ -536,8 +536,7 @@ function putTextOnScreen(x, y, message) {
 
 function messageWindow(message, isCentered, x, y) {
 	var widestWidth, highestHeightForCurrentRow, highestHeight, width, height, messageWindowWidth, messageWindowHeight;
-	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	secondScreenCtx.putImageData(imgData, 0, 0);
+	secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
 	drawAllSprites();
 	waitingForEnterPress = true;
 	widestWidth = 0;
@@ -741,6 +740,7 @@ function play(delta)
     if(imgData != null) ctx.putImageData(imgData, 0, 0);
 
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	if(gameState != STATE_INPUTWINDOW) imgDataWithoutSprites = imgData;
 
 	if(startedGame) {
 		startedGame = false;
@@ -886,7 +886,7 @@ function play(delta)
 
 		if(canTypeKey && keyDown && typedKey.length == 1) {
 			waitingForEnterPress = true;
-			secondScreenCtx.putImageData(imgData, 0, 0);
+			secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
 			gameState = STATE_INPUTWINDOW;
 			var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
 			x = 15;
@@ -918,7 +918,7 @@ function play(delta)
 		enterTyped = false;
 	}
 	else {
-		if(canTypeKey && keyDown && typedKeyCode != 13) {
+		if(gameState == STATE_INPUTWINDOW && canTypeKey && keyDown && typedKeyCode != 13) {
 			eraseCursor(textInputX, textInputY, textInputText);
 			if(typedKeyCode == 8) {
 				imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
