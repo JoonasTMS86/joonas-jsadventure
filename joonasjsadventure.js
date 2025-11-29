@@ -124,6 +124,16 @@ var typedKeyCode                 = 0;
 var typedKey                     = "";
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
+var ignoredWords                 = [
+	"the", "to", "in", "on", "at", "up", "into", "through", "thru"
+];
+var synonyms                     = [
+	"get", "take", "pick", "grab", 0,
+	"look", "see", "watch", 0,
+	"talk", "speak", 0,
+	"people", "guys", "crowd", 0,
+	"bush", 0
+];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -641,6 +651,96 @@ function checkBlockEW(objectX, objectY) {
 	return true;
 }
 
+// Parse the user input.
+function parse(userInput) {
+	var enteredWords = [];
+	var enteredWordsPos = 0;
+	var pos = 0;
+	var currentWord = "";
+	var inAWord = false;
+	var checking = true;
+	var knownWord;
+	while(checking) {
+		if(pos >= userInput.length || userInput.charCodeAt(pos) == 32) {
+			if(inAWord) {
+				// Check whether the given word matches any of the small words which have no effect on the way the given sentence is parsed.
+				var knownArticle = false;
+				var currentWordLowercase = currentWord.toLowerCase();
+				knownWord = false;
+				for(var checkPos = 0; checkPos < ignoredWords.length; checkPos++) {
+					if(currentWordLowercase == ignoredWords[checkPos]) {
+						knownArticle = true;
+						checkPos = ignoredWords.length;
+						inAWord = false;
+						currentWord = "";
+					}
+				}
+
+				if(!knownArticle) {
+					// Check whether the given word matches any of the synonyms.
+					var thisWord = 0;
+					for(var checkPos = 0; checkPos < synonyms.length; checkPos++) {
+						if(synonyms[checkPos] == 0) {
+							thisWord = checkPos + 1;
+						}
+						else if(currentWordLowercase == synonyms[checkPos]) {
+							knownWord = true;
+							currentWord = synonyms[thisWord];
+							checkPos = synonyms.length;
+						}
+					}
+
+					if(!knownWord) {
+						checking = false;
+					}
+					else {
+						// If the word matches any of the known words, we add it to our entered words array.
+						enteredWords[enteredWordsPos] = currentWord;
+						enteredWordsPos++;
+						inAWord = false;
+						currentWord = "";
+					}
+				}
+			}
+		}
+		else {
+			inAWord = true;
+			currentWord += userInput.charAt(pos);
+		}
+		pos++;
+		if(pos >= userInput.length && !inAWord) {
+			checking = false;
+		}
+	}
+	if(knownWord) {
+		if(enteredWords[0] == "look" && enteredWords.length == 1) {
+			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself and a bush.");
+		}
+		else if(enteredWords[0] == "look" && enteredWords[1] == "people") {
+			messageWindowCentered("You see seven clones of yourself. You wonder who has created them.");
+		}
+		else if(enteredWords[0] == "look" && enteredWords[1] == "bush") {
+			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.");
+		}
+		else if(enteredWords[0] == "talk" && enteredWords[1] == "people") {
+			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"");
+		}
+		else if(enteredWords[0] == "get" && enteredWords[1] == "people") {
+			messageWindowCentered("You are not a bodybuilder. Therefore, you don't have the required\nstrength to lift a grown-up person up.");
+		}
+		else if(enteredWords[0] == "get" && enteredWords[1] == "bush") {
+			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.");
+		}
+		else {
+			messageWindowCentered("I understand your words, but not what you're trying to say.");
+		}
+	}
+	else if(currentWord != "") {
+		// This text is shown whenever the parser doesn't recognize one or several words of the given input.
+		messageWindowCentered("I don't know the word \"" + currentWord + "\".");
+	}
+}
+
 window.onload = function() {
 	priorityBufferCtx.drawImage(screen000priSprite, 0, 0);
 	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
@@ -963,7 +1063,7 @@ function play(delta)
 			ctx.putImageData(imgData, 0, 0);
 			if(gameState == STATE_INPUTWINDOW) {
 				gameState = STATE_GAME;
-				messageWindowCentered("TO DO: The code that actually parses\nthe user's input.");
+				parse(textInputText);
 			}
 		}
 	}
