@@ -125,13 +125,13 @@ var typedKey                     = "";
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
 var ignoredWords                 = [
-	"the", "to", "in", "on", "at", "up", "into", "through", "thru"
+	"a", "an", "the", "to", "in", "on", "at", "up", "into", "through", "thru"
 ];
 var synonyms                     = [
 	"get", "take", "pick", "grab", 0,
 	"look", "see", "watch", 0,
 	"talk", "speak", 0,
-	"people", "guys", "crowd", 0,
+	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
 	"bush", 0
 ];
 
@@ -651,6 +651,19 @@ function checkBlockEW(objectX, objectY) {
 	return true;
 }
 
+// If the given input string matches the words we compare it to, then we return true in this function, otherwise false.
+function doesInputMatchThis(givenInput, arrayOfWordsToCheck) {
+	if(givenInput.length != arrayOfWordsToCheck.length) {
+		return false;
+	}
+	for(var pos = 0; pos < arrayOfWordsToCheck.length; pos++) {
+		if(givenInput[pos] != arrayOfWordsToCheck[pos]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 // Parse the user input.
 function parse(userInput) {
 	var enteredWords = [];
@@ -713,22 +726,22 @@ function parse(userInput) {
 		}
 	}
 	if(knownWord) {
-		if(enteredWords[0] == "look" && enteredWords.length == 1) {
+		if(doesInputMatchThis(enteredWords, ["look"])) {
 			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself and a bush.");
 		}
-		else if(enteredWords[0] == "look" && enteredWords[1] == "people") {
+		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
 			messageWindowCentered("You see seven clones of yourself. You wonder who has created them.");
 		}
-		else if(enteredWords[0] == "look" && enteredWords[1] == "bush") {
+		else if(doesInputMatchThis(enteredWords, ["look", "bush"])) {
 			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.");
 		}
-		else if(enteredWords[0] == "talk" && enteredWords[1] == "people") {
+		else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
 			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"");
 		}
-		else if(enteredWords[0] == "get" && enteredWords[1] == "people") {
+		else if(doesInputMatchThis(enteredWords, ["get", "people"])) {
 			messageWindowCentered("You are not a bodybuilder. Therefore, you don't have the required\nstrength to lift a grown-up person up.");
 		}
-		else if(enteredWords[0] == "get" && enteredWords[1] == "bush") {
+		else if(doesInputMatchThis(enteredWords, ["get", "bush"])) {
 			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.");
 		}
 		else {
