@@ -100,7 +100,10 @@ var mainFontSdata                = mainFontCtx.createImageData(672, 168);
 var mainFontSprite               = document.getElementById("mainFont");
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+// The Y coordinates of where the sprites should be displayed on the screen.
 var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+// These sprite Y coordinates determine the "mask location" of each sprite, which can differ from the sprite display Y.
+var spriteMaskYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 // Width and heights of the sprite images.
 var spriteWidths                 = [85, 85, 85, 85, 85, 85, 85, 85];
 var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124];
@@ -345,17 +348,17 @@ function drawSpriteOnScreen(spriteNumber) {
 	var spriterowstride = spriteWidths[spriteNumber] * 4;
 	// Mask out those pixels that are behind an object.
 	var depth;
-	var feetY = spriteYCoords[spriteNumber] + spriteHeights[spriteNumber] - 1;
+	var feetY = spriteMaskYCoords[spriteNumber] + spriteHeights[spriteNumber] - 1;
 	for(var y = 0; y < spriteHeights[spriteNumber]; y++) {
 		for(var x = 0; x < spriteWidths[spriteNumber]; x++) {
-			depth = (depthBufferSdata.data[((y + spriteYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 1] * 256) + depthBufferSdata.data[((y + spriteYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 2];
+			depth = (depthBufferSdata.data[((y + spriteMaskYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 1] * 256) + depthBufferSdata.data[((y + spriteMaskYCoords[spriteNumber]) * rowStride) + ((x + spriteXCoords[spriteNumber]) * 4) + 2];
 			if(feetY < depth) {
 				spriteSdata.data[(y * spriterowstride) + (x * 4) + 3] = 0;
 			}
 		}
 	}
 	spriteCtx.putImageData(spriteSdata, 0, 0);
-	ctx.drawImage(spriteBuffer, 0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber], spriteXCoords[spriteNumber], spriteYCoords[spriteNumber], spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
+	ctx.drawImage(spriteBuffer, 0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber], spriteXCoords[spriteNumber], spriteMaskYCoords[spriteNumber], spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
 }
 
 function drawAllSprites() {
@@ -363,7 +366,7 @@ function drawAllSprites() {
 	// Draw the sprite with the lowest Y value first and the one with the highest Y value last.
 	for(var placePos = 0; placePos < 8; placePos++) {
 		for(var checkPos = placePos + 1; checkPos < 8; checkPos++) {
-			if(spriteYCoords[spriteDrawOrder[checkPos]] < spriteYCoords[spriteDrawOrder[placePos]]) {
+			if(spriteMaskYCoords[spriteDrawOrder[checkPos]] < spriteMaskYCoords[spriteDrawOrder[placePos]]) {
 				var temp = spriteDrawOrder[placePos];
 				spriteDrawOrder[placePos] = spriteDrawOrder[checkPos];
 				spriteDrawOrder[checkPos] = temp;
@@ -947,6 +950,7 @@ function play(delta)
 			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] - 1;
+				spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
 			}
 		}
 		if(goingdown) {
@@ -978,6 +982,7 @@ function play(delta)
 			}
 			if(canMove) {
 				spriteYCoords[0] = spriteYCoords[0] + 1;
+				spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
 			}
 		}
 
