@@ -152,7 +152,7 @@ var typedKey                     = "";
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
 var ignoredWords                 = [
-	"a", "an", "the", "to", "in", "on", "at", "up", "into", "through", "thru", "climbing"
+	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing"
 ];
 var synonyms                     = [
 	"get", "take", "pick", "grab", 0,
@@ -718,19 +718,19 @@ function eraseCursor(x, y, text) {
 function checkBlockNS(objectX, objectY, objectWidth) {
 	var targetX = objectX + objectWidth;
 	while(objectX < targetX) {
-		if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] == 0) {
-			return false;
+		if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] != 0) {
+			return priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)];
 		}
 		objectX++;
 	}
-	return true;
+	return 0;
 }
 
 function checkBlockEW(objectX, objectY) {
 	if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] == 0) {
-		return false;
+		return priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)];
 	}
-	return true;
+	return 0;
 }
 
 // If the given input string matches the words we compare it to, then we return true in this function, otherwise false.
@@ -1024,10 +1024,11 @@ function play(delta)
 						canMove = false;
 					}
 				}
+				var blockType;
 				if(canMove) {
-					canMove = checkBlockEW(playerFeetX, playerFeetY);
+					blockType = checkBlockEW(playerFeetX, playerFeetY);
 				}
-				if(canMove) {
+				if(blockType == 0) {
 					spriteXCoords[0] = spriteXCoords[0] - 1;
 				}
 			}
@@ -1052,10 +1053,11 @@ function play(delta)
 						canMove = false;
 					}
 				}
+				var blockType;
 				if(canMove) {
-					canMove = checkBlockEW(playerFeetX, playerFeetY);
+					blockType = checkBlockEW(playerFeetX, playerFeetY);
 				}
-				if(canMove) {
+				if(blockType == 0) {
 					spriteXCoords[0] = spriteXCoords[0] + 1;
 				}
 			}
@@ -1083,10 +1085,11 @@ function play(delta)
 						canMove = false;
 					}
 				}
+				var blockType;
 				if(canMove) {
-					canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+					blockType = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
 				}
-				if(canMove) {
+				if(blockType == 0) {
 					spriteYCoords[0] = spriteYCoords[0] - 1;
 					spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
 				}
@@ -1115,10 +1118,11 @@ function play(delta)
 						canMove = false;
 					}
 				}
+				var blockType;
 				if(canMove) {
-					canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+					blockType = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
 				}
-				if(canMove) {
+				if(blockType == 0) {
 					spriteYCoords[0] = spriteYCoords[0] + 1;
 					spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
 				}
