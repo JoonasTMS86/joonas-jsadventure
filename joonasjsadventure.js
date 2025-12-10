@@ -6,6 +6,7 @@ const messageWindowMarginHeight  = 10; // Message window margin height in pixels
 const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
 const playerAnimDelay            = 8;
+const npcAnimDelay               = 8;
 var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, textInputY;
 var goingup                      = false;
 var goingdown                    = false;
@@ -141,6 +142,8 @@ var spriteCheckBlockOffsetsW     = [28, 28, 28, 28, 28, 28, 28, 28];
 var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0];
 var playerAnimPos                = 0;
 var playerAnimFrame              = 0;
+var npcAnimPos                   = 0;
+var npcAnimFrame                 = 0;
 var fontStartXIndex              = [];
 var fontStartYIndex              = [];
 var fontWidthIndex               = [];
@@ -163,8 +166,9 @@ var synonyms                     = [
 	"bush", 0,
 	"fence", "obstacle", "wall", 0
 ];
-gameEngineFlags                  = [];
-gameEngineVariables              = [];
+var gameEngineFlags              = [];
+var gameEngineVariables          = [];
+var npcDirections                = [0, true, true, true, true, true, true, true];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -809,10 +813,10 @@ function parse(userInput) {
 	}
 	if(knownWord) {
 		if(doesInputMatchThis(enteredWords, ["look"])) {
-			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself, a climbing wall and a bush.");
+			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.");
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
-			messageWindowCentered("You see seven clones of yourself. You wonder who has created them.");
+			messageWindowCentered("You see seven clones of yourself.\nThey really seem to enjoy walking back and forth.\nYou wonder who has created these guys.");
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "bush"])) {
 			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.");
@@ -1258,6 +1262,108 @@ function play(delta)
 						clearFlag(1);
 						spriteImages[0] = 8;
 					}
+				}
+			}
+		}
+
+		npcAnimPos++;
+		if(npcAnimPos >= npcAnimDelay) {
+			npcAnimPos = 0;
+			npcAnimFrame++;
+			if(npcAnimFrame >= 4) {
+				npcAnimFrame = 0;
+			}
+			if(npcDirections[1]) {
+				spriteImages[1] = npcAnimFrame;
+			}
+			else {
+				spriteImages[1] = 4 + npcAnimFrame;
+			}
+			if(npcDirections[2]) {
+				spriteImages[2] = npcAnimFrame;
+			}
+			else {
+				spriteImages[2] = 4 + npcAnimFrame;
+			}
+			if(npcDirections[3]) {
+				spriteImages[3] = npcAnimFrame;
+			}
+			else {
+				spriteImages[3] = 4 + npcAnimFrame;
+			}
+			if(npcDirections[4]) {
+				spriteImages[4] = npcAnimFrame;
+			}
+			else {
+				spriteImages[4] = 4 + npcAnimFrame;
+			}
+			if(npcDirections[5]) {
+				spriteImages[5] = npcAnimFrame;
+			}
+			else {
+				spriteImages[5] = 4 + npcAnimFrame;
+			}
+			if(npcDirections[6]) {
+				spriteImages[6] = npcAnimFrame;
+			}
+			else {
+				spriteImages[6] = 4 + npcAnimFrame;
+			}
+			if(npcDirections[7]) {
+				spriteImages[7] = npcAnimFrame;
+			}
+			else {
+				spriteImages[7] = 4 + npcAnimFrame;
+			}
+		}
+
+		for(var index = 1; index < 8; index++) {
+			if(npcDirections[index]) {
+				var canMove = true;
+				var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsE[index];
+				var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
+				for(var pos = 0; pos < 8; pos++) {
+					if(pos == index) pos++;
+					if(
+						npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
+						npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+					) {
+						canMove = false;
+					}
+				}
+				var blockType;
+				if(canMove) {
+					blockType = checkBlockEW(npcFeetX, npcFeetY);
+				}
+				if(blockType == 0) {
+					spriteXCoords[index] = spriteXCoords[index] + 1;
+				}
+				if(spriteXCoords[index] >= 1829) {
+					npcDirections[index] = false;
+				}
+			}
+			else {
+				var canMove = true;
+				var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsW[index];
+				var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
+				for(var pos = 1; pos < 8; pos++) {
+					if(pos == index) pos++;
+					if(
+						npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
+						npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+					) {
+						canMove = false;
+					}
+				}
+				var blockType;
+				if(canMove) {
+					blockType = checkBlockEW(npcFeetX, npcFeetY);
+				}
+				if(blockType == 0) {
+					spriteXCoords[index] = spriteXCoords[index] - 1;
+				}
+				if(spriteXCoords[index] <= 0) {
+					npcDirections[index] = true;
 				}
 			}
 		}
