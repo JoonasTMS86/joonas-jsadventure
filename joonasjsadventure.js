@@ -91,6 +91,30 @@ var sprite015Buffer              = document.getElementById("sprite015Buffer");
 var sprite015Ctx                 = sprite015Buffer.getContext("2d");
 var sprite015Sdata               = sprite015Ctx.createImageData(85, 124);
 var sprite015Sprite              = document.getElementById("sprite015");
+var sprite016Buffer              = document.getElementById("sprite016Buffer");
+var sprite016Ctx                 = sprite016Buffer.getContext("2d");
+var sprite016Sdata               = sprite016Ctx.createImageData(85, 124);
+var sprite016Sprite              = document.getElementById("sprite016");
+var sprite017Buffer              = document.getElementById("sprite017Buffer");
+var sprite017Ctx                 = sprite017Buffer.getContext("2d");
+var sprite017Sdata               = sprite017Ctx.createImageData(85, 124);
+var sprite017Sprite              = document.getElementById("sprite017");
+var sprite018Buffer              = document.getElementById("sprite018Buffer");
+var sprite018Ctx                 = sprite018Buffer.getContext("2d");
+var sprite018Sdata               = sprite018Ctx.createImageData(85, 124);
+var sprite018Sprite              = document.getElementById("sprite018");
+var sprite019Buffer              = document.getElementById("sprite019Buffer");
+var sprite019Ctx                 = sprite019Buffer.getContext("2d");
+var sprite019Sdata               = sprite019Ctx.createImageData(85, 124);
+var sprite019Sprite              = document.getElementById("sprite019");
+var sprite020Buffer              = document.getElementById("sprite020Buffer");
+var sprite020Ctx                 = sprite020Buffer.getContext("2d");
+var sprite020Sdata               = sprite020Ctx.createImageData(85, 124);
+var sprite020Sprite              = document.getElementById("sprite020");
+var sprite021Buffer              = document.getElementById("sprite021Buffer");
+var sprite021Ctx                 = sprite021Buffer.getContext("2d");
+var sprite021Sdata               = sprite021Ctx.createImageData(85, 124);
+var sprite021Sprite              = document.getElementById("sprite021");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -128,15 +152,19 @@ var typedKey                     = "";
 var keyDown                      = false;
 var gameState                    = STATE_GAME;
 var ignoredWords                 = [
-	"a", "an", "the", "to", "in", "on", "at", "up", "into", "through", "thru"
+	"a", "an", "the", "to", "in", "on", "at", "up", "into", "through", "thru", "climbing"
 ];
 var synonyms                     = [
 	"get", "take", "pick", "grab", 0,
 	"look", "see", "watch", 0,
 	"talk", "speak", 0,
+	"climb", 0,
 	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
-	"bush", 0
+	"bush", 0,
+	"fence", "obstacle", "wall", 0
 ];
+gameEngineFlags                  = [];
+gameEngineVariables              = [];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -290,6 +318,39 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 	givenbufferctx.putImageData(givenpic, 0, 0);
 }
 
+// Get the bit value (for the bitwise operation) and byte offset.
+function getBitValueAndByteOffset(offset) {
+	var pos = Math.floor(offset / 8);
+	var bitOffset = offset - (pos * 8);
+	var bit = 128 >> bitOffset;
+	return [pos, bit];
+}
+
+// Get the state of the given game engine flag.
+function getFlag(flagNumber) {
+	var bitValues = [];
+	bitValues = getBitValueAndByteOffset(flagNumber);
+	if((gameEngineFlags[bitValues[0]] & bitValues[1]) == 0) {
+		return false;
+	}
+	return true;
+}
+
+// Set the given game engine flag.
+function setFlag(flagNumber) {
+	var bitValues = [];
+	bitValues = getBitValueAndByteOffset(flagNumber);
+	gameEngineFlags[bitValues[0]] = gameEngineFlags[bitValues[0]] | bitValues[1];
+}
+
+// Clear the given game engine flag.
+function clearFlag(flagNumber) {
+	var bitValues = [];
+	bitValues = getBitValueAndByteOffset(flagNumber);
+	var bit = bitValues[1] ^ 255;
+	gameEngineFlags[bitValues[0]] = gameEngineFlags[bitValues[0]] & bit;
+}
+
 // Draw the given sprite on the screen.
 function drawSpriteOnScreen(spriteNumber) {
 	var sData;
@@ -342,6 +403,24 @@ function drawSpriteOnScreen(spriteNumber) {
 		case 15:
 			sData = sprite015Sdata;
 			break;
+		case 16:
+			sData = sprite016Sdata;
+			break;
+		case 17:
+			sData = sprite017Sdata;
+			break;
+		case 18:
+			sData = sprite018Sdata;
+			break;
+		case 19:
+			sData = sprite019Sdata;
+			break;
+		case 20:
+			sData = sprite020Sdata;
+			break;
+		case 21:
+			sData = sprite021Sdata;
+			break;
 	}
 	spriteCtx.putImageData(sData, 0, 0);
 	spriteSdata = spriteCtx.getImageData(0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
@@ -358,7 +437,7 @@ function drawSpriteOnScreen(spriteNumber) {
 		}
 	}
 	spriteCtx.putImageData(spriteSdata, 0, 0);
-	ctx.drawImage(spriteBuffer, 0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber], spriteXCoords[spriteNumber], spriteMaskYCoords[spriteNumber], spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
+	ctx.drawImage(spriteBuffer, 0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber], spriteXCoords[spriteNumber], spriteYCoords[spriteNumber], spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
 }
 
 function drawAllSprites() {
@@ -730,13 +809,16 @@ function parse(userInput) {
 	}
 	if(knownWord) {
 		if(doesInputMatchThis(enteredWords, ["look"])) {
-			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself and a bush.");
+			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself, a climbing wall and a bush.");
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
 			messageWindowCentered("You see seven clones of yourself. You wonder who has created them.");
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "bush"])) {
 			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.");
+		}
+		else if(doesInputMatchThis(enteredWords, ["look", "fence"])) {
+			messageWindowCentered("The climbing wall makes you wonder whether this place\nwas once planned to be somekind of an obstacle course.");
 		}
 		else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
 			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"");
@@ -746,6 +828,31 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["get", "bush"])) {
 			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.");
+		}
+		else if(doesInputMatchThis(enteredWords, ["climb", "fence"])) {
+			if(spriteXCoords[0] >= 546 && spriteXCoords[0] <= 1117 && 
+				(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) ||
+				(spriteYCoords[0] >= 422 && spriteYCoords[0] <= 424)
+			) {
+				// Disable player control while the protagonist is climbing the fence.
+				if(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) {
+					setFlag(0);   // Disable player control
+					setFlag(1);   // Player is climbing the fence
+					clearFlag(2); // Player is not on the opposite side of the fence
+					clearFlag(3); // Player is climbing the fence from S
+				}
+				else {
+					setFlag(0);   // Disable player control
+					setFlag(1);   // Player is climbing the fence
+					clearFlag(2); // Player is not on the opposite side of the fence
+					setFlag(3);   // Player is climbing the fence from N
+				}
+				playerAnimPos = 0;
+				gameEngineVariables[0] = 0;
+			}
+			else {
+				messageWindowCentered("You need to get closer to the climbing wall to climb it.");
+			}
 		}
 		else {
 			messageWindowCentered("I understand your words, but not what you're trying to say.");
@@ -758,6 +865,11 @@ function parse(userInput) {
 }
 
 window.onload = function() {
+	// Initialize all the 32,768 (8 bits * 4096 = 32,768 flags) game engine flags to "clear".
+	for(var pos = 0; pos < 4096; pos++) {
+		gameEngineFlags[pos] = 0;
+		gameEngineVariables[pos] = 0;
+	}
 	priorityBufferCtx.drawImage(screen000priSprite, 0, 0);
 	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
 	mainFontCtx.drawImage(mainFontSprite, 0, 0);
@@ -815,6 +927,24 @@ window.onload = function() {
 	sprite015Ctx.drawImage(sprite015Sprite, 0, 0);
 	sprite015Sdata = sprite015Ctx.getImageData(0, 0, sprite015Buffer.width, sprite015Buffer.height);
 
+	sprite016Ctx.drawImage(sprite016Sprite, 0, 0);
+	sprite016Sdata = sprite016Ctx.getImageData(0, 0, sprite016Buffer.width, sprite016Buffer.height);
+
+	sprite017Ctx.drawImage(sprite017Sprite, 0, 0);
+	sprite017Sdata = sprite017Ctx.getImageData(0, 0, sprite017Buffer.width, sprite017Buffer.height);
+
+	sprite018Ctx.drawImage(sprite018Sprite, 0, 0);
+	sprite018Sdata = sprite018Ctx.getImageData(0, 0, sprite018Buffer.width, sprite018Buffer.height);
+
+	sprite019Ctx.drawImage(sprite019Sprite, 0, 0);
+	sprite019Sdata = sprite019Ctx.getImageData(0, 0, sprite019Buffer.width, sprite019Buffer.height);
+
+	sprite020Ctx.drawImage(sprite020Sprite, 0, 0);
+	sprite020Sdata = sprite020Ctx.getImageData(0, 0, sprite020Buffer.width, sprite020Buffer.height);
+
+	sprite021Ctx.drawImage(sprite021Sprite, 0, 0);
+	sprite021Sdata = sprite021Ctx.getImageData(0, 0, sprite021Buffer.width, sprite021Buffer.height);
+
 	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite001Ctx, sprite001Buffer, sprite001Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite002Ctx, sprite002Buffer, sprite002Sdata, 52, 90, 72);
@@ -831,6 +961,12 @@ window.onload = function() {
 	doSpriteTransparency(sprite013Ctx, sprite013Buffer, sprite013Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite014Ctx, sprite014Buffer, sprite014Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite015Ctx, sprite015Buffer, sprite015Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite016Ctx, sprite016Buffer, sprite016Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite017Ctx, sprite017Buffer, sprite017Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite018Ctx, sprite018Buffer, sprite018Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite019Ctx, sprite019Buffer, sprite019Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite020Ctx, sprite020Buffer, sprite020Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite021Ctx, sprite021Buffer, sprite021Sdata, 52, 90, 72);
 	setIndicesAndTransparenciesForFont();
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
@@ -865,64 +1001,9 @@ function play(delta)
 	else if(!waitingForEnterPress) {
 		drawAllSprites();
 
-		if(goingleft) {
-			playerAnimPos++;
-			if(playerAnimPos >= playerAnimDelay) {
-				playerAnimPos = 0;
-				playerAnimFrame++;
-				if(playerAnimFrame >= 4) {
-					playerAnimFrame = 0;
-				}
-				spriteImages[0] = 4 + playerAnimFrame;
-			}
-			var canMove = true;
-			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
-			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-			for(var pos = 1; pos < 8; pos++) {
-				if(
-					playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
-					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-				) {
-					canMove = false;
-				}
-			}
-			if(canMove) {
-				canMove = checkBlockEW(playerFeetX, playerFeetY);
-			}
-			if(canMove) {
-				spriteXCoords[0] = spriteXCoords[0] - 1;
-			}
-		}
-		if(goingright) {
-			playerAnimPos++;
-			if(playerAnimPos >= playerAnimDelay) {
-				playerAnimPos = 0;
-				playerAnimFrame++;
-				if(playerAnimFrame >= 4) {
-					playerAnimFrame = 0;
-				}
-				spriteImages[0] = playerAnimFrame;
-			}
-			var canMove = true;
-			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
-			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-			for(var pos = 1; pos < 8; pos++) {
-				if(
-					playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
-					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-				) {
-					canMove = false;
-				}
-			}
-			if(canMove) {
-				canMove = checkBlockEW(playerFeetX, playerFeetY);
-			}
-			if(canMove) {
-				spriteXCoords[0] = spriteXCoords[0] + 1;
-			}
-		}
-		if(goingup) {
-			if(!goingleft && !goingright) {
+		// Reading game engine flag 0 this way instead of with getFlag() results in a slightly better performance.
+		if(gameEngineFlags[0] <= 127) {
+			if(goingleft) {
 				playerAnimPos++;
 				if(playerAnimPos >= playerAnimDelay) {
 					playerAnimPos = 0;
@@ -930,31 +1011,27 @@ function play(delta)
 					if(playerAnimFrame >= 4) {
 						playerAnimFrame = 0;
 					}
-					spriteImages[0] = 8 + playerAnimFrame;
+					spriteImages[0] = 4 + playerAnimFrame;
+				}
+				var canMove = true;
+				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
+				var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
+				for(var pos = 1; pos < 8; pos++) {
+					if(
+						playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
+						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+					) {
+						canMove = false;
+					}
+				}
+				if(canMove) {
+					canMove = checkBlockEW(playerFeetX, playerFeetY);
+				}
+				if(canMove) {
+					spriteXCoords[0] = spriteXCoords[0] - 1;
 				}
 			}
-			var canMove = true;
-			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
-			var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
-			for(var pos = 1; pos < 8; pos++) {
-				if(
-					(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
-					playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
-					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-				) {
-					canMove = false;
-				}
-			}
-			if(canMove) {
-				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
-			}
-			if(canMove) {
-				spriteYCoords[0] = spriteYCoords[0] - 1;
-				spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
-			}
-		}
-		if(goingdown) {
-			if(!goingleft && !goingright) {
+			if(goingright) {
 				playerAnimPos++;
 				if(playerAnimPos >= playerAnimDelay) {
 					playerAnimPos = 0;
@@ -962,78 +1039,224 @@ function play(delta)
 					if(playerAnimFrame >= 4) {
 						playerAnimFrame = 0;
 					}
-					spriteImages[0] = 12 + playerAnimFrame;
+					spriteImages[0] = playerAnimFrame;
+				}
+				var canMove = true;
+				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
+				var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
+				for(var pos = 1; pos < 8; pos++) {
+					if(
+						playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
+						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+					) {
+						canMove = false;
+					}
+				}
+				if(canMove) {
+					canMove = checkBlockEW(playerFeetX, playerFeetY);
+				}
+				if(canMove) {
+					spriteXCoords[0] = spriteXCoords[0] + 1;
 				}
 			}
-			var canMove = true;
-			var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
-			var playerFeetY = spriteYCoords[0] + spriteHeights[0];
-			for(var pos = 1; pos < 8; pos++) {
-				if(
-					(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
-					playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
-					playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-				) {
-					canMove = false;
+			if(goingup) {
+				if(!goingleft && !goingright) {
+					playerAnimPos++;
+					if(playerAnimPos >= playerAnimDelay) {
+						playerAnimPos = 0;
+						playerAnimFrame++;
+						if(playerAnimFrame >= 4) {
+							playerAnimFrame = 0;
+						}
+						spriteImages[0] = 8 + playerAnimFrame;
+					}
+				}
+				var canMove = true;
+				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
+				var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
+				for(var pos = 1; pos < 8; pos++) {
+					if(
+						(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+						playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
+						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+					) {
+						canMove = false;
+					}
+				}
+				if(canMove) {
+					canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+				}
+				if(canMove) {
+					spriteYCoords[0] = spriteYCoords[0] - 1;
+					spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
 				}
 			}
-			if(canMove) {
-				canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+			if(goingdown) {
+				if(!goingleft && !goingright) {
+					playerAnimPos++;
+					if(playerAnimPos >= playerAnimDelay) {
+						playerAnimPos = 0;
+						playerAnimFrame++;
+						if(playerAnimFrame >= 4) {
+							playerAnimFrame = 0;
+						}
+						spriteImages[0] = 12 + playerAnimFrame;
+					}
+				}
+				var canMove = true;
+				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
+				var playerFeetY = spriteYCoords[0] + spriteHeights[0];
+				for(var pos = 1; pos < 8; pos++) {
+					if(
+						(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+						playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
+						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+					) {
+						canMove = false;
+					}
+				}
+				if(canMove) {
+					canMove = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+				}
+				if(canMove) {
+					spriteYCoords[0] = spriteYCoords[0] + 1;
+					spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
+				}
 			}
-			if(canMove) {
-				spriteYCoords[0] = spriteYCoords[0] + 1;
-				spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
+
+			// Key codes:
+			// F1              = 112
+			// Backspace       = 8
+			// Shift           = 16
+			// Control         = 17
+			// Alt             = 18
+			// AltGr           = 225
+			// Up Arrow Key    = 38
+			// Down Arrow Key  = 40
+			// Left Arrow Key  = 37
+			// Right Arrow Key = 39
+
+			if(!keyDown && typedKeyCode == 112) {
+				messageWindowCentered("playerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0]);
+			}
+
+			if(canTypeKey && keyDown && typedKey.length == 1) {
+				waitingForEnterPress = true;
+				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
+				gameState = STATE_INPUTWINDOW;
+				var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+				x = 15;
+				y = 822;
+				winWidth = screenWidth - (x * 2);
+				winHeight = 75;
+				targetX = x + winWidth;
+				targetY = y + winHeight;
+				borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+				borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+				borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+				borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+				drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
+				x += messageWindowMarginWidth;
+				y += messageWindowMarginHeight;
+				textInputText = typedKey;
+				textInputX = x + 5;
+				textInputY = y + 27;
+				putTextOnScreen(x, y, "Enter command:");
+				drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25);
+				putTextOnScreen(textInputX, textInputY, textInputText);
+				drawCursor(textInputX, textInputY, textInputText);
+			}
+			canTypeKey = false;
+			keyDown = false;
+			if(!keyDown) {
+				canTypeKey = true;
+			}
+			enterTyped = false;
+		}
+		if(getFlag(1)) {
+			if(!getFlag(3)) {
+				if(!getFlag(2)) {
+					if(spriteYCoords[0] > 225) {
+						playerAnimPos++;
+						if(playerAnimPos >= playerAnimDelay) {
+							playerAnimPos = 0;
+							gameEngineVariables[0] = gameEngineVariables[0] + 1;
+							if(gameEngineVariables[0] >= 3) {
+								gameEngineVariables[0] = 0;
+							}
+							spriteImages[0] = 16 + gameEngineVariables[0];
+						}
+						spriteYCoords[0] = spriteYCoords[0] - 1;
+					}
+					else {
+						spriteMaskYCoords[0] = spriteYCoords[0];
+						setFlag(2);
+						playerAnimPos = 0;
+					}
+				}
+				else {
+					if(spriteYCoords[0] < 424) {
+						playerAnimPos++;
+						if(playerAnimPos >= playerAnimDelay) {
+							playerAnimPos = 0;
+							gameEngineVariables[0] = gameEngineVariables[0] + 1;
+							if(gameEngineVariables[0] >= 3) {
+								gameEngineVariables[0] = 0;
+							}
+							spriteImages[0] = 19 + gameEngineVariables[0];
+						}
+						spriteYCoords[0] = spriteYCoords[0] + 1;
+						spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
+					}
+					else {
+						clearFlag(0);
+						clearFlag(1);
+						spriteImages[0] = 12;
+					}
+				}
+			}
+			else {
+				if(!getFlag(2)) {
+					if(spriteYCoords[0] > 225) {
+						playerAnimPos++;
+						if(playerAnimPos >= playerAnimDelay) {
+							playerAnimPos = 0;
+							gameEngineVariables[0] = gameEngineVariables[0] + 1;
+							if(gameEngineVariables[0] >= 3) {
+								gameEngineVariables[0] = 0;
+							}
+							spriteImages[0] = 19 + gameEngineVariables[0];
+						}
+						spriteYCoords[0] = spriteYCoords[0] - 1;
+						spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
+					}
+					else {
+						spriteMaskYCoords[0] = 430;
+						setFlag(2);
+						playerAnimPos = 0;
+					}
+				}
+				else {
+					if(spriteYCoords[0] < 430) {
+						playerAnimPos++;
+						if(playerAnimPos >= playerAnimDelay) {
+							playerAnimPos = 0;
+							gameEngineVariables[0] = gameEngineVariables[0] + 1;
+							if(gameEngineVariables[0] >= 3) {
+								gameEngineVariables[0] = 0;
+							}
+							spriteImages[0] = 16 + gameEngineVariables[0];
+						}
+						spriteYCoords[0] = spriteYCoords[0] + 1;
+					}
+					else {
+						clearFlag(0);
+						clearFlag(1);
+						spriteImages[0] = 8;
+					}
+				}
 			}
 		}
-
-		// Key codes:
-		// F1              = 112
-		// Backspace       = 8
-		// Shift           = 16
-		// Control         = 17
-		// Alt             = 18
-		// AltGr           = 225
-		// Up Arrow Key    = 38
-		// Down Arrow Key  = 40
-		// Left Arrow Key  = 37
-		// Right Arrow Key = 39
-
-		if(!keyDown && typedKeyCode == 112) {
-			messageWindowCentered("Use this key for debugging purposes, for example.");
-		}
-
-		if(canTypeKey && keyDown && typedKey.length == 1) {
-			waitingForEnterPress = true;
-			secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
-			gameState = STATE_INPUTWINDOW;
-			var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
-			x = 15;
-			y = 822;
-			winWidth = screenWidth - (x * 2);
-			winHeight = 75;
-			targetX = x + winWidth;
-			targetY = y + winHeight;
-			borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
-			borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
-			borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
-			borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
-			drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
-			x += messageWindowMarginWidth;
-			y += messageWindowMarginHeight;
-			textInputText = typedKey;
-			textInputX = x + 5;
-			textInputY = y + 27;
-			putTextOnScreen(x, y, "Enter command:");
-			drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25);
-			putTextOnScreen(textInputX, textInputY, textInputText);
-			drawCursor(textInputX, textInputY, textInputText);
-		}
-		canTypeKey = false;
-		keyDown = false;
-		if(!keyDown) {
-			canTypeKey = true;
-		}
-		enterTyped = false;
 	}
 	else {
 		if(gameState == STATE_INPUTWINDOW && canTypeKey && keyDown && typedKeyCode != 13) {
@@ -1074,7 +1297,6 @@ function play(delta)
 		}
 
 		if(enterTyped) {
-			console.log("enter pressed");
 			waitingForEnterPress = false;
 			enterTyped = false;
 			imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
