@@ -123,6 +123,11 @@ var mainFontBuffer               = document.getElementById("mainFontBuffer");
 var mainFontCtx                  = mainFontBuffer.getContext("2d");
 var mainFontSdata                = mainFontCtx.createImageData(672, 168);
 var mainFontSprite               = document.getElementById("mainFont");
+var narrowFontBuffer             = document.getElementById("narrowFontBuffer");
+var narrowFontCtx                = narrowFontBuffer.getContext("2d");
+var narrowFontSdata              = narrowFontCtx.createImageData(416, 168);
+var narrowFontSprite             = document.getElementById("narrowFont");
+
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
 // The Y coordinates of where the sprites should be displayed on the screen.
@@ -144,10 +149,14 @@ var playerAnimPos                = 0;
 var playerAnimFrame              = 0;
 var npcAnimPos                   = 0;
 var npcAnimFrame                 = 0;
-var fontStartXIndex              = [];
-var fontStartYIndex              = [];
-var fontWidthIndex               = [];
-var fontHeightIndex              = [];
+var mainFontStartXIndex          = [];
+var mainFontStartYIndex          = [];
+var mainFontWidthIndex           = [];
+var mainFontHeightIndex          = [];
+var narrowFontStartXIndex        = [];
+var narrowFontStartYIndex        = [];
+var narrowFontWidthIndex         = [];
+var narrowFontHeightIndex        = [];
 var waitingForEnterPress         = false;
 var startedGame                  = true;
 var typedKeyCode                 = 0;
@@ -158,6 +167,7 @@ var ignoredWords                 = [
 	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing"
 ];
 var synonyms                     = [
+	"inventory", "inv", 0,
 	"get", "take", "pick", "grab", 0,
 	"look", "see", "watch", 0,
 	"talk", "speak", 0,
@@ -169,6 +179,7 @@ var synonyms                     = [
 var gameEngineFlags              = [];
 var gameEngineVariables          = [];
 var npcDirections                = [0, true, true, true, true, true, true, true];
+var saidShowInventory            = false;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -466,20 +477,40 @@ function drawAllSprites() {
 	drawSpriteOnScreen(spriteDrawOrder[7]);
 }
 
-function setIndicesAndTransparenciesForFont() {
-	var indexPos, x, y, restoreX, restoreY, width, height, highestHeight, fontRowStride, boundaryColorR, boundaryColorG, boundaryColorB, keyColorR, keyColorG, keyColorB, searching;
-	fontRowStride = mainFontBuffer.width * 4;
+function setIndicesAndTransparenciesForFont(whichFont) {
+	var indexPos, x, y, restoreX, restoreY, referencedFontWidth, width, height, highestHeight, fontRowStride, boundaryColorR, boundaryColorG, boundaryColorB, keyColorR, keyColorG, keyColorB, searching;
+	switch(whichFont) {
+		case 0:
+			referencedFontWidth = mainFontBuffer.width;
+			break;
+		case 1:
+			referencedFontWidth = narrowFontBuffer.width;
+			break;
+	}
+	fontRowStride = referencedFontWidth * 4;
 	indexPos = 0;
 	x = 1;
 	y = 1;
 	highestHeight = 0;
 	while(indexPos < 256) {
-		boundaryColorR = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 0];
-		boundaryColorG = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 1];
-		boundaryColorB = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 2];
-		keyColorR = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 0];
-		keyColorG = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 1];
-		keyColorB = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 2];
+		switch(whichFont) {
+			case 0:
+				boundaryColorR = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 0];
+				boundaryColorG = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 1];
+				boundaryColorB = mainFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 2];
+				keyColorR = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 0];
+				keyColorG = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 1];
+				keyColorB = mainFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 2];
+				break;
+			case 1:
+				boundaryColorR = narrowFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 0];
+				boundaryColorG = narrowFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 1];
+				boundaryColorB = narrowFontSdata.data[((y - 1) * fontRowStride) + ((x - 1) * 4) + 2];
+				keyColorR = narrowFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 0];
+				keyColorG = narrowFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 1];
+				keyColorB = narrowFontSdata.data[((y - 1) * fontRowStride) + (x * 4) + 2];
+				break;
+		}
 		searching = true;
 		width = 0;
 		height = 0;
@@ -487,53 +518,111 @@ function setIndicesAndTransparenciesForFont() {
 		restoreY = y;
 		// Get the width and the height for the currently inspected character.
 		while(searching) {
-			if(
-				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
-				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
-				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
-			) {
-				searching = false;
-			}
-			else {
-				x++;
-				width++;
+			switch(whichFont) {
+				case 0:
+					if(
+						mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
+						mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
+						mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
+					) {
+						searching = false;
+					}
+					else {
+						x++;
+						width++;
+					}
+					break;
+				case 1:
+					if(
+						narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
+						narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
+						narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
+					) {
+						searching = false;
+					}
+					else {
+						x++;
+						width++;
+					}
+					break;
 			}
 		}
 		searching = true;
 		x = restoreX;
 		y = restoreY;
 		while(searching) {
-			if(
-				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
-				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
-				mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
-			) {
-				searching = false;
-			}
-			else {
-				y++;
-				height++;
+			switch(whichFont) {
+				case 0:
+					if(
+						mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
+						mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
+						mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
+					) {
+						searching = false;
+					}
+					else {
+						y++;
+						height++;
+					}
+					break;
+				case 1:
+					if(
+						narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == boundaryColorR &&
+						narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == boundaryColorG &&
+						narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == boundaryColorB
+					) {
+						searching = false;
+					}
+					else {
+						y++;
+						height++;
+					}
+					break;
 			}
 		}
 		if(height > highestHeight) highestHeight = height;
-		fontStartXIndex[indexPos] = restoreX;
-		fontStartYIndex[indexPos] = restoreY;
-		fontWidthIndex[indexPos] = width;
-		fontHeightIndex[indexPos] = height;
+		switch(whichFont) {
+			case 0:
+				mainFontStartXIndex[indexPos] = restoreX;
+				mainFontStartYIndex[indexPos] = restoreY;
+				mainFontWidthIndex[indexPos] = width;
+				mainFontHeightIndex[indexPos] = height;
+				break;
+			case 1:
+				narrowFontStartXIndex[indexPos] = restoreX;
+				narrowFontStartYIndex[indexPos] = restoreY;
+				narrowFontWidthIndex[indexPos] = width;
+				narrowFontHeightIndex[indexPos] = height;
+				break;
+		}
 
 		y = restoreY;
 		// Make those pixels of the font transparent that correspond to the given key RGB color.
 		while(y < (restoreY + height)) {
 			x = restoreX;
 			while(x < (restoreX + width)) {
-				if(
-					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == keyColorR &&
-					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == keyColorG &&
-					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == keyColorB
-				) {
-					mainFontSdata.data[(y * fontRowStride) + (x * 4) + 3] = 0;
+				switch(whichFont) {
+					case 0:
+						if(
+							mainFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == keyColorR &&
+							mainFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == keyColorG &&
+							mainFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == keyColorB
+						) {
+							mainFontSdata.data[(y * fontRowStride) + (x * 4) + 3] = 0;
+						}
+						x++;
+						break;
+					case 1:
+						if(
+							narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 0] == keyColorR &&
+							narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 1] == keyColorG &&
+							narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 2] == keyColorB
+						) {
+							narrowFontSdata.data[(y * fontRowStride) + (x * 4) + 3] = 0;
+						}
+						x++;
+						break;
 				}
-				x++;
 			}
 			y++;
 		}
@@ -541,13 +630,20 @@ function setIndicesAndTransparenciesForFont() {
 		indexPos++;
 		y = restoreY;
 		x = restoreX + width + 2;
-		if(x >= mainFontBuffer.width) {
+		if(x >= referencedFontWidth) {
 			x = 1;
 			y += highestHeight + 2;
 			highestHeight = 0;
 		}
 	}
-	mainFontCtx.putImageData(mainFontSdata, 0, 0);
+	switch(whichFont) {
+		case 0:
+			mainFontCtx.putImageData(mainFontSdata, 0, 0);
+			break;
+		case 1:
+			narrowFontCtx.putImageData(narrowFontSdata, 0, 0);
+			break;
+	}
 }
 
 // Draw a border at the given X,Y coordinates on the screen.
@@ -599,31 +695,48 @@ function drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, 
 	drawBorder(borderStartX, borderStartY, borderTargetX, borderTargetY);
 }
 
-function putTextOnScreen(x, y, message) {
+function putTextOnScreen(x, y, message, whichFont) {
+	var referencedFontBuffer, referencedFontStartXIndex, referencedFontStartYIndex, referencedFontWidthIndex, referencedFontHeightIndex;
+	switch(whichFont) {
+		case 0:
+			referencedFontBuffer = mainFontBuffer;
+			referencedFontStartXIndex = mainFontStartXIndex;
+			referencedFontStartYIndex = mainFontStartYIndex;
+			referencedFontWidthIndex = mainFontWidthIndex;
+			referencedFontHeightIndex = mainFontHeightIndex;
+			break;
+		case 1:
+			referencedFontBuffer = narrowFontBuffer;
+			referencedFontStartXIndex = narrowFontStartXIndex;
+			referencedFontStartYIndex = narrowFontStartYIndex;
+			referencedFontWidthIndex = narrowFontWidthIndex;
+			referencedFontHeightIndex = narrowFontHeightIndex;
+			break;
+	}
 	ctx.putImageData(imgData, 0, 0);
 	var highestCharacter = 0;
 	var restoreX = x;
 	for(var pos = 0; pos < message.length; pos++) {
 		if(message.charCodeAt(pos) == 10) {
-			if(highestCharacter == 0) highestCharacter = fontHeightIndex[32];
+			if(highestCharacter == 0) highestCharacter = referencedFontHeightIndex[32];
 			x = restoreX;
 			y += highestCharacter;
 			highestCharacter = 0;
 		}
 		else {
 			ctx.drawImage(
-				mainFontBuffer, 
-				fontStartXIndex[message.charCodeAt(pos)], 
-				fontStartYIndex[message.charCodeAt(pos)], 
-				fontWidthIndex[message.charCodeAt(pos)], 
-				fontHeightIndex[message.charCodeAt(pos)], 
+				referencedFontBuffer, 
+				referencedFontStartXIndex[message.charCodeAt(pos)], 
+				referencedFontStartYIndex[message.charCodeAt(pos)], 
+				referencedFontWidthIndex[message.charCodeAt(pos)], 
+				referencedFontHeightIndex[message.charCodeAt(pos)], 
 				x, 
 				y, 
-				fontWidthIndex[message.charCodeAt(pos)], 
-				fontHeightIndex[message.charCodeAt(pos)]
+				referencedFontWidthIndex[message.charCodeAt(pos)], 
+				referencedFontHeightIndex[message.charCodeAt(pos)]
 			);
-			x += fontWidthIndex[message.charCodeAt(pos)];
-			if(fontHeightIndex[message.charCodeAt(pos)] > highestCharacter) highestCharacter = fontHeightIndex[message.charCodeAt(pos)];
+			x += referencedFontWidthIndex[message.charCodeAt(pos)];
+			if(referencedFontHeightIndex[message.charCodeAt(pos)] > highestCharacter) highestCharacter = referencedFontHeightIndex[message.charCodeAt(pos)];
 		}
 	}
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -642,7 +755,7 @@ function messageWindow(message, isCentered, x, y) {
 	height = 0;
 	for(var pos = 0; pos < message.length; pos++) {
 		if(message.charCodeAt(pos) == 10) {
-			if(highestHeightForCurrentRow == 0) highestHeightForCurrentRow = fontHeightIndex[32];
+			if(highestHeightForCurrentRow == 0) highestHeightForCurrentRow = mainFontHeightIndex[32];
 			if(width > widestWidth) widestWidth = width;
 			highestHeight += highestHeightForCurrentRow;
 			width = 0;
@@ -650,8 +763,8 @@ function messageWindow(message, isCentered, x, y) {
 			highestHeightForCurrentRow = 0;
 		}
 		else {
-			width += fontWidthIndex[message.charCodeAt(pos)];
-			height = fontHeightIndex[message.charCodeAt(pos)];
+			width += mainFontWidthIndex[message.charCodeAt(pos)];
+			height = mainFontHeightIndex[message.charCodeAt(pos)];
 		}
 		if(height > highestHeightForCurrentRow) highestHeightForCurrentRow = height;
 	}
@@ -681,7 +794,7 @@ function messageWindow(message, isCentered, x, y) {
 	// Put the text to the message window.
 	x = restoreX + messageWindowMarginWidth;
 	y = restoreY + messageWindowMarginHeight;
-	putTextOnScreen(x, y, message);
+	putTextOnScreen(x, y, message, 0);
 }
 
 // Display a centered message window on the screen, meaning that the X,Y coordinates that are passed to messageWindow() are irrelevant
@@ -706,7 +819,7 @@ function drawColorAtCursorXY(x, y, r, g, b) {
 // Draw the text cursor at the given X,Y coordinates on the screen.
 function drawCursor(x, y, text) {
 	for(var pos = 0; pos < text.length; pos++) {
-		x += fontWidthIndex[text.charCodeAt(pos)];
+		x += mainFontWidthIndex[text.charCodeAt(pos)];
 	}
 	drawColorAtCursorXY(x, y, 0, 0, 0);
 }
@@ -714,7 +827,7 @@ function drawCursor(x, y, text) {
 // Erase the text cursor at the given X,Y coordinates on the screen.
 function eraseCursor(x, y, text) {
 	for(var pos = 0; pos < text.length; pos++) {
-		x += fontWidthIndex[text.charCodeAt(pos)];
+		x += mainFontWidthIndex[text.charCodeAt(pos)];
 	}
 	drawColorAtCursorXY(x, y, 255, 255, 255);
 }
@@ -812,7 +925,10 @@ function parse(userInput) {
 		}
 	}
 	if(knownWord) {
-		if(doesInputMatchThis(enteredWords, ["look"])) {
+		if(doesInputMatchThis(enteredWords, ["inventory"])) {
+			saidShowInventory = true;
+		}
+		else if(doesInputMatchThis(enteredWords, ["look"])) {
 			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.");
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
@@ -878,6 +994,8 @@ window.onload = function() {
 	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
 	mainFontCtx.drawImage(mainFontSprite, 0, 0);
 	mainFontSdata = mainFontCtx.getImageData(0, 0, mainFontBuffer.width, mainFontBuffer.height);
+	narrowFontCtx.drawImage(narrowFontSprite, 0, 0);
+	narrowFontSdata = narrowFontCtx.getImageData(0, 0, narrowFontBuffer.width, narrowFontBuffer.height);
 	depthBufferCtx.drawImage(screen000depSprite, 0, 0);
 	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
 	ctx.drawImage(screen000picSprite, 0, 0);
@@ -971,7 +1089,8 @@ window.onload = function() {
 	doSpriteTransparency(sprite019Ctx, sprite019Buffer, sprite019Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite020Ctx, sprite020Buffer, sprite020Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite021Ctx, sprite021Buffer, sprite021Sdata, 52, 90, 72);
-	setIndicesAndTransparenciesForFont();
+	setIndicesAndTransparenciesForFont(0); // 0 = set indices and transparencies for main (default) font
+	setIndicesAndTransparenciesForFont(1); // 1 = set indices and transparencies for narrow font
 	// Put the status bar at the top of the screen.
 	for(var y = 0; y < 19; y++) {
 		for(var x = 0; x < screenWidth; x++) {
@@ -981,8 +1100,8 @@ window.onload = function() {
 		}
 	}
 	ctx.putImageData(imgData, 0, 0);
-	putTextOnScreen(30, 0, "Score: 0 of 500");
-	putTextOnScreen(765, 0, "Joonas' JS Adventure");
+	putTextOnScreen(30, 0, "Score: 0 of 500", 0);
+	putTextOnScreen(765, 0, "Joonas' JS Adventure", 0);
 	document.addEventListener('keydown', indicateHeldDownKey);
 	function indicateHeldDownKey(e) {
 		keyDown = true;
@@ -1135,6 +1254,7 @@ function play(delta)
 			// Key codes:
 			// F1              = 112
 			// Backspace       = 8
+			// Tab             = 9
 			// Shift           = 16
 			// Control         = 17
 			// Alt             = 18
@@ -1145,7 +1265,7 @@ function play(delta)
 			// Right Arrow Key = 39
 
 			if(!keyDown && typedKeyCode == 112) {
-				messageWindowCentered("playerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0]);
+				messageWindowCentered("debug info\nplayerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0]);
 			}
 
 			if(canTypeKey && keyDown && typedKey.length == 1) {
@@ -1169,10 +1289,40 @@ function play(delta)
 				textInputText = typedKey;
 				textInputX = x + 5;
 				textInputY = y + 27;
-				putTextOnScreen(x, y, "Enter command:");
+				putTextOnScreen(x, y, "Enter command:", 0);
 				drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25);
-				putTextOnScreen(textInputX, textInputY, textInputText);
+				putTextOnScreen(textInputX, textInputY, textInputText, 0);
 				drawCursor(textInputX, textInputY, textInputText);
+			}
+
+			// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
+			if((canTypeKey && keyDown && typedKeyCode == 9) || saidShowInventory) {
+				console.log("open inventory window");
+				waitingForEnterPress = true;
+				saidShowInventory = false;
+				var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+				x = 605;
+				y = 150;
+				winWidth = 700;
+				winHeight = 500;
+				targetX = x + winWidth;
+				targetY = y + winHeight;
+				borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+				borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+				borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+				borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+				drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
+				/*
+				Inventory items could use a different font, so that we can fit even very long inventory item names
+				on one line, two different items on the same line separated by columns.
+				The font could have the same height as the default font but narrower width.
+				The inventory item text font could be 11 x 19 px.
+				*/
+				putTextOnScreen(797, 175, "You are carrying:", 0);
+				// Uncomment the following 2 lines in order to see the narrow font in use.
+				//putTextOnScreen(616, 194, "Very Long Inventory Item Name", 1);
+				//putTextOnScreen(966, 194, "Very Long Inventory Item Name", 1);
+				putTextOnScreen(822, 391, "Nothing at all", 0);
 			}
 			canTypeKey = false;
 			keyDown = false;
@@ -1346,7 +1496,7 @@ function play(delta)
 				var canMove = true;
 				var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsW[index];
 				var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
-				for(var pos = 1; pos < 8; pos++) {
+				for(var pos = 0; pos < 8; pos++) {
 					if(pos == index) pos++;
 					if(
 						npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
@@ -1376,11 +1526,11 @@ function play(delta)
 				var x = textInputX;
 				var y = textInputY;
 				for(var pos = 0; pos < (textInputText.length - 1); pos++) {
-					x += fontWidthIndex[textInputText.charCodeAt(pos)];
+					x += mainFontWidthIndex[textInputText.charCodeAt(pos)];
 				}
 				var restoreX = x;
-				var endX = x + fontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
-				var endY = y + fontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
+				var endX = x + mainFontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
+				var endY = y + mainFontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
 				while(y < endY) {
 					x = restoreX;
 					while(x < endX) {
@@ -1397,7 +1547,7 @@ function play(delta)
 			if(typedKey.length == 1) {
 				textInputText += typedKey;
 			}
-			putTextOnScreen(textInputX, textInputY, textInputText);
+			putTextOnScreen(textInputX, textInputY, textInputText, 0);
 			drawCursor(textInputX, textInputY, textInputText);
 		}
 		canTypeKey = false;
