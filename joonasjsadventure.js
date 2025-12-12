@@ -6,6 +6,7 @@ const messageWindowMarginHeight  = 10; // Message window margin height in pixels
 const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
 const STATE_INVENTORY            = 2;
+const STATE_ITEMDESCRIPTION      = 3;
 const playerAnimDelay            = 8;
 const npcAnimDelay               = 8;
 var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, textInputY, inventorySelectedIndex;
@@ -20,6 +21,8 @@ var canvas                       = document.getElementById("myCanvas");
 var ctx                          = canvas.getContext("2d");
 var secondScreenBuffer           = document.getElementById("secondBuffer");
 var secondScreenCtx              = secondScreenBuffer.getContext("2d");
+var thirdScreenBuffer            = document.getElementById("thirdBuffer");
+var thirdScreenCtx               = thirdScreenBuffer.getContext("2d");
 var screen000picSprite           = document.getElementById("screen000pic");
 var priorityBuffer               = document.getElementById("priorityBuffer");
 var priorityBufferCtx            = priorityBuffer.getContext("2d");
@@ -128,6 +131,10 @@ var narrowFontBuffer             = document.getElementById("narrowFontBuffer");
 var narrowFontCtx                = narrowFontBuffer.getContext("2d");
 var narrowFontSdata              = narrowFontCtx.createImageData(416, 168);
 var narrowFontSprite             = document.getElementById("narrowFont");
+var item01Buffer                 = document.getElementById("item01Buffer");
+var item01Ctx                    = item01Buffer.getContext("2d");
+var item01Sdata                  = item01Ctx.createImageData(333, 333);
+var item01Sprite                 = document.getElementById("item01");
 
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
@@ -748,10 +755,12 @@ function putTextOnScreen(x, y, message, whichFont) {
 	ctx.putImageData(imgData, 0, 0);
 }
 
-function messageWindow(message, isCentered, x, y) {
+function messageWindow(message, isCenteredHorizontally, isCenteredVertically, x, y, layered) {
 	var widestWidth, highestHeightForCurrentRow, highestHeight, width, height, messageWindowWidth, messageWindowHeight;
-	secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
-	drawAllSprites();
+	if(!layered) {
+		secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
+		drawAllSprites();
+	}
 	waitingForEnterPress = true;
 	widestWidth = 0;
 	highestHeight = 0;
@@ -780,9 +789,12 @@ function messageWindow(message, isCentered, x, y) {
 	messageWindowWidth = widestWidth + (messageWindowMarginWidth * 2);
 	messageWindowHeight = highestHeight + (messageWindowMarginHeight * 2);
 
-	if(isCentered) {
-		// Center the message window.
+	// Center the message window horizontally.
+	if(isCenteredHorizontally) {
 		x = Math.floor((screenWidth / 2)) - Math.floor((messageWindowWidth / 2));
+	}
+	// Center the message window horizontally.
+	if(isCenteredVertically) {
 		y = Math.floor((screenHeight / 2)) - Math.floor((messageWindowHeight / 2));
 	}
 	var restoreX, restoreY, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
@@ -804,8 +816,13 @@ function messageWindow(message, isCentered, x, y) {
 
 // Display a centered message window on the screen, meaning that the X,Y coordinates that are passed to messageWindow() are irrelevant
 // (ie. can be any arbitrary values).
-function messageWindowCentered(message) {
-	messageWindow(message, true, 0, 0);
+function messageWindowCentered(message, layered) {
+	messageWindow(message, true, true, 0, 0, layered);
+}
+
+// Display a message window that is centered horizontally, while the Y position can be freely defined.
+function messageWindowHorizontallyCentered(message, y, layered) {
+	messageWindow(message, true, false, 0, y, layered);
 }
 
 // Draw the given RGB color at the given cursor X,Y coordinates.
@@ -934,25 +951,25 @@ function parse(userInput) {
 			saidShowInventory = true;
 		}
 		else if(doesInputMatchThis(enteredWords, ["look"])) {
-			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.");
+			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
-			messageWindowCentered("You see seven clones of yourself.\nThey really seem to enjoy walking back and forth.\nYou wonder who has created these guys.");
+			messageWindowCentered("You see seven clones of yourself.\nThey really seem to enjoy walking back and forth.\nYou wonder who has created these guys.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "bush"])) {
-			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.");
+			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "fence"])) {
-			messageWindowCentered("The climbing wall makes you wonder whether this place\nwas once planned to be somekind of an obstacle course.");
+			messageWindowCentered("The climbing wall makes you wonder whether this place\nwas once planned to be somekind of an obstacle course.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
-			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"");
+			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["get", "people"])) {
-			messageWindowCentered("You are not a bodybuilder. Therefore, you don't have the required\nstrength to lift a grown-up person up.");
+			messageWindowCentered("You are not a bodybuilder. Therefore, you don't have the required\nstrength to lift a grown-up person up.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["get", "bush"])) {
-			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.");
+			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["climb", "fence"])) {
 			if(spriteXCoords[0] >= 546 && spriteXCoords[0] <= 1117 && 
@@ -976,16 +993,16 @@ function parse(userInput) {
 				gameEngineVariables[0] = 0;
 			}
 			else {
-				messageWindowCentered("You need to get closer to the climbing wall to climb it.");
+				messageWindowCentered("You need to get closer to the climbing wall to climb it.", false);
 			}
 		}
 		else {
-			messageWindowCentered("I understand your words, but not what you're trying to say.");
+			messageWindowCentered("I understand your words, but not what you're trying to say.", false);
 		}
 	}
 	else if(currentWord != "") {
 		// This text is shown whenever the parser doesn't recognize one or several words of the given input.
-		messageWindowCentered("I don't know the word \"" + currentWord + "\".");
+		messageWindowCentered("I don't know the word \"" + currentWord + "\".", false);
 	}
 }
 
@@ -1035,6 +1052,8 @@ window.onload = function() {
 	narrowFontSdata = narrowFontCtx.getImageData(0, 0, narrowFontBuffer.width, narrowFontBuffer.height);
 	depthBufferCtx.drawImage(screen000depSprite, 0, 0);
 	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+	item01Ctx.drawImage(item01Sprite, 0, 0);
+	item01Sdata = item01Ctx.getImageData(0, 0, item01Buffer.width, item01Buffer.height);
 	ctx.drawImage(screen000picSprite, 0, 0);
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	
@@ -1156,7 +1175,7 @@ function play(delta)
 
 	if(startedGame) {
 		startedGame = false;
-		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nThis project is free and open source.\nFor the latest version of the project, please use the GitHub repository:\ngithub.com/JoonasTMS86/joonas-jsadventure");
+		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nThis project is free and open source.\nFor the latest version of the project, please use the GitHub repository:\ngithub.com/JoonasTMS86/joonas-jsadventure", false);
 	}
 	else if(!waitingForEnterPress) {
 		drawAllSprites();
@@ -1302,7 +1321,7 @@ function play(delta)
 			// Right Arrow Key = 39
 
 			if(!keyDown && typedKeyCode == 112) {
-				messageWindowCentered("debug info\nplayerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0]);
+				messageWindowCentered("debug info\nplayerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0], false);
 			}
 
 			if(canTypeKey && keyDown && typedKey.length == 1) {
@@ -1675,13 +1694,49 @@ function play(delta)
 		}
 
 		if(enterTyped) {
-			waitingForEnterPress = false;
 			enterTyped = false;
-			imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
-			ctx.putImageData(imgData, 0, 0);
-			if(gameState == STATE_INPUTWINDOW) {
-				gameState = STATE_GAME;
-				parse(textInputText);
+			if(gameState == STATE_INVENTORY) {
+				if(inventorySelectedIndex == 34) {
+					waitingForEnterPress = false;
+					imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+					ctx.putImageData(imgData, 0, 0);
+					gameState = STATE_GAME;
+				}
+				else {
+					imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+					thirdScreenCtx.putImageData(imgData, 0, 0);
+					gameState = STATE_ITEMDESCRIPTION;
+
+					var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+					x = 775;
+					y = 60;
+					winWidth = 360;
+					winHeight = 360;
+					targetX = x + winWidth;
+					targetY = y + winHeight;
+					borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+					borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+					borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+					borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+					drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
+					ctx.putImageData(imgData, 0, 0);
+					ctx.drawImage(item01Sprite, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
+					messageWindowHorizontallyCentered("Your trusty hammer has served you well\nfor several years now.", 425, true);
+				}
+			}
+			else if(gameState == STATE_ITEMDESCRIPTION) {
+				imgData = thirdScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+				ctx.putImageData(imgData, 0, 0);
+				gameState = STATE_INVENTORY;
+			}
+			else {
+				waitingForEnterPress = false;
+				imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+				ctx.putImageData(imgData, 0, 0);
+				if(gameState == STATE_INPUTWINDOW) {
+					gameState = STATE_GAME;
+					parse(textInputText);
+				}
 			}
 		}
 	}
