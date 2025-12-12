@@ -180,6 +180,10 @@ var gameEngineFlags              = [];
 var gameEngineVariables          = [];
 var npcDirections                = [0, true, true, true, true, true, true, true];
 var saidShowInventory            = false;
+// Inventory items are stored as item index numbers to the inventory array.
+// An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
+var inventory                    = [];
+var inventoryItemNames           = [0, "Hammer"];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -1300,9 +1304,11 @@ function play(delta)
 				console.log("open inventory window");
 				waitingForEnterPress = true;
 				saidShowInventory = false;
-				var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
-				x = 605;
-				y = 150;
+				var windowX, windowY, x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+				windowX = 605;
+				windowY = 150;
+				x = windowX;
+				y = windowY;
 				winWidth = 700;
 				winHeight = 500;
 				targetX = x + winWidth;
@@ -1319,10 +1325,39 @@ function play(delta)
 				The inventory item text font could be 11 x 19 px.
 				*/
 				putTextOnScreen(797, 175, "You are carrying:", 0);
+
 				// Uncomment the following 2 lines in order to see the narrow font in use.
 				//putTextOnScreen(616, 194, "Very Long Inventory Item Name", 1);
 				//putTextOnScreen(966, 194, "Very Long Inventory Item Name", 1);
-				putTextOnScreen(822, 391, "Nothing at all", 0);
+
+				if(inventory.length == 0) {
+					putTextOnScreen(822, 391, "Nothing at all", 0);
+				}
+				else {
+					putTextOnScreen(946, 616, "OK", 0);
+					var invTextColumn = 0;
+					var invTextLine = 0;
+					for(var pos = 0; pos < inventory.length; pos++) {
+						putTextOnScreen((616 + (invTextColumn * 350)), (202 + (invTextLine * 23)), inventoryItemNames[inventory[pos]], 1);
+						invTextLine++;
+						if(invTextLine >= 17) {
+							if(invTextColumn == 0 && pos < (inventory.length - 1)) {
+								imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+								for(var ypos = windowY + 52; ypos < (windowY + 52 + 390); ypos++) {
+									imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 0] = 0;
+									imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 1] = 0;
+									imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 2] = 0;
+								}
+								ctx.putImageData(imgData, 0, 0);
+							}
+							invTextLine = 0;
+							invTextColumn++;
+							if(invTextColumn >= 2) {
+								pos = inventory.length;
+							}
+						}
+					}
+				}
 			}
 			canTypeKey = false;
 			keyDown = false;
