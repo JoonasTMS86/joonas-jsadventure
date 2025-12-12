@@ -5,9 +5,10 @@ const messageWindowMarginWidth   = 10; // Message window margin width in pixels.
 const messageWindowMarginHeight  = 10; // Message window margin height in pixels.
 const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
+const STATE_INVENTORY            = 2;
 const playerAnimDelay            = 8;
 const npcAnimDelay               = 8;
-var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, textInputY;
+var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, textInputY, inventorySelectedIndex;
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
@@ -182,7 +183,7 @@ var npcDirections                = [0, true, true, true, true, true, true, true]
 var saidShowInventory            = false;
 // Inventory items are stored as item index numbers to the inventory array.
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
-var inventory                    = [];
+var inventory                    = [1];
 var inventoryItemNames           = [0, "Hammer"];
 
 let Application = PIXI.Application,
@@ -652,32 +653,32 @@ function setIndicesAndTransparenciesForFont(whichFont) {
 
 // Draw a border at the given X,Y coordinates on the screen.
 // Use this to draw the message window border, text input field border etc.
-function drawBorder(x, y, endX, endY) {
+function drawBorder(x, y, endX, endY, r, g, b) {
 	var origX, origY;
 	var origX = x;
 	var origY = y;
 	while(x < endX) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 0] = r;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = g;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = b;
 		x++;
 	}
 	while(y < endY) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 0] = r;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = g;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = b;
 		y++;
 	}
 	while(x > origX) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 0] = r;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = g;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = b;
 		x--;
 	}
 	while(y > origY) {
-		imgData.data[(y * rowStride) + (x * 4) + 0] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 1] = 0;
-		imgData.data[(y * rowStride) + (x * 4) + 2] = 0;
+		imgData.data[(y * rowStride) + (x * 4) + 0] = r;
+		imgData.data[(y * rowStride) + (x * 4) + 1] = g;
+		imgData.data[(y * rowStride) + (x * 4) + 2] = b;
 		y--;
 	}
 }
@@ -696,7 +697,7 @@ function drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, 
 		y++;
 	}
 	// Put a little border into the message window.
-	drawBorder(borderStartX, borderStartY, borderTargetX, borderTargetY);
+	drawBorder(borderStartX, borderStartY, borderTargetX, borderTargetY, 0, 0, 0);
 }
 
 function putTextOnScreen(x, y, message, whichFont) {
@@ -986,6 +987,38 @@ function parse(userInput) {
 		// This text is shown whenever the parser doesn't recognize one or several words of the given input.
 		messageWindowCentered("I don't know the word \"" + currentWord + "\".");
 	}
+}
+
+function colorInventorySelection(r, g, b) {
+	if(inventorySelectedIndex == 34) {
+		// Draw a thick border around the "OK" button to indicate it has been highlighted.
+		var buttonX, buttonY, buttonXEnd, buttonYEnd;
+		buttonX = 940;
+		buttonY = 610;
+		buttonXEnd = buttonX + 50;
+		buttonYEnd = buttonY + 30;
+		drawBorder(buttonX, buttonY, buttonXEnd, buttonYEnd, r, g, b);
+		drawBorder(buttonX + 1, buttonY + 1, buttonXEnd - 1, buttonYEnd - 1, r, g, b);
+		drawBorder(buttonX + 2, buttonY + 2, buttonXEnd - 2, buttonYEnd - 2, r, g, b);
+		drawBorder(buttonX + 3, buttonY + 3, buttonXEnd - 3, buttonYEnd - 3, r, g, b);
+	}
+	else {
+		// Column 0 start, end X coords: 613, 943
+		// Column 1 start, end X coords: 963, 1293
+		// Start, end Y coords of 1st line: 201, 220
+		var column = Math.floor(inventorySelectedIndex / 17);
+		var line = inventorySelectedIndex - (column * 17);
+		console.log("col, line: " + column + ", " + line);
+		drawBorder(613 + (column * 350), 201 + (line * 23), 943 + (column * 350), 220 + (line * 23), r, g, b);
+	}
+}
+
+function highlightInventorySelection() {
+	colorInventorySelection(255, 0, 0);
+}
+
+function deselectInventorySelection() {
+	colorInventorySelection(255, 255, 255);
 }
 
 window.onload = function() {
@@ -1294,7 +1327,7 @@ function play(delta)
 				textInputX = x + 5;
 				textInputY = y + 27;
 				putTextOnScreen(x, y, "Enter command:", 0);
-				drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25);
+				drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25, 0, 0, 0);
 				putTextOnScreen(textInputX, textInputY, textInputText, 0);
 				drawCursor(textInputX, textInputY, textInputText);
 			}
@@ -1302,6 +1335,7 @@ function play(delta)
 			// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
 			if((canTypeKey && keyDown && typedKeyCode == 9) || saidShowInventory) {
 				console.log("open inventory window");
+				gameState = STATE_INVENTORY;
 				waitingForEnterPress = true;
 				saidShowInventory = false;
 				var windowX, windowY, x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
@@ -1358,6 +1392,8 @@ function play(delta)
 						}
 					}
 				}
+				inventorySelectedIndex = 34;
+				highlightInventorySelection();
 			}
 			canTypeKey = false;
 			keyDown = false;
@@ -1584,6 +1620,53 @@ function play(delta)
 			}
 			putTextOnScreen(textInputX, textInputY, textInputText, 0);
 			drawCursor(textInputX, textInputY, textInputText);
+		}
+		if(gameState == STATE_INVENTORY && inventory.length > 0) {
+			if(canTypeKey && keyDown) {
+				switch(typedKeyCode) {
+					case 38:
+						// Up arrow key on selection
+						deselectInventorySelection();
+						if(inventorySelectedIndex == 34) {
+							inventorySelectedIndex = inventory.length - 1;
+						}
+						else if(inventorySelectedIndex > 0){
+							inventorySelectedIndex--;
+						}
+						highlightInventorySelection();
+						break;
+					case 40:
+						// Down arrow key on selection
+						deselectInventorySelection();
+						if(inventorySelectedIndex == 16 || inventorySelectedIndex == 33 || inventorySelectedIndex == (inventory.length - 1)) {
+							inventorySelectedIndex = 34;
+						}
+						else if(inventorySelectedIndex < 34){
+							inventorySelectedIndex++;
+						}
+						highlightInventorySelection();
+						break;
+					case 37:
+						// Left arrow key on selection
+						if(inventorySelectedIndex != 34 && inventorySelectedIndex >= 17) {
+							deselectInventorySelection();
+							inventorySelectedIndex -= 17;
+							highlightInventorySelection();
+						}
+						break;
+					case 39:
+						// Right arrow key on selection
+						if(inventorySelectedIndex != 34 && inventory.length >= 18 && inventorySelectedIndex < 17) {
+							deselectInventorySelection();
+							inventorySelectedIndex += 17;
+							if(inventorySelectedIndex > (inventory.length - 1)) {
+								inventorySelectedIndex = inventory.length - 1;
+							}
+							highlightInventorySelection();
+						}
+						break;
+				}
+			}
 		}
 		canTypeKey = false;
 		keyDown = false;
