@@ -135,16 +135,22 @@ var item01Buffer                 = document.getElementById("item01Buffer");
 var item01Ctx                    = item01Buffer.getContext("2d");
 var item01Sdata                  = item01Ctx.createImageData(333, 333);
 var item01Sprite                 = document.getElementById("item01");
+var object01Buffer               = document.getElementById("object01Buffer");
+var object01Ctx                  = object01Buffer.getContext("2d");
+var object01Sdata                = object01Ctx.createImageData(19, 12);
+var object01Sprite               = document.getElementById("object01");
 
+// How many sprites have been set to be active on the current screen
+var numberOfSprites              = 9;
 // The coordinates of the sprites are in these arrays.
-var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550, 1322];
 // The Y coordinates of where the sprites should be displayed on the screen.
-var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550, 233];
 // These sprite Y coordinates determine the "mask location" of each sprite, which can differ from the sprite display Y.
-var spriteMaskYCoords                = [60, 130, 200, 270, 340, 410, 480, 550];
+var spriteMaskYCoords            = [60, 130, 200, 270, 340, 410, 480, 550, 233];
 // Width and heights of the sprite images.
-var spriteWidths                 = [85, 85, 85, 85, 85, 85, 85, 85];
-var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124];
+var spriteWidths                 = [85, 85, 85, 85, 85, 85, 85, 85, 19];
+var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124, 12];
 // Width of sprite when facing N or S.
 var spriteWidthsNS               = [26, 26, 26, 26, 26, 26, 26, 26];
 // When we check for collisions, we only wish to check those pixels of the sprite that are not transparent.
@@ -152,7 +158,7 @@ var spriteWidthsNS               = [26, 26, 26, 26, 26, 26, 26, 26];
 var spriteCheckBlockOffsetsNS    = [29, 29, 29, 29, 29, 29, 29, 29];
 var spriteCheckBlockOffsetsE     = [55, 55, 55, 55, 55, 55, 55, 55];
 var spriteCheckBlockOffsetsW     = [28, 28, 28, 28, 28, 28, 28, 28];
-var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0];
+var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0, 22];
 var playerAnimPos                = 0;
 var playerAnimFrame              = 0;
 var npcAnimPos                   = 0;
@@ -182,7 +188,8 @@ var synonyms                     = [
 	"climb", 0,
 	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
 	"bush", 0,
-	"fence", "obstacle", "wall", 0
+	"fence", "obstacle", "wall", 0,
+	"hammer", 0
 ];
 var gameEngineFlags              = [];
 var gameEngineVariables          = [];
@@ -190,7 +197,7 @@ var npcDirections                = [0, true, true, true, true, true, true, true]
 var saidShowInventory            = false;
 // Inventory items are stored as item index numbers to the inventory array.
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
-var inventory                    = [1];
+var inventory                    = [];
 var inventoryItemNames           = [0, "Hammer"];
 
 let Application = PIXI.Application,
@@ -448,6 +455,9 @@ function drawSpriteOnScreen(spriteNumber) {
 		case 21:
 			sData = sprite021Sdata;
 			break;
+		case 22:
+			sData = object01Sdata;
+			break;
 	}
 	spriteCtx.putImageData(sData, 0, 0);
 	spriteSdata = spriteCtx.getImageData(0, 0, spriteWidths[spriteNumber], spriteHeights[spriteNumber]);
@@ -468,11 +478,14 @@ function drawSpriteOnScreen(spriteNumber) {
 }
 
 function drawAllSprites() {
-	var spriteDrawOrder = [0, 1, 2, 3, 4, 5, 6, 7];
+	var spriteDrawOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 	// Draw the sprite with the lowest Y value first and the one with the highest Y value last.
-	for(var placePos = 0; placePos < 8; placePos++) {
-		for(var checkPos = placePos + 1; checkPos < 8; checkPos++) {
-			if(spriteMaskYCoords[spriteDrawOrder[checkPos]] < spriteMaskYCoords[spriteDrawOrder[placePos]]) {
+	for(var placePos = 0; placePos < numberOfSprites; placePos++) {
+		for(var checkPos = placePos + 1; checkPos < numberOfSprites; checkPos++) {
+			if(
+				(spriteMaskYCoords[spriteDrawOrder[checkPos]] + spriteHeights[spriteDrawOrder[checkPos]]) < 
+				(spriteMaskYCoords[spriteDrawOrder[placePos]] + spriteHeights[spriteDrawOrder[placePos]])
+			) {
 				var temp = spriteDrawOrder[placePos];
 				spriteDrawOrder[placePos] = spriteDrawOrder[checkPos];
 				spriteDrawOrder[checkPos] = temp;
@@ -487,6 +500,7 @@ function drawAllSprites() {
 	drawSpriteOnScreen(spriteDrawOrder[5]);
 	drawSpriteOnScreen(spriteDrawOrder[6]);
 	drawSpriteOnScreen(spriteDrawOrder[7]);
+	if(numberOfSprites > 8) drawSpriteOnScreen(spriteDrawOrder[8]);
 }
 
 function setIndicesAndTransparenciesForFont(whichFont) {
@@ -885,6 +899,16 @@ function doesInputMatchThis(givenInput, arrayOfWordsToCheck) {
 	return true;
 }
 
+// Check if the given item index number is present in the inventory array. Returns true if found.
+function hasItem(itemNumber) {
+	for(var pos = 0; pos < inventory.length; pos++) {
+		if(inventory[pos] == itemNumber) {
+			return true;
+		}
+	}
+	return false;
+}
+
 // Parse the user input.
 function parse(userInput) {
 	var enteredWords = [];
@@ -951,7 +975,12 @@ function parse(userInput) {
 			saidShowInventory = true;
 		}
 		else if(doesInputMatchThis(enteredWords, ["look"])) {
-			messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.", false);
+			if(!hasItem(1)) {
+				messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
+			}
+			else {
+				messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.", false);
+			}
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
 			messageWindowCentered("You see seven clones of yourself.\nThey really seem to enjoy walking back and forth.\nYou wonder who has created these guys.", false);
@@ -962,6 +991,14 @@ function parse(userInput) {
 		else if(doesInputMatchThis(enteredWords, ["look", "fence"])) {
 			messageWindowCentered("The climbing wall makes you wonder whether this place\nwas once planned to be somekind of an obstacle course.", false);
 		}
+		else if(doesInputMatchThis(enteredWords, ["look", "hammer"])) {
+			if(hasItem(1)) {
+				messageWindowCentered("You have it in your inventory.", false);
+			}
+			else {
+				messageWindowCentered("Your hammer is not where you expected it to be.\nIt's lying here on the ground!", false);
+			}
+		}
 		else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
 			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"", false);
 		}
@@ -970,6 +1007,26 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["get", "bush"])) {
 			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.", false);
+		}
+		else if(doesInputMatchThis(enteredWords, ["get", "hammer"])) {
+			if(hasItem(1)) {
+				messageWindowCentered("You already have it in your inventory.", false);
+			}
+			else {
+				if(
+					(spriteXCoords[0] + spriteWidths[0]) >= (spriteXCoords[8] - 3) &&
+					spriteXCoords[0] <= (spriteXCoords[8] + spriteWidths[8] + 3) &&
+					(spriteYCoords[0] + spriteHeights[0]) >= (spriteYCoords[8] - 3) &&
+					spriteYCoords[0] <= (spriteYCoords[8] + spriteHeights[8] + 3)
+				) {
+					messageWindowCentered("Why is your trusty hammer lying here on the ground?\nAnyway, you pick it up and carry it with you.", false);
+					inventory[inventory.length] = 1;
+					numberOfSprites--;
+				}
+				else {
+					messageWindowCentered("You need to get closer to it.", false);
+				}
+			}
 		}
 		else if(doesInputMatchThis(enteredWords, ["climb", "fence"])) {
 			if(spriteXCoords[0] >= 546 && spriteXCoords[0] <= 1117 && 
@@ -1123,6 +1180,9 @@ window.onload = function() {
 	sprite021Ctx.drawImage(sprite021Sprite, 0, 0);
 	sprite021Sdata = sprite021Ctx.getImageData(0, 0, sprite021Buffer.width, sprite021Buffer.height);
 
+	object01Ctx.drawImage(object01Sprite, 0, 0);
+	object01Sdata = object01Ctx.getImageData(0, 0, object01Buffer.width, object01Buffer.height);
+
 	doSpriteTransparency(sprite000Ctx, sprite000Buffer, sprite000Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite001Ctx, sprite001Buffer, sprite001Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite002Ctx, sprite002Buffer, sprite002Sdata, 52, 90, 72);
@@ -1145,6 +1205,7 @@ window.onload = function() {
 	doSpriteTransparency(sprite019Ctx, sprite019Buffer, sprite019Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite020Ctx, sprite020Buffer, sprite020Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite021Ctx, sprite021Buffer, sprite021Sdata, 52, 90, 72);
+	doSpriteTransparency(object01Ctx, object01Buffer, object01Sdata, 72, 147, 15);
 	setIndicesAndTransparenciesForFont(0); // 0 = set indices and transparencies for main (default) font
 	setIndicesAndTransparenciesForFont(1); // 1 = set indices and transparencies for narrow font
 	// Put the status bar at the top of the screen.
@@ -1379,10 +1440,7 @@ function play(delta)
 				*/
 				putTextOnScreen(797, 175, "You are carrying:", 0);
 
-				// Uncomment the following 2 lines in order to see the narrow font in use.
-				//putTextOnScreen(616, 194, "Very Long Inventory Item Name", 1);
-				//putTextOnScreen(966, 194, "Very Long Inventory Item Name", 1);
-
+				inventorySelectedIndex = 34;
 				if(inventory.length == 0) {
 					putTextOnScreen(822, 391, "Nothing at all", 0);
 				}
@@ -1410,9 +1468,8 @@ function play(delta)
 							}
 						}
 					}
+					highlightInventorySelection();
 				}
-				inventorySelectedIndex = 34;
-				highlightInventorySelection();
 			}
 			canTypeKey = false;
 			keyDown = false;
@@ -1506,6 +1563,7 @@ function play(delta)
 			}
 		}
 
+		// Move all the NPC characters, the Joonas clones which march back and forth.
 		npcAnimPos++;
 		if(npcAnimPos >= npcAnimDelay) {
 			npcAnimPos = 0;
