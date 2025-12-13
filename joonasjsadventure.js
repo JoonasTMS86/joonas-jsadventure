@@ -199,6 +199,7 @@ var saidShowInventory            = false;
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
 var inventory                    = [];
 var inventoryItemNames           = [0, "Hammer"];
+var score                        = 0;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -1014,14 +1015,15 @@ function parse(userInput) {
 			}
 			else {
 				if(
-					(spriteXCoords[0] + spriteWidths[0]) >= (spriteXCoords[8] - 3) &&
-					spriteXCoords[0] <= (spriteXCoords[8] + spriteWidths[8] + 3) &&
-					(spriteYCoords[0] + spriteHeights[0]) >= (spriteYCoords[8] - 3) &&
-					spriteYCoords[0] <= (spriteYCoords[8] + spriteHeights[8] + 3)
+					(spriteXCoords[0] + spriteWidths[0]) >= (spriteXCoords[8] - 6) &&
+					spriteXCoords[0] <= (spriteXCoords[8] + spriteWidths[8] + 6) &&
+					(spriteYCoords[0] + spriteHeights[0]) >= (spriteYCoords[8] - 11) &&
+					(spriteYCoords[0] + spriteHeights[0]) <= (spriteYCoords[8] + spriteHeights[8] + 11)
 				) {
 					messageWindowCentered("Why is your trusty hammer lying here on the ground?\nAnyway, you pick it up and carry it with you.", false);
 					inventory[inventory.length] = 1;
 					numberOfSprites--;
+					score += 5;
 				}
 				else {
 					messageWindowCentered("You need to get closer to it.", false);
@@ -1093,6 +1095,20 @@ function highlightInventorySelection() {
 
 function deselectInventorySelection() {
 	colorInventorySelection(255, 255, 255);
+}
+
+function updateStatusBar() {
+	// Put the status bar at the top of the screen.
+	for(var y = 0; y < 19; y++) {
+		for(var x = 0; x < screenWidth; x++) {
+			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+		}
+	}
+	ctx.putImageData(imgData, 0, 0);
+	putTextOnScreen(30, 0, "Score: " + score + " of 500", 0);
+	putTextOnScreen(765, 0, "Joonas' JS Adventure", 0);
 }
 
 window.onload = function() {
@@ -1208,17 +1224,9 @@ window.onload = function() {
 	doSpriteTransparency(object01Ctx, object01Buffer, object01Sdata, 72, 147, 15);
 	setIndicesAndTransparenciesForFont(0); // 0 = set indices and transparencies for main (default) font
 	setIndicesAndTransparenciesForFont(1); // 1 = set indices and transparencies for narrow font
-	// Put the status bar at the top of the screen.
-	for(var y = 0; y < 19; y++) {
-		for(var x = 0; x < screenWidth; x++) {
-			imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
-			imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
-			imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
-		}
-	}
-	ctx.putImageData(imgData, 0, 0);
-	putTextOnScreen(30, 0, "Score: 0 of 500", 0);
-	putTextOnScreen(765, 0, "Joonas' JS Adventure", 0);
+
+	updateStatusBar();
+
 	document.addEventListener('keydown', indicateHeldDownKey);
 	function indicateHeldDownKey(e) {
 		keyDown = true;
@@ -1415,6 +1423,7 @@ function play(delta)
 			// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
 			if((canTypeKey && keyDown && typedKeyCode == 9) || saidShowInventory) {
 				console.log("open inventory window");
+				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
 				gameState = STATE_INVENTORY;
 				waitingForEnterPress = true;
 				saidShowInventory = false;
@@ -1790,6 +1799,7 @@ function play(delta)
 			else {
 				waitingForEnterPress = false;
 				imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+				updateStatusBar();
 				ctx.putImageData(imgData, 0, 0);
 				if(gameState == STATE_INPUTWINDOW) {
 					gameState = STATE_GAME;
