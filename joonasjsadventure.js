@@ -1084,7 +1084,6 @@ function colorInventorySelection(r, g, b) {
 		// Start, end Y coords of 1st line: 201, 220
 		var column = Math.floor(inventorySelectedIndex / 17);
 		var line = inventorySelectedIndex - (column * 17);
-		console.log("col, line: " + column + ", " + line);
 		drawBorder(613 + (column * 350), 201 + (line * 23), 943 + (column * 350), 220 + (line * 23), r, g, b);
 	}
 }
@@ -1422,7 +1421,6 @@ function play(delta)
 
 			// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
 			if((canTypeKey && keyDown && typedKeyCode == 9) || saidShowInventory) {
-				console.log("open inventory window");
 				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
 				gameState = STATE_INVENTORY;
 				waitingForEnterPress = true;
