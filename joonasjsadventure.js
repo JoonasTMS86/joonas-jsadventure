@@ -7,9 +7,14 @@ const STATE_GAME                 = 0;
 const STATE_INPUTWINDOW          = 1;
 const STATE_INVENTORY            = 2;
 const STATE_ITEMDESCRIPTION      = 3;
+const INPUTSTATE_COMMAND         = 0;
+const INPUTSTATE_GETITEM         = 1;
 const playerAnimDelay            = 8;
 const npcAnimDelay               = 8;
-var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, textInputY, inventorySelectedIndex;
+var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, 
+textInputY, inventorySelectedIndex, inputWinX, inputWinY, inputWinWidth, 
+inputWinHeight, inputWinText, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight,
+inputBoxOnlyNumericCharacters, inputBoxTextMaxLength, inputState;
 var goingup                      = false;
 var goingdown                    = false;
 var goingleft                    = false;
@@ -135,6 +140,10 @@ var item01Buffer                 = document.getElementById("item01Buffer");
 var item01Ctx                    = item01Buffer.getContext("2d");
 var item01Sdata                  = item01Ctx.createImageData(333, 333);
 var item01Sprite                 = document.getElementById("item01");
+var item02Buffer                 = document.getElementById("item02Buffer");
+var item02Ctx                    = item02Buffer.getContext("2d");
+var item02Sdata                  = item02Ctx.createImageData(333, 333);
+var item02Sprite                 = document.getElementById("item02");
 var object01Buffer               = document.getElementById("object01Buffer");
 var object01Ctx                  = object01Buffer.getContext("2d");
 var object01Sdata                = object01Ctx.createImageData(19, 12);
@@ -186,9 +195,12 @@ var synonyms                     = [
 	"look", "see", "watch", 0,
 	"talk", "speak", 0,
 	"climb", 0,
+	"debugdebug", 0,
+	"item", 0,
 	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
 	"bush", 0,
 	"fence", "obstacle", "wall", 0,
+	"crowbar", 0,
 	"hammer", 0
 ];
 var gameEngineFlags              = [];
@@ -198,8 +210,17 @@ var saidShowInventory            = false;
 // Inventory items are stored as item index numbers to the inventory array.
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
 var inventory                    = [];
-var inventoryItemNames           = [0, "Hammer"];
+var inventoryItemNames           = [0, "Hammer", "Crowbar"];
 var score                        = 0;
+// The debug mode of the game engine is enabled by entering the command "debugdebug".
+var debugMode                    = false;
+var msgCommandNotUnderstood      = "I understand your words, but not what you're trying to say.";
+var showInputWindow              = false;
+var itemDescriptions             = [
+	0,
+	"Your trusty hammer has served you well\nfor several years now.",
+	"A crowbar is always a handy tool to have."
+];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -1055,8 +1076,29 @@ function parse(userInput) {
 				messageWindowCentered("You need to get closer to the climbing wall to climb it.", false);
 			}
 		}
+		else if(doesInputMatchThis(enteredWords, ["debugdebug"])) {
+			debugMode = true;
+				messageWindowCentered("Debug mode activated.", false);
+		}
+		else if(doesInputMatchThis(enteredWords, ["get", "item"])) {
+			if(debugMode) {
+				showInputWindow = true;
+				// Input window is centered horizontally, so we don't need to define the X pos.
+				inputWinY = 822;
+				inputWinWidth = 380;
+				inputWinHeight = 75;
+				inputBoxX = 10;
+				inputBoxY = 32;
+				inputBoxWidth = 75;
+				inputBoxHeight = 25;
+				inputWinText = "Item number to get:";
+			}
+			else {
+				messageWindowCentered(msgCommandNotUnderstood, false);
+			}
+		}
 		else {
-			messageWindowCentered("I understand your words, but not what you're trying to say.", false);
+			messageWindowCentered(msgCommandNotUnderstood, false);
 		}
 	}
 	else if(currentWord != "") {
@@ -1110,6 +1152,38 @@ function updateStatusBar() {
 	putTextOnScreen(765, 0, "Joonas' JS Adventure", 0);
 }
 
+function inputWindow(x, y, winWidth, winHeight, isCenteredHorizontally, isCenteredVertically, inputBoxX, inputBoxY, inputBoxEndX, inputBoxEndY, onlyNumericChars, inputMaxLength, inputText) {
+	inputBoxOnlyNumericCharacters = onlyNumericChars;
+	inputBoxTextMaxLength = inputMaxLength;
+	if(isCenteredHorizontally) {
+		x = (Math.floor(screenWidth / 2)) - (Math.floor(winWidth / 2));
+	}
+	if(isCenteredVertically) {
+		y = (Math.floor(screenHeight / 2)) - (Math.floor(winHeight / 2));
+	}
+	inputBoxX += x;
+	inputBoxY += y;
+	inputBoxEndX += inputBoxX;
+	inputBoxEndY += inputBoxY;
+	var targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+	targetX = x + winWidth;
+	targetY = y + winHeight;
+	borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+	borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+	borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+	borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+	drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
+	x += messageWindowMarginWidth;
+	y += messageWindowMarginHeight;
+	textInputText = typedKey;
+	textInputX = x + 5;
+	textInputY = y + 27;
+	putTextOnScreen(x, y, inputText, 0);
+	drawBorder(inputBoxX, inputBoxY, inputBoxEndX, inputBoxEndY, 0, 0, 0);
+	putTextOnScreen(textInputX, textInputY, textInputText, 0);
+	drawCursor(textInputX, textInputY, textInputText);
+}
+
 window.onload = function() {
 	// Initialize all the 32,768 (8 bits * 4096 = 32,768 flags) game engine flags to "clear".
 	for(var pos = 0; pos < 4096; pos++) {
@@ -1126,6 +1200,8 @@ window.onload = function() {
 	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
 	item01Ctx.drawImage(item01Sprite, 0, 0);
 	item01Sdata = item01Ctx.getImageData(0, 0, item01Buffer.width, item01Buffer.height);
+	item02Ctx.drawImage(item02Sprite, 0, 0);
+	item02Sdata = item02Ctx.getImageData(0, 0, item02Buffer.width, item02Buffer.height);
 	ctx.drawImage(screen000picSprite, 0, 0);
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	
@@ -1388,7 +1464,7 @@ function play(delta)
 			// Left Arrow Key  = 37
 			// Right Arrow Key = 39
 
-			if(!keyDown && typedKeyCode == 112) {
+			if(!keyDown && typedKeyCode == 112 && debugMode) {
 				messageWindowCentered("debug info\nplayerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0], false);
 			}
 
@@ -1396,27 +1472,26 @@ function play(delta)
 				waitingForEnterPress = true;
 				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
 				gameState = STATE_INPUTWINDOW;
-				var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
-				x = 15;
-				y = 822;
-				winWidth = screenWidth - (x * 2);
-				winHeight = 75;
-				targetX = x + winWidth;
-				targetY = y + winHeight;
-				borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
-				borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
-				borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
-				borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
-				drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
-				x += messageWindowMarginWidth;
-				y += messageWindowMarginHeight;
-				textInputText = typedKey;
-				textInputX = x + 5;
-				textInputY = y + 27;
-				putTextOnScreen(x, y, "Enter command:", 0);
-				drawBorder(textInputX - 5, textInputY - 5, textInputX + winWidth - 25, textInputY + 25, 0, 0, 0);
-				putTextOnScreen(textInputX, textInputY, textInputText, 0);
-				drawCursor(textInputX, textInputY, textInputText);
+				inputState = INPUTSTATE_COMMAND;
+				var x = 15;
+				var y = 822;
+				var winWidth = screenWidth - (x * 2);
+				var winHeight = 75;
+				inputBoxX = 10;
+				inputBoxY = 32;
+				inputBoxWidth = winWidth - 25;
+				inputBoxHeight = 25;
+				inputWindow(x, y, winWidth, winHeight, false, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, false, 97, "Enter command:");
+			}
+
+			if(showInputWindow) {
+				showInputWindow = false;
+				waitingForEnterPress = true;
+				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
+				gameState = STATE_INPUTWINDOW;
+				inputState = INPUTSTATE_GETITEM;
+				typedKey = "";
+				inputWindow(0, inputWinY, inputWinWidth, inputWinHeight, true, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, true, 3, inputWinText);
 			}
 
 			// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
@@ -1675,35 +1750,44 @@ function play(delta)
 	}
 	else {
 		if(gameState == STATE_INPUTWINDOW && canTypeKey && keyDown && typedKeyCode != 13) {
-			eraseCursor(textInputX, textInputY, textInputText);
-			if(typedKeyCode == 8) {
-				imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-				var x = textInputX;
-				var y = textInputY;
-				for(var pos = 0; pos < (textInputText.length - 1); pos++) {
-					x += mainFontWidthIndex[textInputText.charCodeAt(pos)];
+			var validCharacter = true;
+			if(inputBoxOnlyNumericCharacters) {
+				validCharacter = false;
+				if(typedKeyCode == 8 || (typedKey.charCodeAt(0) >= 48 && typedKey.charCodeAt(0) <= 57)) {
+					validCharacter = true;
 				}
-				var restoreX = x;
-				var endX = x + mainFontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
-				var endY = y + mainFontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
-				while(y < endY) {
-					x = restoreX;
-					while(x < endX) {
-						imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
-						imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
-						imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
-						x++;
+			}
+			if(validCharacter) {
+				eraseCursor(textInputX, textInputY, textInputText);
+				if(typedKeyCode == 8) {
+					imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+					var x = textInputX;
+					var y = textInputY;
+					for(var pos = 0; pos < (textInputText.length - 1); pos++) {
+						x += mainFontWidthIndex[textInputText.charCodeAt(pos)];
 					}
-					y++;
+					var restoreX = x;
+					var endX = x + mainFontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
+					var endY = y + mainFontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
+					while(y < endY) {
+						x = restoreX;
+						while(x < endX) {
+							imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+							imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+							imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+							x++;
+						}
+						y++;
+					}
+					ctx.putImageData(imgData, 0, 0);
+					textInputText = textInputText.slice(0, -1);
 				}
-				ctx.putImageData(imgData, 0, 0);
-				textInputText = textInputText.slice(0, -1);
+				if(typedKey.length == 1 && textInputText.length < inputBoxTextMaxLength) {
+					textInputText += typedKey;
+				}
+				putTextOnScreen(textInputX, textInputY, textInputText, 0);
+				drawCursor(textInputX, textInputY, textInputText);
 			}
-			if(typedKey.length == 1) {
-				textInputText += typedKey;
-			}
-			putTextOnScreen(textInputX, textInputY, textInputText, 0);
-			drawCursor(textInputX, textInputY, textInputText);
 		}
 		if(gameState == STATE_INVENTORY && inventory.length > 0) {
 			if(canTypeKey && keyDown) {
@@ -1785,8 +1869,17 @@ function play(delta)
 					borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
 					drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
 					ctx.putImageData(imgData, 0, 0);
-					ctx.drawImage(item01Sprite, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
-					messageWindowHorizontallyCentered("Your trusty hammer has served you well\nfor several years now.", 425, true);
+					var spriteToDraw;
+					switch(inventory[inventorySelectedIndex]) {
+						case 1:
+							spriteToDraw = item01Sprite;
+							break;
+						case 2:
+							spriteToDraw = item02Sprite;
+							break;
+					}
+					ctx.drawImage(spriteToDraw, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
+					messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
 				}
 			}
 			else if(gameState == STATE_ITEMDESCRIPTION) {
@@ -1801,7 +1894,33 @@ function play(delta)
 				ctx.putImageData(imgData, 0, 0);
 				if(gameState == STATE_INPUTWINDOW) {
 					gameState = STATE_GAME;
-					parse(textInputText);
+					switch(inputState) {
+						case INPUTSTATE_COMMAND:
+							parse(textInputText);
+							break;
+						case INPUTSTATE_GETITEM:
+							if(textInputText.length > 0) {
+								var itemNumber = parseInt(textInputText);
+								if(itemNumber == 0 || itemNumber >= inventoryItemNames.length) {
+									messageWindowCentered("Invalid item number.\nValid item numbers are: 1 to " + (inventoryItemNames.length - 1) + ".");
+								}
+								else {
+									var itemAlreadyInInventory = false;
+									for(var pos = 0; pos < inventory.length; pos++) {
+										if(inventory[pos] == itemNumber) {
+											itemAlreadyInInventory = true;
+										}
+									}
+									if(itemAlreadyInInventory) {
+										messageWindowCentered("Item already in inventory.");
+									}
+									else {
+										inventory[inventory.length] = itemNumber;
+									}
+								}
+							}
+							break;
+					}
 				}
 			}
 		}
