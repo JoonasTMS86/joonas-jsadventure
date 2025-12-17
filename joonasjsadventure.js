@@ -3,10 +3,11 @@ const screenHeight               = 909;
 const rowStride                  = screenWidth * 4;
 const messageWindowMarginWidth   = 10; // Message window margin width in pixels.
 const messageWindowMarginHeight  = 10; // Message window margin height in pixels.
-const STATE_GAME                 = 0;
-const STATE_INPUTWINDOW          = 1;
-const STATE_INVENTORY            = 2;
-const STATE_ITEMDESCRIPTION      = 3;
+const STATE_TITLE                = 0;
+const STATE_GAME                 = 1;
+const STATE_INPUTWINDOW          = 2;
+const STATE_INVENTORY            = 3;
+const STATE_ITEMDESCRIPTION      = 4;
 const INPUTSTATE_COMMAND         = 0;
 const INPUTSTATE_GETITEM         = 1;
 const playerAnimDelay            = 8;
@@ -28,6 +29,7 @@ var secondScreenBuffer           = document.getElementById("secondBuffer");
 var secondScreenCtx              = secondScreenBuffer.getContext("2d");
 var thirdScreenBuffer            = document.getElementById("thirdBuffer");
 var thirdScreenCtx               = thirdScreenBuffer.getContext("2d");
+var screen000picSprite           = document.getElementById("screen000pic");
 var screen001picSprite           = document.getElementById("screen001pic");
 var priorityBuffer               = document.getElementById("priorityBuffer");
 var priorityBufferCtx            = priorityBuffer.getContext("2d");
@@ -181,11 +183,11 @@ var narrowFontStartYIndex        = [];
 var narrowFontWidthIndex         = [];
 var narrowFontHeightIndex        = [];
 var waitingForEnterPress         = false;
-var startedGame                  = true;
+var startedGame                  = false;
 var typedKeyCode                 = 0;
 var typedKey                     = "";
 var keyDown                      = false;
-var gameState                    = STATE_GAME;
+var gameState                    = STATE_TITLE;
 var ignoredWords                 = [
 	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing"
 ];
@@ -1202,7 +1204,9 @@ window.onload = function() {
 	item01Sdata = item01Ctx.getImageData(0, 0, item01Buffer.width, item01Buffer.height);
 	item02Ctx.drawImage(item02Sprite, 0, 0);
 	item02Sdata = item02Ctx.getImageData(0, 0, item02Buffer.width, item02Buffer.height);
-	ctx.drawImage(screen001picSprite, 0, 0);
+
+	// We start the game with the title page.
+	ctx.drawImage(screen000picSprite, 0, 0);
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	
 	sprite000Ctx.drawImage(sprite000Sprite, 0, 0);
@@ -1300,8 +1304,6 @@ window.onload = function() {
 	setIndicesAndTransparenciesForFont(0); // 0 = set indices and transparencies for main (default) font
 	setIndicesAndTransparenciesForFont(1); // 1 = set indices and transparencies for narrow font
 
-	updateStatusBar();
-
 	document.addEventListener('keydown', indicateHeldDownKey);
 	function indicateHeldDownKey(e) {
 		keyDown = true;
@@ -1317,550 +1319,208 @@ function play(delta)
 	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	if(gameState != STATE_INPUTWINDOW) imgDataWithoutSprites = imgData;
 
-	if(startedGame) {
-		startedGame = false;
-		messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nThis project is free and open source.\nFor the latest version of the project, please use the GitHub repository:\ngithub.com/JoonasTMS86/joonas-jsadventure", false);
-	}
-	else if(!waitingForEnterPress) {
-		drawAllSprites();
-
-		// Reading game engine flag 0 this way instead of with getFlag() results in a slightly better performance.
-		if(gameEngineFlags[0] <= 127) {
-			if(goingleft) {
-				playerAnimPos++;
-				if(playerAnimPos >= playerAnimDelay) {
-					playerAnimPos = 0;
-					playerAnimFrame++;
-					if(playerAnimFrame >= 4) {
-						playerAnimFrame = 0;
-					}
-					spriteImages[0] = 4 + playerAnimFrame;
-				}
-				var canMove = true;
-				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
-				var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-				for(var pos = 1; pos < 8; pos++) {
-					if(
-						playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
-						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-					) {
-						canMove = false;
-					}
-				}
-				var blockType;
-				if(canMove) {
-					blockType = checkBlockEW(playerFeetX, playerFeetY);
-				}
-				if(blockType == 0) {
-					spriteXCoords[0] = spriteXCoords[0] - 1;
-				}
-			}
-			if(goingright) {
-				playerAnimPos++;
-				if(playerAnimPos >= playerAnimDelay) {
-					playerAnimPos = 0;
-					playerAnimFrame++;
-					if(playerAnimFrame >= 4) {
-						playerAnimFrame = 0;
-					}
-					spriteImages[0] = playerAnimFrame;
-				}
-				var canMove = true;
-				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
-				var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-				for(var pos = 1; pos < 8; pos++) {
-					if(
-						playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
-						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-					) {
-						canMove = false;
-					}
-				}
-				var blockType;
-				if(canMove) {
-					blockType = checkBlockEW(playerFeetX, playerFeetY);
-				}
-				if(blockType == 0) {
-					spriteXCoords[0] = spriteXCoords[0] + 1;
-				}
-			}
-			if(goingup) {
-				if(!goingleft && !goingright) {
-					playerAnimPos++;
-					if(playerAnimPos >= playerAnimDelay) {
-						playerAnimPos = 0;
-						playerAnimFrame++;
-						if(playerAnimFrame >= 4) {
-							playerAnimFrame = 0;
-						}
-						spriteImages[0] = 8 + playerAnimFrame;
-					}
-				}
-				var canMove = true;
-				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
-				var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
-				for(var pos = 1; pos < 8; pos++) {
-					if(
-						(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
-						playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
-						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-					) {
-						canMove = false;
-					}
-				}
-				var blockType;
-				if(canMove) {
-					blockType = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
-				}
-				if(blockType == 0) {
-					spriteYCoords[0] = spriteYCoords[0] - 1;
-					spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
-				}
-			}
-			if(goingdown) {
-				if(!goingleft && !goingright) {
-					playerAnimPos++;
-					if(playerAnimPos >= playerAnimDelay) {
-						playerAnimPos = 0;
-						playerAnimFrame++;
-						if(playerAnimFrame >= 4) {
-							playerAnimFrame = 0;
-						}
-						spriteImages[0] = 12 + playerAnimFrame;
-					}
-				}
-				var canMove = true;
-				var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
-				var playerFeetY = spriteYCoords[0] + spriteHeights[0];
-				for(var pos = 1; pos < 8; pos++) {
-					if(
-						(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
-						playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
-						playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-					) {
-						canMove = false;
-					}
-				}
-				var blockType;
-				if(canMove) {
-					blockType = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
-				}
-				if(blockType == 0) {
-					spriteYCoords[0] = spriteYCoords[0] + 1;
-					spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
-				}
-			}
-
-			// Key codes:
-			// F1              = 112
-			// Backspace       = 8
-			// Tab             = 9
-			// Shift           = 16
-			// Control         = 17
-			// Alt             = 18
-			// AltGr           = 225
-			// Up Arrow Key    = 38
-			// Down Arrow Key  = 40
-			// Left Arrow Key  = 37
-			// Right Arrow Key = 39
-
-			if(!keyDown && typedKeyCode == 112 && debugMode) {
-				messageWindowCentered("debug info\nplayerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0], false);
-			}
-
-			if(canTypeKey && keyDown && typedKey.length == 1) {
-				waitingForEnterPress = true;
-				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
-				gameState = STATE_INPUTWINDOW;
-				inputState = INPUTSTATE_COMMAND;
-				var x = 15;
-				var y = 822;
-				var winWidth = screenWidth - (x * 2);
-				var winHeight = 75;
-				inputBoxX = 10;
-				inputBoxY = 32;
-				inputBoxWidth = winWidth - 25;
-				inputBoxHeight = 25;
-				inputWindow(x, y, winWidth, winHeight, false, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, false, 97, "Enter command:");
-			}
-
-			if(showInputWindow) {
-				showInputWindow = false;
-				waitingForEnterPress = true;
-				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
-				gameState = STATE_INPUTWINDOW;
-				inputState = INPUTSTATE_GETITEM;
-				typedKey = "";
-				inputWindow(0, inputWinY, inputWinWidth, inputWinHeight, true, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, true, 3, inputWinText);
-			}
-
-			// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
-			if((canTypeKey && keyDown && typedKeyCode == 9) || saidShowInventory) {
-				secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
-				gameState = STATE_INVENTORY;
-				waitingForEnterPress = true;
-				saidShowInventory = false;
-				var windowX, windowY, x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
-				windowX = 605;
-				windowY = 150;
-				x = windowX;
-				y = windowY;
-				winWidth = 700;
-				winHeight = 500;
-				targetX = x + winWidth;
-				targetY = y + winHeight;
-				borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
-				borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
-				borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
-				borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
-				drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
-				/*
-				Inventory items could use a different font, so that we can fit even very long inventory item names
-				on one line, two different items on the same line separated by columns.
-				The font could have the same height as the default font but narrower width.
-				The inventory item text font could be 11 x 19 px.
-				*/
-				putTextOnScreen(797, 175, "You are carrying:", 0);
-
-				inventorySelectedIndex = 34;
-				if(inventory.length == 0) {
-					putTextOnScreen(822, 391, "Nothing at all", 0);
-				}
-				else {
-					putTextOnScreen(946, 616, "OK", 0);
-					var invTextColumn = 0;
-					var invTextLine = 0;
-					for(var pos = 0; pos < inventory.length; pos++) {
-						putTextOnScreen((616 + (invTextColumn * 350)), (202 + (invTextLine * 23)), inventoryItemNames[inventory[pos]], 1);
-						invTextLine++;
-						if(invTextLine >= 17) {
-							if(invTextColumn == 0 && pos < (inventory.length - 1)) {
-								imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-								for(var ypos = windowY + 52; ypos < (windowY + 52 + 390); ypos++) {
-									imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 0] = 0;
-									imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 1] = 0;
-									imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 2] = 0;
-								}
-								ctx.putImageData(imgData, 0, 0);
-							}
-							invTextLine = 0;
-							invTextColumn++;
-							if(invTextColumn >= 2) {
-								pos = inventory.length;
-							}
-						}
-					}
-					highlightInventorySelection();
-				}
-			}
-			canTypeKey = false;
+	if(gameState == STATE_TITLE) {
+		if(keyDown) {
+			ctx.drawImage(screen001picSprite, 0, 0);
+			imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			keyDown = false;
-			if(!keyDown) {
-				canTypeKey = true;
-			}
-			enterTyped = false;
+			startedGame = true;
+			gameState = STATE_GAME;
+			updateStatusBar();
 		}
-		if(getFlag(1)) {
-			if(!getFlag(3)) {
-				if(!getFlag(2)) {
-					if(spriteYCoords[0] > 225) {
-						playerAnimPos++;
-						if(playerAnimPos >= playerAnimDelay) {
-							playerAnimPos = 0;
-							gameEngineVariables[0] = gameEngineVariables[0] + 1;
-							if(gameEngineVariables[0] >= 3) {
-								gameEngineVariables[0] = 0;
-							}
-							spriteImages[0] = 16 + gameEngineVariables[0];
-						}
-						spriteYCoords[0] = spriteYCoords[0] - 1;
-					}
-					else {
-						spriteMaskYCoords[0] = spriteYCoords[0];
-						setFlag(2);
+	}
+
+	else {
+		if(startedGame) {
+			startedGame = false;
+			messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nThis project is free and open source.\nFor the latest version of the project, please use the GitHub repository:\ngithub.com/JoonasTMS86/joonas-jsadventure", false);
+		}
+		else if(!waitingForEnterPress) {
+			drawAllSprites();
+
+			// Reading game engine flag 0 this way instead of with getFlag() results in a slightly better performance.
+			if(gameEngineFlags[0] <= 127) {
+				if(goingleft) {
+					playerAnimPos++;
+					if(playerAnimPos >= playerAnimDelay) {
 						playerAnimPos = 0;
+						playerAnimFrame++;
+						if(playerAnimFrame >= 4) {
+							playerAnimFrame = 0;
+						}
+						spriteImages[0] = 4 + playerAnimFrame;
+					}
+					var canMove = true;
+					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
+					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
+					for(var pos = 1; pos < 8; pos++) {
+						if(
+							playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
+							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+						) {
+							canMove = false;
+						}
+					}
+					var blockType;
+					if(canMove) {
+						blockType = checkBlockEW(playerFeetX, playerFeetY);
+					}
+					if(blockType == 0) {
+						spriteXCoords[0] = spriteXCoords[0] - 1;
 					}
 				}
-				else {
-					if(spriteYCoords[0] < 424) {
+				if(goingright) {
+					playerAnimPos++;
+					if(playerAnimPos >= playerAnimDelay) {
+						playerAnimPos = 0;
+						playerAnimFrame++;
+						if(playerAnimFrame >= 4) {
+							playerAnimFrame = 0;
+						}
+						spriteImages[0] = playerAnimFrame;
+					}
+					var canMove = true;
+					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
+					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
+					for(var pos = 1; pos < 8; pos++) {
+						if(
+							playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
+							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+						) {
+							canMove = false;
+						}
+					}
+					var blockType;
+					if(canMove) {
+						blockType = checkBlockEW(playerFeetX, playerFeetY);
+					}
+					if(blockType == 0) {
+						spriteXCoords[0] = spriteXCoords[0] + 1;
+					}
+				}
+				if(goingup) {
+					if(!goingleft && !goingright) {
 						playerAnimPos++;
 						if(playerAnimPos >= playerAnimDelay) {
 							playerAnimPos = 0;
-							gameEngineVariables[0] = gameEngineVariables[0] + 1;
-							if(gameEngineVariables[0] >= 3) {
-								gameEngineVariables[0] = 0;
+							playerAnimFrame++;
+							if(playerAnimFrame >= 4) {
+								playerAnimFrame = 0;
 							}
-							spriteImages[0] = 19 + gameEngineVariables[0];
+							spriteImages[0] = 8 + playerAnimFrame;
 						}
-						spriteYCoords[0] = spriteYCoords[0] + 1;
-						spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
 					}
-					else {
-						clearFlag(0);
-						clearFlag(1);
-						spriteImages[0] = 12;
-					}
-				}
-			}
-			else {
-				if(!getFlag(2)) {
-					if(spriteYCoords[0] > 225) {
-						playerAnimPos++;
-						if(playerAnimPos >= playerAnimDelay) {
-							playerAnimPos = 0;
-							gameEngineVariables[0] = gameEngineVariables[0] + 1;
-							if(gameEngineVariables[0] >= 3) {
-								gameEngineVariables[0] = 0;
-							}
-							spriteImages[0] = 19 + gameEngineVariables[0];
+					var canMove = true;
+					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
+					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
+					for(var pos = 1; pos < 8; pos++) {
+						if(
+							(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+							playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
+							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+						) {
+							canMove = false;
 						}
+					}
+					var blockType;
+					if(canMove) {
+						blockType = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+					}
+					if(blockType == 0) {
 						spriteYCoords[0] = spriteYCoords[0] - 1;
 						spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
 					}
-					else {
-						spriteMaskYCoords[0] = 430;
-						setFlag(2);
-						playerAnimPos = 0;
-					}
 				}
-				else {
-					if(spriteYCoords[0] < 430) {
+				if(goingdown) {
+					if(!goingleft && !goingright) {
 						playerAnimPos++;
 						if(playerAnimPos >= playerAnimDelay) {
 							playerAnimPos = 0;
-							gameEngineVariables[0] = gameEngineVariables[0] + 1;
-							if(gameEngineVariables[0] >= 3) {
-								gameEngineVariables[0] = 0;
+							playerAnimFrame++;
+							if(playerAnimFrame >= 4) {
+								playerAnimFrame = 0;
 							}
-							spriteImages[0] = 16 + gameEngineVariables[0];
+							spriteImages[0] = 12 + playerAnimFrame;
 						}
+					}
+					var canMove = true;
+					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
+					var playerFeetY = spriteYCoords[0] + spriteHeights[0];
+					for(var pos = 1; pos < 8; pos++) {
+						if(
+							(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+							playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
+							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+						) {
+							canMove = false;
+						}
+					}
+					var blockType;
+					if(canMove) {
+						blockType = checkBlockNS(playerFeetX, playerFeetY, spriteWidthsNS[0]);
+					}
+					if(blockType == 0) {
 						spriteYCoords[0] = spriteYCoords[0] + 1;
-					}
-					else {
-						clearFlag(0);
-						clearFlag(1);
-						spriteImages[0] = 8;
+						spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
 					}
 				}
-			}
-		}
 
-		// Move all the NPC characters, the Joonas clones which march back and forth.
-		npcAnimPos++;
-		if(npcAnimPos >= npcAnimDelay) {
-			npcAnimPos = 0;
-			npcAnimFrame++;
-			if(npcAnimFrame >= 4) {
-				npcAnimFrame = 0;
-			}
-			if(npcDirections[1]) {
-				spriteImages[1] = npcAnimFrame;
-			}
-			else {
-				spriteImages[1] = 4 + npcAnimFrame;
-			}
-			if(npcDirections[2]) {
-				spriteImages[2] = npcAnimFrame;
-			}
-			else {
-				spriteImages[2] = 4 + npcAnimFrame;
-			}
-			if(npcDirections[3]) {
-				spriteImages[3] = npcAnimFrame;
-			}
-			else {
-				spriteImages[3] = 4 + npcAnimFrame;
-			}
-			if(npcDirections[4]) {
-				spriteImages[4] = npcAnimFrame;
-			}
-			else {
-				spriteImages[4] = 4 + npcAnimFrame;
-			}
-			if(npcDirections[5]) {
-				spriteImages[5] = npcAnimFrame;
-			}
-			else {
-				spriteImages[5] = 4 + npcAnimFrame;
-			}
-			if(npcDirections[6]) {
-				spriteImages[6] = npcAnimFrame;
-			}
-			else {
-				spriteImages[6] = 4 + npcAnimFrame;
-			}
-			if(npcDirections[7]) {
-				spriteImages[7] = npcAnimFrame;
-			}
-			else {
-				spriteImages[7] = 4 + npcAnimFrame;
-			}
-		}
+				// Key codes:
+				// F1              = 112
+				// Backspace       = 8
+				// Tab             = 9
+				// Shift           = 16
+				// Control         = 17
+				// Alt             = 18
+				// AltGr           = 225
+				// Up Arrow Key    = 38
+				// Down Arrow Key  = 40
+				// Left Arrow Key  = 37
+				// Right Arrow Key = 39
 
-		for(var index = 1; index < 8; index++) {
-			if(npcDirections[index]) {
-				var canMove = true;
-				var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsE[index];
-				var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
-				for(var pos = 0; pos < 8; pos++) {
-					if(pos == index) pos++;
-					if(
-						npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
-						npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-					) {
-						canMove = false;
-					}
+				if(!keyDown && typedKeyCode == 112 && debugMode) {
+					messageWindowCentered("debug info\nplayerX: " + spriteXCoords[0] + "\nplayerY: " + spriteYCoords[0], false);
 				}
-				var blockType;
-				if(canMove) {
-					blockType = checkBlockEW(npcFeetX, npcFeetY);
-				}
-				if(blockType == 0) {
-					spriteXCoords[index] = spriteXCoords[index] + 1;
-				}
-				if(spriteXCoords[index] >= 1829) {
-					npcDirections[index] = false;
-				}
-			}
-			else {
-				var canMove = true;
-				var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsW[index];
-				var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
-				for(var pos = 0; pos < 8; pos++) {
-					if(pos == index) pos++;
-					if(
-						npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
-						npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-					) {
-						canMove = false;
-					}
-				}
-				var blockType;
-				if(canMove) {
-					blockType = checkBlockEW(npcFeetX, npcFeetY);
-				}
-				if(blockType == 0) {
-					spriteXCoords[index] = spriteXCoords[index] - 1;
-				}
-				if(spriteXCoords[index] <= 0) {
-					npcDirections[index] = true;
-				}
-			}
-		}
-	}
-	else {
-		if(gameState == STATE_INPUTWINDOW && canTypeKey && keyDown && typedKeyCode != 13) {
-			var validCharacter = true;
-			if(inputBoxOnlyNumericCharacters) {
-				validCharacter = false;
-				if(typedKeyCode == 8 || (typedKey.charCodeAt(0) >= 48 && typedKey.charCodeAt(0) <= 57)) {
-					validCharacter = true;
-				}
-			}
-			if(validCharacter) {
-				eraseCursor(textInputX, textInputY, textInputText);
-				if(typedKeyCode == 8) {
-					imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-					var x = textInputX;
-					var y = textInputY;
-					for(var pos = 0; pos < (textInputText.length - 1); pos++) {
-						x += mainFontWidthIndex[textInputText.charCodeAt(pos)];
-					}
-					var restoreX = x;
-					var endX = x + mainFontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
-					var endY = y + mainFontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
-					while(y < endY) {
-						x = restoreX;
-						while(x < endX) {
-							imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
-							imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
-							imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
-							x++;
-						}
-						y++;
-					}
-					ctx.putImageData(imgData, 0, 0);
-					textInputText = textInputText.slice(0, -1);
-				}
-				if(typedKey.length == 1 && textInputText.length < inputBoxTextMaxLength) {
-					textInputText += typedKey;
-				}
-				putTextOnScreen(textInputX, textInputY, textInputText, 0);
-				drawCursor(textInputX, textInputY, textInputText);
-			}
-		}
-		if(gameState == STATE_INVENTORY && inventory.length > 0) {
-			if(canTypeKey && keyDown) {
-				switch(typedKeyCode) {
-					case 38:
-						// Up arrow key on selection
-						deselectInventorySelection();
-						if(inventorySelectedIndex == 34) {
-							inventorySelectedIndex = inventory.length - 1;
-						}
-						else if(inventorySelectedIndex > 0){
-							inventorySelectedIndex--;
-						}
-						highlightInventorySelection();
-						break;
-					case 40:
-						// Down arrow key on selection
-						deselectInventorySelection();
-						if(inventorySelectedIndex == 16 || inventorySelectedIndex == 33 || inventorySelectedIndex == (inventory.length - 1)) {
-							inventorySelectedIndex = 34;
-						}
-						else if(inventorySelectedIndex < 34){
-							inventorySelectedIndex++;
-						}
-						highlightInventorySelection();
-						break;
-					case 37:
-						// Left arrow key on selection
-						if(inventorySelectedIndex != 34 && inventorySelectedIndex >= 17) {
-							deselectInventorySelection();
-							inventorySelectedIndex -= 17;
-							highlightInventorySelection();
-						}
-						break;
-					case 39:
-						// Right arrow key on selection
-						if(inventorySelectedIndex != 34 && inventory.length >= 18 && inventorySelectedIndex < 17) {
-							deselectInventorySelection();
-							inventorySelectedIndex += 17;
-							if(inventorySelectedIndex > (inventory.length - 1)) {
-								inventorySelectedIndex = inventory.length - 1;
-							}
-							highlightInventorySelection();
-						}
-						break;
-				}
-			}
-		}
-		canTypeKey = false;
-		keyDown = false;
-		if(!keyDown) {
-			canTypeKey = true;
-		}
 
-		if(enterTyped) {
-			enterTyped = false;
-			if(gameState == STATE_INVENTORY) {
-				if(inventorySelectedIndex == 34) {
-					waitingForEnterPress = false;
-					imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
-					ctx.putImageData(imgData, 0, 0);
-					gameState = STATE_GAME;
+				if(canTypeKey && keyDown && typedKey.length == 1) {
+					waitingForEnterPress = true;
+					secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
+					gameState = STATE_INPUTWINDOW;
+					inputState = INPUTSTATE_COMMAND;
+					var x = 15;
+					var y = 822;
+					var winWidth = screenWidth - (x * 2);
+					var winHeight = 75;
+					inputBoxX = 10;
+					inputBoxY = 32;
+					inputBoxWidth = winWidth - 25;
+					inputBoxHeight = 25;
+					inputWindow(x, y, winWidth, winHeight, false, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, false, 97, "Enter command:");
 				}
-				else {
-					imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-					thirdScreenCtx.putImageData(imgData, 0, 0);
-					gameState = STATE_ITEMDESCRIPTION;
 
-					var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
-					x = 775;
-					y = 60;
-					winWidth = 360;
-					winHeight = 360;
+				if(showInputWindow) {
+					showInputWindow = false;
+					waitingForEnterPress = true;
+					secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
+					gameState = STATE_INPUTWINDOW;
+					inputState = INPUTSTATE_GETITEM;
+					typedKey = "";
+					inputWindow(0, inputWinY, inputWinWidth, inputWinHeight, true, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, true, 3, inputWinText);
+				}
+
+				// Display the inventory window. You display the inventory by entering "inventory" at the input window or by pressing the Tab key.
+				if((canTypeKey && keyDown && typedKeyCode == 9) || saidShowInventory) {
+					secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
+					gameState = STATE_INVENTORY;
+					waitingForEnterPress = true;
+					saidShowInventory = false;
+					var windowX, windowY, x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+					windowX = 605;
+					windowY = 150;
+					x = windowX;
+					y = windowY;
+					winWidth = 700;
+					winHeight = 500;
 					targetX = x + winWidth;
 					targetY = y + winHeight;
 					borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
@@ -1868,58 +1528,413 @@ function play(delta)
 					borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
 					borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
 					drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
-					ctx.putImageData(imgData, 0, 0);
-					var spriteToDraw;
-					switch(inventory[inventorySelectedIndex]) {
-						case 1:
-							spriteToDraw = item01Sprite;
-							break;
-						case 2:
-							spriteToDraw = item02Sprite;
-							break;
+					/*
+					Inventory items could use a different font, so that we can fit even very long inventory item names
+					on one line, two different items on the same line separated by columns.
+					The font could have the same height as the default font but narrower width.
+					The inventory item text font could be 11 x 19 px.
+					*/
+					putTextOnScreen(797, 175, "You are carrying:", 0);
+
+					inventorySelectedIndex = 34;
+					if(inventory.length == 0) {
+						putTextOnScreen(822, 391, "Nothing at all", 0);
 					}
-					ctx.drawImage(spriteToDraw, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
-					messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
-				}
-			}
-			else if(gameState == STATE_ITEMDESCRIPTION) {
-				imgData = thirdScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
-				ctx.putImageData(imgData, 0, 0);
-				gameState = STATE_INVENTORY;
-			}
-			else {
-				waitingForEnterPress = false;
-				imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
-				updateStatusBar();
-				ctx.putImageData(imgData, 0, 0);
-				if(gameState == STATE_INPUTWINDOW) {
-					gameState = STATE_GAME;
-					switch(inputState) {
-						case INPUTSTATE_COMMAND:
-							parse(textInputText);
-							break;
-						case INPUTSTATE_GETITEM:
-							if(textInputText.length > 0) {
-								var itemNumber = parseInt(textInputText);
-								if(itemNumber == 0 || itemNumber >= inventoryItemNames.length) {
-									messageWindowCentered("Invalid item number.\nValid item numbers are: 1 to " + (inventoryItemNames.length - 1) + ".");
+					else {
+						putTextOnScreen(946, 616, "OK", 0);
+						var invTextColumn = 0;
+						var invTextLine = 0;
+						for(var pos = 0; pos < inventory.length; pos++) {
+							putTextOnScreen((616 + (invTextColumn * 350)), (202 + (invTextLine * 23)), inventoryItemNames[inventory[pos]], 1);
+							invTextLine++;
+							if(invTextLine >= 17) {
+								if(invTextColumn == 0 && pos < (inventory.length - 1)) {
+									imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+									for(var ypos = windowY + 52; ypos < (windowY + 52 + 390); ypos++) {
+										imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 0] = 0;
+										imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 1] = 0;
+										imgData.data[(ypos * rowStride) + ((windowX + 347) * 4) + 2] = 0;
+									}
+									ctx.putImageData(imgData, 0, 0);
 								}
-								else {
-									var itemAlreadyInInventory = false;
-									for(var pos = 0; pos < inventory.length; pos++) {
-										if(inventory[pos] == itemNumber) {
-											itemAlreadyInInventory = true;
-										}
-									}
-									if(itemAlreadyInInventory) {
-										messageWindowCentered("Item already in inventory.");
-									}
-									else {
-										inventory[inventory.length] = itemNumber;
-									}
+								invTextLine = 0;
+								invTextColumn++;
+								if(invTextColumn >= 2) {
+									pos = inventory.length;
 								}
 							}
+						}
+						highlightInventorySelection();
+					}
+				}
+				canTypeKey = false;
+				keyDown = false;
+				if(!keyDown) {
+					canTypeKey = true;
+				}
+				enterTyped = false;
+			}
+			if(getFlag(1)) {
+				if(!getFlag(3)) {
+					if(!getFlag(2)) {
+						if(spriteYCoords[0] > 225) {
+							playerAnimPos++;
+							if(playerAnimPos >= playerAnimDelay) {
+								playerAnimPos = 0;
+								gameEngineVariables[0] = gameEngineVariables[0] + 1;
+								if(gameEngineVariables[0] >= 3) {
+									gameEngineVariables[0] = 0;
+								}
+								spriteImages[0] = 16 + gameEngineVariables[0];
+							}
+							spriteYCoords[0] = spriteYCoords[0] - 1;
+						}
+						else {
+							spriteMaskYCoords[0] = spriteYCoords[0];
+							setFlag(2);
+							playerAnimPos = 0;
+						}
+					}
+					else {
+						if(spriteYCoords[0] < 424) {
+							playerAnimPos++;
+							if(playerAnimPos >= playerAnimDelay) {
+								playerAnimPos = 0;
+								gameEngineVariables[0] = gameEngineVariables[0] + 1;
+								if(gameEngineVariables[0] >= 3) {
+									gameEngineVariables[0] = 0;
+								}
+								spriteImages[0] = 19 + gameEngineVariables[0];
+							}
+							spriteYCoords[0] = spriteYCoords[0] + 1;
+							spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
+						}
+						else {
+							clearFlag(0);
+							clearFlag(1);
+							spriteImages[0] = 12;
+						}
+					}
+				}
+				else {
+					if(!getFlag(2)) {
+						if(spriteYCoords[0] > 225) {
+							playerAnimPos++;
+							if(playerAnimPos >= playerAnimDelay) {
+								playerAnimPos = 0;
+								gameEngineVariables[0] = gameEngineVariables[0] + 1;
+								if(gameEngineVariables[0] >= 3) {
+									gameEngineVariables[0] = 0;
+								}
+								spriteImages[0] = 19 + gameEngineVariables[0];
+							}
+							spriteYCoords[0] = spriteYCoords[0] - 1;
+							spriteMaskYCoords[0] = spriteMaskYCoords[0] - 1;
+						}
+						else {
+							spriteMaskYCoords[0] = 430;
+							setFlag(2);
+							playerAnimPos = 0;
+						}
+					}
+					else {
+						if(spriteYCoords[0] < 430) {
+							playerAnimPos++;
+							if(playerAnimPos >= playerAnimDelay) {
+								playerAnimPos = 0;
+								gameEngineVariables[0] = gameEngineVariables[0] + 1;
+								if(gameEngineVariables[0] >= 3) {
+									gameEngineVariables[0] = 0;
+								}
+								spriteImages[0] = 16 + gameEngineVariables[0];
+							}
+							spriteYCoords[0] = spriteYCoords[0] + 1;
+						}
+						else {
+							clearFlag(0);
+							clearFlag(1);
+							spriteImages[0] = 8;
+						}
+					}
+				}
+			}
+
+			// Move all the NPC characters, the Joonas clones which march back and forth.
+			npcAnimPos++;
+			if(npcAnimPos >= npcAnimDelay) {
+				npcAnimPos = 0;
+				npcAnimFrame++;
+				if(npcAnimFrame >= 4) {
+					npcAnimFrame = 0;
+				}
+				if(npcDirections[1]) {
+					spriteImages[1] = npcAnimFrame;
+				}
+				else {
+					spriteImages[1] = 4 + npcAnimFrame;
+				}
+				if(npcDirections[2]) {
+					spriteImages[2] = npcAnimFrame;
+				}
+				else {
+					spriteImages[2] = 4 + npcAnimFrame;
+				}
+				if(npcDirections[3]) {
+					spriteImages[3] = npcAnimFrame;
+				}
+				else {
+					spriteImages[3] = 4 + npcAnimFrame;
+				}
+				if(npcDirections[4]) {
+					spriteImages[4] = npcAnimFrame;
+				}
+				else {
+					spriteImages[4] = 4 + npcAnimFrame;
+				}
+				if(npcDirections[5]) {
+					spriteImages[5] = npcAnimFrame;
+				}
+				else {
+					spriteImages[5] = 4 + npcAnimFrame;
+				}
+				if(npcDirections[6]) {
+					spriteImages[6] = npcAnimFrame;
+				}
+				else {
+					spriteImages[6] = 4 + npcAnimFrame;
+				}
+				if(npcDirections[7]) {
+					spriteImages[7] = npcAnimFrame;
+				}
+				else {
+					spriteImages[7] = 4 + npcAnimFrame;
+				}
+			}
+
+			for(var index = 1; index < 8; index++) {
+				if(npcDirections[index]) {
+					var canMove = true;
+					var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsE[index];
+					var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
+					for(var pos = 0; pos < 8; pos++) {
+						if(pos == index) pos++;
+						if(
+							npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
+							npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+						) {
+							canMove = false;
+						}
+					}
+					var blockType;
+					if(canMove) {
+						blockType = checkBlockEW(npcFeetX, npcFeetY);
+					}
+					if(blockType == 0) {
+						spriteXCoords[index] = spriteXCoords[index] + 1;
+					}
+					if(spriteXCoords[index] >= 1829) {
+						npcDirections[index] = false;
+					}
+				}
+				else {
+					var canMove = true;
+					var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsW[index];
+					var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
+					for(var pos = 0; pos < 8; pos++) {
+						if(pos == index) pos++;
+						if(
+							npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
+							npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+						) {
+							canMove = false;
+						}
+					}
+					var blockType;
+					if(canMove) {
+						blockType = checkBlockEW(npcFeetX, npcFeetY);
+					}
+					if(blockType == 0) {
+						spriteXCoords[index] = spriteXCoords[index] - 1;
+					}
+					if(spriteXCoords[index] <= 0) {
+						npcDirections[index] = true;
+					}
+				}
+			}
+		}
+		else {
+			if(gameState == STATE_INPUTWINDOW && canTypeKey && keyDown && typedKeyCode != 13) {
+				var validCharacter = true;
+				if(inputBoxOnlyNumericCharacters) {
+					validCharacter = false;
+					if(typedKeyCode == 8 || (typedKey.charCodeAt(0) >= 48 && typedKey.charCodeAt(0) <= 57)) {
+						validCharacter = true;
+					}
+				}
+				if(validCharacter) {
+					eraseCursor(textInputX, textInputY, textInputText);
+					if(typedKeyCode == 8) {
+						imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+						var x = textInputX;
+						var y = textInputY;
+						for(var pos = 0; pos < (textInputText.length - 1); pos++) {
+							x += mainFontWidthIndex[textInputText.charCodeAt(pos)];
+						}
+						var restoreX = x;
+						var endX = x + mainFontWidthIndex[textInputText.charCodeAt(textInputText.length - 1)];
+						var endY = y + mainFontHeightIndex[textInputText.charCodeAt(textInputText.length - 1)];
+						while(y < endY) {
+							x = restoreX;
+							while(x < endX) {
+								imgData.data[(y * rowStride) + (x * 4) + 0] = 255;
+								imgData.data[(y * rowStride) + (x * 4) + 1] = 255;
+								imgData.data[(y * rowStride) + (x * 4) + 2] = 255;
+								x++;
+							}
+							y++;
+						}
+						ctx.putImageData(imgData, 0, 0);
+						textInputText = textInputText.slice(0, -1);
+					}
+					if(typedKey.length == 1 && textInputText.length < inputBoxTextMaxLength) {
+						textInputText += typedKey;
+					}
+					putTextOnScreen(textInputX, textInputY, textInputText, 0);
+					drawCursor(textInputX, textInputY, textInputText);
+				}
+			}
+			if(gameState == STATE_INVENTORY && inventory.length > 0) {
+				if(canTypeKey && keyDown) {
+					switch(typedKeyCode) {
+						case 38:
+							// Up arrow key on selection
+							deselectInventorySelection();
+							if(inventorySelectedIndex == 34) {
+								inventorySelectedIndex = inventory.length - 1;
+							}
+							else if(inventorySelectedIndex > 0){
+								inventorySelectedIndex--;
+							}
+							highlightInventorySelection();
 							break;
+						case 40:
+							// Down arrow key on selection
+							deselectInventorySelection();
+							if(inventorySelectedIndex == 16 || inventorySelectedIndex == 33 || inventorySelectedIndex == (inventory.length - 1)) {
+								inventorySelectedIndex = 34;
+							}
+							else if(inventorySelectedIndex < 34){
+								inventorySelectedIndex++;
+							}
+							highlightInventorySelection();
+							break;
+						case 37:
+							// Left arrow key on selection
+							if(inventorySelectedIndex != 34 && inventorySelectedIndex >= 17) {
+								deselectInventorySelection();
+								inventorySelectedIndex -= 17;
+								highlightInventorySelection();
+							}
+							break;
+						case 39:
+							// Right arrow key on selection
+							if(inventorySelectedIndex != 34 && inventory.length >= 18 && inventorySelectedIndex < 17) {
+								deselectInventorySelection();
+								inventorySelectedIndex += 17;
+								if(inventorySelectedIndex > (inventory.length - 1)) {
+									inventorySelectedIndex = inventory.length - 1;
+								}
+								highlightInventorySelection();
+							}
+							break;
+					}
+				}
+			}
+			canTypeKey = false;
+			keyDown = false;
+			if(!keyDown) {
+				canTypeKey = true;
+			}
+
+			if(enterTyped) {
+				enterTyped = false;
+				if(gameState == STATE_INVENTORY) {
+					if(inventorySelectedIndex == 34) {
+						waitingForEnterPress = false;
+						imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+						ctx.putImageData(imgData, 0, 0);
+						gameState = STATE_GAME;
+					}
+					else {
+						imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+						thirdScreenCtx.putImageData(imgData, 0, 0);
+						gameState = STATE_ITEMDESCRIPTION;
+
+						var x, y, winWidth, winHeight, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY;
+						x = 775;
+						y = 60;
+						winWidth = 360;
+						winHeight = 360;
+						targetX = x + winWidth;
+						targetY = y + winHeight;
+						borderTargetX = x + Math.floor(messageWindowMarginWidth / 2) + winWidth - (Math.floor(messageWindowMarginWidth / 2) * 2) - 1;
+						borderTargetY = y + Math.floor(messageWindowMarginHeight / 2) + winHeight - (Math.floor(messageWindowMarginHeight / 2) * 2) - 1;
+						borderStartX = x + Math.floor(messageWindowMarginWidth / 2);
+						borderStartY = y + Math.floor(messageWindowMarginHeight / 2);
+						drawWindowOnScreen(x, y, targetX, targetY, borderStartX, borderStartY, borderTargetX, borderTargetY);
+						ctx.putImageData(imgData, 0, 0);
+						var spriteToDraw;
+						switch(inventory[inventorySelectedIndex]) {
+							case 1:
+								spriteToDraw = item01Sprite;
+								break;
+							case 2:
+								spriteToDraw = item02Sprite;
+								break;
+						}
+						ctx.drawImage(spriteToDraw, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
+						messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
+					}
+				}
+				else if(gameState == STATE_ITEMDESCRIPTION) {
+					imgData = thirdScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+					ctx.putImageData(imgData, 0, 0);
+					gameState = STATE_INVENTORY;
+				}
+				else {
+					waitingForEnterPress = false;
+					imgData = secondScreenCtx.getImageData(0, 0, secondScreenBuffer.width, secondScreenBuffer.height);
+					updateStatusBar();
+					ctx.putImageData(imgData, 0, 0);
+					if(gameState == STATE_INPUTWINDOW) {
+						gameState = STATE_GAME;
+						switch(inputState) {
+							case INPUTSTATE_COMMAND:
+								parse(textInputText);
+								break;
+							case INPUTSTATE_GETITEM:
+								if(textInputText.length > 0) {
+									var itemNumber = parseInt(textInputText);
+									if(itemNumber == 0 || itemNumber >= inventoryItemNames.length) {
+										messageWindowCentered("Invalid item number.\nValid item numbers are: 1 to " + (inventoryItemNames.length - 1) + ".");
+									}
+									else {
+										var itemAlreadyInInventory = false;
+										for(var pos = 0; pos < inventory.length; pos++) {
+											if(inventory[pos] == itemNumber) {
+												itemAlreadyInInventory = true;
+											}
+										}
+										if(itemAlreadyInInventory) {
+											messageWindowCentered("Item already in inventory.");
+										}
+										else {
+											inventory[inventory.length] = itemNumber;
+										}
+									}
+								}
+								break;
+						}
 					}
 				}
 			}
