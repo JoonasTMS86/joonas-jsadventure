@@ -127,6 +127,70 @@ var sprite021Buffer              = document.getElementById("sprite021Buffer");
 var sprite021Ctx                 = sprite021Buffer.getContext("2d");
 var sprite021Sdata               = sprite021Ctx.createImageData(85, 124);
 var sprite021Sprite              = document.getElementById("sprite021");
+var sprite022Buffer              = document.getElementById("sprite022Buffer");
+var sprite022Ctx                 = sprite022Buffer.getContext("2d");
+var sprite022Sdata               = sprite022Ctx.createImageData(85, 124);
+var sprite022Sprite              = document.getElementById("sprite022");
+var sprite023Buffer              = document.getElementById("sprite023Buffer");
+var sprite023Ctx                 = sprite023Buffer.getContext("2d");
+var sprite023Sdata               = sprite023Ctx.createImageData(85, 124);
+var sprite023Sprite              = document.getElementById("sprite023");
+var sprite024Buffer              = document.getElementById("sprite024Buffer");
+var sprite024Ctx                 = sprite024Buffer.getContext("2d");
+var sprite024Sdata               = sprite024Ctx.createImageData(85, 124);
+var sprite024Sprite              = document.getElementById("sprite024");
+var sprite025Buffer              = document.getElementById("sprite025Buffer");
+var sprite025Ctx                 = sprite025Buffer.getContext("2d");
+var sprite025Sdata               = sprite025Ctx.createImageData(85, 124);
+var sprite025Sprite              = document.getElementById("sprite025");
+var sprite026Buffer              = document.getElementById("sprite026Buffer");
+var sprite026Ctx                 = sprite026Buffer.getContext("2d");
+var sprite026Sdata               = sprite026Ctx.createImageData(85, 124);
+var sprite026Sprite              = document.getElementById("sprite026");
+var sprite027Buffer              = document.getElementById("sprite027Buffer");
+var sprite027Ctx                 = sprite027Buffer.getContext("2d");
+var sprite027Sdata               = sprite027Ctx.createImageData(85, 124);
+var sprite027Sprite              = document.getElementById("sprite027");
+var sprite028Buffer              = document.getElementById("sprite028Buffer");
+var sprite028Ctx                 = sprite028Buffer.getContext("2d");
+var sprite028Sdata               = sprite028Ctx.createImageData(85, 124);
+var sprite028Sprite              = document.getElementById("sprite028");
+var sprite029Buffer              = document.getElementById("sprite029Buffer");
+var sprite029Ctx                 = sprite029Buffer.getContext("2d");
+var sprite029Sdata               = sprite029Ctx.createImageData(85, 124);
+var sprite029Sprite              = document.getElementById("sprite029");
+var sprite030Buffer              = document.getElementById("sprite030Buffer");
+var sprite030Ctx                 = sprite030Buffer.getContext("2d");
+var sprite030Sdata               = sprite030Ctx.createImageData(85, 124);
+var sprite030Sprite              = document.getElementById("sprite030");
+var sprite031Buffer              = document.getElementById("sprite031Buffer");
+var sprite031Ctx                 = sprite031Buffer.getContext("2d");
+var sprite031Sdata               = sprite031Ctx.createImageData(85, 124);
+var sprite031Sprite              = document.getElementById("sprite031");
+var sprite032Buffer              = document.getElementById("sprite032Buffer");
+var sprite032Ctx                 = sprite032Buffer.getContext("2d");
+var sprite032Sdata               = sprite032Ctx.createImageData(85, 124);
+var sprite032Sprite              = document.getElementById("sprite032");
+var sprite033Buffer              = document.getElementById("sprite033Buffer");
+var sprite033Ctx                 = sprite033Buffer.getContext("2d");
+var sprite033Sdata               = sprite033Ctx.createImageData(85, 124);
+var sprite033Sprite              = document.getElementById("sprite033");
+var sprite034Buffer              = document.getElementById("sprite034Buffer");
+var sprite034Ctx                 = sprite034Buffer.getContext("2d");
+var sprite034Sdata               = sprite034Ctx.createImageData(85, 124);
+var sprite034Sprite              = document.getElementById("sprite034");
+var sprite035Buffer              = document.getElementById("sprite035Buffer");
+var sprite035Ctx                 = sprite035Buffer.getContext("2d");
+var sprite035Sdata               = sprite035Ctx.createImageData(85, 124);
+var sprite035Sprite              = document.getElementById("sprite035");
+var sprite036Buffer              = document.getElementById("sprite036Buffer");
+var sprite036Ctx                 = sprite036Buffer.getContext("2d");
+var sprite036Sdata               = sprite036Ctx.createImageData(85, 124);
+var sprite036Sprite              = document.getElementById("sprite036");
+var sprite037Buffer              = document.getElementById("sprite037Buffer");
+var sprite037Ctx                 = sprite037Buffer.getContext("2d");
+var sprite037Sdata               = sprite037Ctx.createImageData(85, 124);
+var sprite037Sprite              = document.getElementById("sprite037");
 var spriteBuffer                 = document.getElementById("spriteBuffer");
 var spriteCtx                    = spriteBuffer.getContext("2d");
 var spriteSdata                  = spriteCtx.createImageData(400, 400);
@@ -169,7 +233,7 @@ var spriteWidthsNS               = [26, 26, 26, 26, 26, 26, 26, 26];
 var spriteCheckBlockOffsetsNS    = [29, 29, 29, 29, 29, 29, 29, 29];
 var spriteCheckBlockOffsetsE     = [55, 55, 55, 55, 55, 55, 55, 55];
 var spriteCheckBlockOffsetsW     = [28, 28, 28, 28, 28, 28, 28, 28];
-var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0, 22];
+var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0, 100];
 var playerAnimPos                = 0;
 var playerAnimFrame              = 0;
 var npcAnimPos                   = 0;
@@ -197,13 +261,16 @@ var synonyms                     = [
 	"look", "see", "watch", 0,
 	"talk", "speak", 0,
 	"climb", 0,
+	"drink", "swallow", 0,
+	"swim", 0,
 	"debugdebug", 0,
 	"item", 0,
 	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
 	"bush", 0,
 	"fence", "obstacle", "wall", 0,
-	"crowbar", 0,
-	"hammer", 0
+	"rock", "stone", 0,
+	"hammer", 0,
+	"water", "sea", 0
 ];
 var gameEngineFlags              = [];
 var gameEngineVariables          = [];
@@ -212,7 +279,7 @@ var saidShowInventory            = false;
 // Inventory items are stored as item index numbers to the inventory array.
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
 var inventory                    = [];
-var inventoryItemNames           = [0, "Hammer", "Crowbar"];
+var inventoryItemNames           = [0, "Hammer", "Rock"];
 var score                        = 0;
 // The debug mode of the game engine is enabled by entering the command "debugdebug".
 var debugMode                    = false;
@@ -221,7 +288,7 @@ var showInputWindow              = false;
 var itemDescriptions             = [
 	0,
 	"Your trusty hammer has served you well\nfor several years now.",
-	"A crowbar is always a handy tool to have."
+	"This is a smooth, round and slightly wet rock."
 ];
 
 let Application = PIXI.Application,
@@ -480,6 +547,54 @@ function drawSpriteOnScreen(spriteNumber) {
 			sData = sprite021Sdata;
 			break;
 		case 22:
+			sData = sprite022Sdata;
+			break;
+		case 23:
+			sData = sprite023Sdata;
+			break;
+		case 24:
+			sData = sprite024Sdata;
+			break;
+		case 25:
+			sData = sprite025Sdata;
+			break;
+		case 26:
+			sData = sprite026Sdata;
+			break;
+		case 27:
+			sData = sprite027Sdata;
+			break;
+		case 28:
+			sData = sprite028Sdata;
+			break;
+		case 29:
+			sData = sprite029Sdata;
+			break;
+		case 30:
+			sData = sprite030Sdata;
+			break;
+		case 31:
+			sData = sprite031Sdata;
+			break;
+		case 32:
+			sData = sprite032Sdata;
+			break;
+		case 33:
+			sData = sprite033Sdata;
+			break;
+		case 34:
+			sData = sprite034Sdata;
+			break;
+		case 35:
+			sData = sprite035Sdata;
+			break;
+		case 36:
+			sData = sprite036Sdata;
+			break;
+		case 37:
+			sData = sprite037Sdata;
+			break;
+		case 100:
 			sData = object01Sdata;
 			break;
 	}
@@ -1000,10 +1115,10 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["look"])) {
 			if(!hasItem(1)) {
-				messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
+				messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
 			}
 			else {
-				messageWindowCentered("You are in an area where the only elements you can see are\nseven clones of yourself who march back and forth, a\nclimbing wall and a bush.", false);
+				messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.", false);
 			}
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
@@ -1022,6 +1137,44 @@ function parse(userInput) {
 			else {
 				messageWindowCentered("Your hammer is not where you expected it to be.\nIt's lying here on the ground!", false);
 			}
+		}
+		else if(doesInputMatchThis(enteredWords, ["look", "rock"])) {
+			if(hasItem(2)) {
+				messageWindowCentered("You have it in your inventory.", false);
+			}
+			else {
+				messageWindowCentered("You can indeed see a rock under the water.", false);
+			}
+		}
+		else if(doesInputMatchThis(enteredWords, ["look", "water"])) {
+			messageWindowCentered("The water here is clean and crystal clear.\nYou would love to go swimming, but you need\nto complete your quest first.", false);
+		}
+		else if(doesInputMatchThis(enteredWords, ["get", "water"]) || doesInputMatchThis(enteredWords, ["drink", "water"])) {
+			messageWindowCentered("Good idea, but you're not thirsty at the moment.");
+		}
+		else if(doesInputMatchThis(enteredWords, ["get", "rock"])) {
+			if(hasItem(2)) {
+				messageWindowCentered("You already have it in your inventory.", false);
+			}
+			else {
+				// Rock at X,Y coords 802,767.
+				if(
+					(spriteXCoords[0] + spriteWidths[0]) >= 796 &&
+					spriteXCoords[0] <= 808 &&
+					(spriteYCoords[0] + spriteHeights[0]) >= 826 &&
+					(spriteYCoords[0] + spriteHeights[0]) <= 848
+				) {
+					messageWindowCentered("You pick up the underwater rock.");
+					inventory[inventory.length] = 2;
+					score += 5;
+				}
+				else {
+					messageWindowCentered("To pick up the underwater rock, you need to get closer to it.");
+				}
+			}
+		}
+		else if(doesInputMatchThis(enteredWords, ["swim"])) {
+			messageWindowCentered("You have no time to go swimming right now.", false);
 		}
 		else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
 			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"", false);
@@ -1275,6 +1428,54 @@ window.onload = function() {
 	sprite021Ctx.drawImage(sprite021Sprite, 0, 0);
 	sprite021Sdata = sprite021Ctx.getImageData(0, 0, sprite021Buffer.width, sprite021Buffer.height);
 
+	sprite022Ctx.drawImage(sprite022Sprite, 0, 0);
+	sprite022Sdata = sprite022Ctx.getImageData(0, 0, sprite022Buffer.width, sprite022Buffer.height);
+
+	sprite023Ctx.drawImage(sprite023Sprite, 0, 0);
+	sprite023Sdata = sprite023Ctx.getImageData(0, 0, sprite023Buffer.width, sprite023Buffer.height);
+
+	sprite024Ctx.drawImage(sprite024Sprite, 0, 0);
+	sprite024Sdata = sprite024Ctx.getImageData(0, 0, sprite024Buffer.width, sprite024Buffer.height);
+
+	sprite025Ctx.drawImage(sprite025Sprite, 0, 0);
+	sprite025Sdata = sprite025Ctx.getImageData(0, 0, sprite025Buffer.width, sprite025Buffer.height);
+
+	sprite026Ctx.drawImage(sprite026Sprite, 0, 0);
+	sprite026Sdata = sprite026Ctx.getImageData(0, 0, sprite026Buffer.width, sprite026Buffer.height);
+
+	sprite027Ctx.drawImage(sprite027Sprite, 0, 0);
+	sprite027Sdata = sprite027Ctx.getImageData(0, 0, sprite027Buffer.width, sprite027Buffer.height);
+
+	sprite028Ctx.drawImage(sprite028Sprite, 0, 0);
+	sprite028Sdata = sprite028Ctx.getImageData(0, 0, sprite028Buffer.width, sprite028Buffer.height);
+
+	sprite029Ctx.drawImage(sprite029Sprite, 0, 0);
+	sprite029Sdata = sprite029Ctx.getImageData(0, 0, sprite029Buffer.width, sprite029Buffer.height);
+
+	sprite030Ctx.drawImage(sprite030Sprite, 0, 0);
+	sprite030Sdata = sprite030Ctx.getImageData(0, 0, sprite030Buffer.width, sprite030Buffer.height);
+
+	sprite031Ctx.drawImage(sprite031Sprite, 0, 0);
+	sprite031Sdata = sprite031Ctx.getImageData(0, 0, sprite031Buffer.width, sprite031Buffer.height);
+
+	sprite032Ctx.drawImage(sprite032Sprite, 0, 0);
+	sprite032Sdata = sprite032Ctx.getImageData(0, 0, sprite032Buffer.width, sprite032Buffer.height);
+
+	sprite033Ctx.drawImage(sprite033Sprite, 0, 0);
+	sprite033Sdata = sprite033Ctx.getImageData(0, 0, sprite033Buffer.width, sprite033Buffer.height);
+
+	sprite034Ctx.drawImage(sprite034Sprite, 0, 0);
+	sprite034Sdata = sprite034Ctx.getImageData(0, 0, sprite034Buffer.width, sprite034Buffer.height);
+
+	sprite035Ctx.drawImage(sprite035Sprite, 0, 0);
+	sprite035Sdata = sprite035Ctx.getImageData(0, 0, sprite035Buffer.width, sprite035Buffer.height);
+
+	sprite036Ctx.drawImage(sprite036Sprite, 0, 0);
+	sprite036Sdata = sprite036Ctx.getImageData(0, 0, sprite036Buffer.width, sprite036Buffer.height);
+
+	sprite037Ctx.drawImage(sprite037Sprite, 0, 0);
+	sprite037Sdata = sprite037Ctx.getImageData(0, 0, sprite037Buffer.width, sprite037Buffer.height);
+
 	object01Ctx.drawImage(object01Sprite, 0, 0);
 	object01Sdata = object01Ctx.getImageData(0, 0, object01Buffer.width, object01Buffer.height);
 
@@ -1300,6 +1501,22 @@ window.onload = function() {
 	doSpriteTransparency(sprite019Ctx, sprite019Buffer, sprite019Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite020Ctx, sprite020Buffer, sprite020Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite021Ctx, sprite021Buffer, sprite021Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite022Ctx, sprite022Buffer, sprite022Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite023Ctx, sprite023Buffer, sprite023Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite024Ctx, sprite024Buffer, sprite024Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite025Ctx, sprite025Buffer, sprite025Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite026Ctx, sprite026Buffer, sprite026Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite027Ctx, sprite027Buffer, sprite027Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite028Ctx, sprite028Buffer, sprite028Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite029Ctx, sprite029Buffer, sprite029Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite030Ctx, sprite030Buffer, sprite030Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite031Ctx, sprite031Buffer, sprite031Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite032Ctx, sprite032Buffer, sprite032Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite033Ctx, sprite033Buffer, sprite033Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite034Ctx, sprite034Buffer, sprite034Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite035Ctx, sprite035Buffer, sprite035Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite036Ctx, sprite036Buffer, sprite036Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite037Ctx, sprite037Buffer, sprite037Sdata, 52, 90, 72);
 	doSpriteTransparency(object01Ctx, object01Buffer, object01Sdata, 72, 147, 15);
 	setIndicesAndTransparenciesForFont(0); // 0 = set indices and transparencies for main (default) font
 	setIndicesAndTransparenciesForFont(1); // 1 = set indices and transparencies for narrow font
@@ -1348,7 +1565,11 @@ function play(delta)
 						if(playerAnimFrame >= 4) {
 							playerAnimFrame = 0;
 						}
-						spriteImages[0] = 4 + playerAnimFrame;
+						var plus = 0;
+						if(spriteYCoords[0] > 622) {
+							plus = 22;
+						}
+						spriteImages[0] = 4 + playerAnimFrame + plus;
 					}
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
@@ -1377,7 +1598,11 @@ function play(delta)
 						if(playerAnimFrame >= 4) {
 							playerAnimFrame = 0;
 						}
-						spriteImages[0] = playerAnimFrame;
+						var plus = 0;
+						if(spriteYCoords[0] > 622) {
+							plus = 22;
+						}
+						spriteImages[0] = playerAnimFrame + plus;
 					}
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
@@ -1407,7 +1632,11 @@ function play(delta)
 							if(playerAnimFrame >= 4) {
 								playerAnimFrame = 0;
 							}
-							spriteImages[0] = 8 + playerAnimFrame;
+							var plus = 0;
+							if(spriteYCoords[0] > 622) {
+								plus = 22;
+							}
+							spriteImages[0] = 8 + playerAnimFrame + plus;
 						}
 					}
 					var canMove = true;
@@ -1440,7 +1669,11 @@ function play(delta)
 							if(playerAnimFrame >= 4) {
 								playerAnimFrame = 0;
 							}
-							spriteImages[0] = 12 + playerAnimFrame;
+							var plus = 0;
+							if(spriteYCoords[0] > 622) {
+								plus = 22;
+							}
+							spriteImages[0] = 12 + playerAnimFrame + plus;
 						}
 					}
 					var canMove = true;
