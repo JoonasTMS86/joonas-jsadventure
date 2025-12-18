@@ -294,6 +294,7 @@ var itemDescriptions             = [
 	"Your trusty hammer has served you well\nfor several years now.",
 	"This is a smooth, round and slightly wet rock."
 ];
+var room                         = 0;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -636,13 +637,13 @@ function drawAllSprites() {
 		}
 	}
 	drawSpriteOnScreen(spriteDrawOrder[0]);
-	drawSpriteOnScreen(spriteDrawOrder[1]);
-	drawSpriteOnScreen(spriteDrawOrder[2]);
-	drawSpriteOnScreen(spriteDrawOrder[3]);
-	drawSpriteOnScreen(spriteDrawOrder[4]);
-	drawSpriteOnScreen(spriteDrawOrder[5]);
-	drawSpriteOnScreen(spriteDrawOrder[6]);
-	drawSpriteOnScreen(spriteDrawOrder[7]);
+	if(numberOfSprites > 1) drawSpriteOnScreen(spriteDrawOrder[1]);
+	if(numberOfSprites > 2) drawSpriteOnScreen(spriteDrawOrder[2]);
+	if(numberOfSprites > 3) drawSpriteOnScreen(spriteDrawOrder[3]);
+	if(numberOfSprites > 4) drawSpriteOnScreen(spriteDrawOrder[4]);
+	if(numberOfSprites > 5) drawSpriteOnScreen(spriteDrawOrder[5]);
+	if(numberOfSprites > 6) drawSpriteOnScreen(spriteDrawOrder[6]);
+	if(numberOfSprites > 7) drawSpriteOnScreen(spriteDrawOrder[7]);
 	if(numberOfSprites > 8) drawSpriteOnScreen(spriteDrawOrder[8]);
 }
 
@@ -1014,8 +1015,11 @@ function eraseCursor(x, y, text) {
 function checkBlockNS(objectX, objectY, objectWidth) {
 	var targetX = objectX + objectWidth;
 	while(objectX < targetX) {
-		if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] != 0) {
-			return priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)];
+		if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 2] != 0) {
+			var b3 = priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 0] * 65536;
+			var b2 = priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 1] * 256;
+			var b1 = priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 2];
+			return b3 + b2 + b1;
 		}
 		objectX++;
 	}
@@ -1023,8 +1027,11 @@ function checkBlockNS(objectX, objectY, objectWidth) {
 }
 
 function checkBlockEW(objectX, objectY) {
-	if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] != 0) {
-		return priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)];
+	if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 2] != 0) {
+		var b3 = priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 0] * 65536;
+		var b2 = priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 1] * 256;
+		var b1 = priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4) + 2];
+		return b3 + b2 + b1;
 	}
 	return 0;
 }
@@ -1557,6 +1564,7 @@ function play(delta)
 
 	if(gameState == STATE_TITLE) {
 		if(keyDown) {
+			room = 1;
 			ctx.drawImage(screen001picSprite, 0, 0);
 			priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
 			priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
@@ -1597,7 +1605,9 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-					for(var pos = 1; pos < 8; pos++) {
+					var howManyToCheck = numberOfSprites;
+					if(numberOfSprites > 8) howManyToCheck = 8;
+					for(var pos = 1; pos < howManyToCheck; pos++) {
 						if(
 							playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
 							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
@@ -1609,8 +1619,25 @@ function play(delta)
 					if(canMove) {
 						blockType = checkBlockEW(playerFeetX, playerFeetY);
 					}
-					if(blockType == 0) {
-						spriteXCoords[0] = spriteXCoords[0] - 1;
+					switch(blockType) {
+						case 0:
+							spriteXCoords[0] = spriteXCoords[0] - 1;
+							break;
+						case 16385:
+							room = 1;
+							numberOfSprites = 9;
+							if(hasItem(1)) {
+								numberOfSprites = 8;
+							}
+							spriteXCoords[0] = screenWidth - 85;
+							ctx.drawImage(screen001picSprite, 0, 0);
+							priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
+							priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+							depthBufferCtx.drawImage(screen001depSprite, 0, 0);
+							depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+							imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+							updateStatusBar();
+							break;
 					}
 				}
 				if(goingright) {
@@ -1630,7 +1657,9 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-					for(var pos = 1; pos < 8; pos++) {
+					var howManyToCheck = numberOfSprites;
+					if(numberOfSprites > 8) howManyToCheck = 8;
+					for(var pos = 1; pos < howManyToCheck; pos++) {
 						if(
 							playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
 							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
@@ -1642,8 +1671,22 @@ function play(delta)
 					if(canMove) {
 						blockType = checkBlockEW(playerFeetX, playerFeetY);
 					}
-					if(blockType == 0) {
-						spriteXCoords[0] = spriteXCoords[0] + 1;
+					switch(blockType) {
+						case 0:
+							spriteXCoords[0] = spriteXCoords[0] + 1;
+							break;
+						case 255:
+							room = 2;
+							numberOfSprites = 1;
+							spriteXCoords[0] = 6;
+							ctx.drawImage(screen002picSprite, 0, 0);
+							priorityBufferCtx.drawImage(screen002priSprite, 0, 0);
+							priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+							depthBufferCtx.drawImage(screen002depSprite, 0, 0);
+							depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+							imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+							updateStatusBar();
+							break;
 					}
 				}
 				if(goingup) {
@@ -1665,7 +1708,9 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
-					for(var pos = 1; pos < 8; pos++) {
+					var howManyToCheck = numberOfSprites;
+					if(numberOfSprites > 8) howManyToCheck = 8;
+					for(var pos = 1; pos < howManyToCheck; pos++) {
 						if(
 							(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
 							playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
@@ -1702,7 +1747,9 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0];
-					for(var pos = 1; pos < 8; pos++) {
+					var howManyToCheck = numberOfSprites;
+					if(numberOfSprites > 8) howManyToCheck = 8;
+					for(var pos = 1; pos < howManyToCheck; pos++) {
 						if(
 							(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
 							playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
@@ -1915,105 +1962,107 @@ function play(delta)
 				}
 			}
 
-			// Move all the NPC characters, the Joonas clones which march back and forth.
-			npcAnimPos++;
-			if(npcAnimPos >= npcAnimDelay) {
-				npcAnimPos = 0;
-				npcAnimFrame++;
-				if(npcAnimFrame >= 4) {
-					npcAnimFrame = 0;
+			// Script for room 1: Move all the NPC characters, the Joonas clones which march back and forth.
+			if(room == 1) {
+				npcAnimPos++;
+				if(npcAnimPos >= npcAnimDelay) {
+					npcAnimPos = 0;
+					npcAnimFrame++;
+					if(npcAnimFrame >= 4) {
+						npcAnimFrame = 0;
+					}
+					if(npcDirections[1]) {
+						spriteImages[1] = npcAnimFrame;
+					}
+					else {
+						spriteImages[1] = 4 + npcAnimFrame;
+					}
+					if(npcDirections[2]) {
+						spriteImages[2] = npcAnimFrame;
+					}
+					else {
+						spriteImages[2] = 4 + npcAnimFrame;
+					}
+					if(npcDirections[3]) {
+						spriteImages[3] = npcAnimFrame;
+					}
+					else {
+						spriteImages[3] = 4 + npcAnimFrame;
+					}
+					if(npcDirections[4]) {
+						spriteImages[4] = npcAnimFrame;
+					}
+					else {
+						spriteImages[4] = 4 + npcAnimFrame;
+					}
+					if(npcDirections[5]) {
+						spriteImages[5] = npcAnimFrame;
+					}
+					else {
+						spriteImages[5] = 4 + npcAnimFrame;
+					}
+					if(npcDirections[6]) {
+						spriteImages[6] = npcAnimFrame;
+					}
+					else {
+						spriteImages[6] = 4 + npcAnimFrame;
+					}
+					if(npcDirections[7]) {
+						spriteImages[7] = npcAnimFrame;
+					}
+					else {
+						spriteImages[7] = 4 + npcAnimFrame;
+					}
 				}
-				if(npcDirections[1]) {
-					spriteImages[1] = npcAnimFrame;
-				}
-				else {
-					spriteImages[1] = 4 + npcAnimFrame;
-				}
-				if(npcDirections[2]) {
-					spriteImages[2] = npcAnimFrame;
-				}
-				else {
-					spriteImages[2] = 4 + npcAnimFrame;
-				}
-				if(npcDirections[3]) {
-					spriteImages[3] = npcAnimFrame;
-				}
-				else {
-					spriteImages[3] = 4 + npcAnimFrame;
-				}
-				if(npcDirections[4]) {
-					spriteImages[4] = npcAnimFrame;
-				}
-				else {
-					spriteImages[4] = 4 + npcAnimFrame;
-				}
-				if(npcDirections[5]) {
-					spriteImages[5] = npcAnimFrame;
-				}
-				else {
-					spriteImages[5] = 4 + npcAnimFrame;
-				}
-				if(npcDirections[6]) {
-					spriteImages[6] = npcAnimFrame;
-				}
-				else {
-					spriteImages[6] = 4 + npcAnimFrame;
-				}
-				if(npcDirections[7]) {
-					spriteImages[7] = npcAnimFrame;
-				}
-				else {
-					spriteImages[7] = 4 + npcAnimFrame;
-				}
-			}
 
-			for(var index = 1; index < 8; index++) {
-				if(npcDirections[index]) {
-					var canMove = true;
-					var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsE[index];
-					var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
-					for(var pos = 0; pos < 8; pos++) {
-						if(pos == index) pos++;
-						if(
-							npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
-							npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-						) {
-							canMove = false;
+				for(var index = 1; index < 8; index++) {
+					if(npcDirections[index]) {
+						var canMove = true;
+						var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsE[index];
+						var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
+						for(var pos = 0; pos < 8; pos++) {
+							if(pos == index) pos++;
+							if(
+								npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
+								npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+							) {
+								canMove = false;
+							}
+						}
+						var blockType;
+						if(canMove) {
+							blockType = checkBlockEW(npcFeetX, npcFeetY);
+						}
+						if(blockType == 0) {
+							spriteXCoords[index] = spriteXCoords[index] + 1;
+						}
+						if(spriteXCoords[index] >= 1829) {
+							npcDirections[index] = false;
 						}
 					}
-					var blockType;
-					if(canMove) {
-						blockType = checkBlockEW(npcFeetX, npcFeetY);
-					}
-					if(blockType == 0) {
-						spriteXCoords[index] = spriteXCoords[index] + 1;
-					}
-					if(spriteXCoords[index] >= 1829) {
-						npcDirections[index] = false;
-					}
-				}
-				else {
-					var canMove = true;
-					var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsW[index];
-					var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
-					for(var pos = 0; pos < 8; pos++) {
-						if(pos == index) pos++;
-						if(
-							npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
-							npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
-						) {
-							canMove = false;
+					else {
+						var canMove = true;
+						var npcFeetX = spriteXCoords[index] + spriteCheckBlockOffsetsW[index];
+						var npcFeetY = spriteYCoords[index] + spriteHeights[index] - 1;
+						for(var pos = 0; pos < 8; pos++) {
+							if(pos == index) pos++;
+							if(
+								npcFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
+								npcFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
+							) {
+								canMove = false;
+							}
 						}
-					}
-					var blockType;
-					if(canMove) {
-						blockType = checkBlockEW(npcFeetX, npcFeetY);
-					}
-					if(blockType == 0) {
-						spriteXCoords[index] = spriteXCoords[index] - 1;
-					}
-					if(spriteXCoords[index] <= 0) {
-						npcDirections[index] = true;
+						var blockType;
+						if(canMove) {
+							blockType = checkBlockEW(npcFeetX, npcFeetY);
+						}
+						if(blockType == 0) {
+							spriteXCoords[index] = spriteXCoords[index] - 1;
+						}
+						if(spriteXCoords[index] <= 0) {
+							npcDirections[index] = true;
+						}
 					}
 				}
 			}
