@@ -284,6 +284,7 @@ var score                        = 0;
 // The debug mode of the game engine is enabled by entering the command "debugdebug".
 var debugMode                    = false;
 var msgCommandNotUnderstood      = "I understand your words, but not what you're trying to say.";
+var msgAlreadyHaveIt             = "You have it in your inventory.";
 var showInputWindow              = false;
 var itemDescriptions             = [
 	0,
@@ -1132,7 +1133,7 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "hammer"])) {
 			if(hasItem(1)) {
-				messageWindowCentered("You have it in your inventory.", false);
+				messageWindowCentered(msgAlreadyHaveIt, false);
 			}
 			else {
 				messageWindowCentered("Your hammer is not where you expected it to be.\nIt's lying here on the ground!", false);
@@ -1140,7 +1141,7 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["look", "rock"])) {
 			if(hasItem(2)) {
-				messageWindowCentered("You have it in your inventory.", false);
+				messageWindowCentered(msgAlreadyHaveIt, false);
 			}
 			else {
 				messageWindowCentered("You can indeed see a rock under the water.", false);
@@ -1154,7 +1155,7 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["get", "rock"])) {
 			if(hasItem(2)) {
-				messageWindowCentered("You already have it in your inventory.", false);
+				messageWindowCentered(msgAlreadyHaveIt, false);
 			}
 			else {
 				// Rock at X,Y coords 802,767.
@@ -1169,7 +1170,26 @@ function parse(userInput) {
 					score += 5;
 				}
 				else {
-					messageWindowCentered("To pick up the underwater rock, you need to get closer to it.");
+					var msg = "To pick up the underwater rock, you need to get closer to it.\nYou are too far to the ";
+					var sayAnd = false;
+					if((spriteXCoords[0] + spriteWidths[0]) < 796) {
+						sayAnd = true;
+						msg += "west";
+					}
+					if(spriteXCoords[0] > 808) {
+						sayAnd = true;
+						msg += "east";
+					}
+					if((spriteYCoords[0] + spriteHeights[0]) < 826) {
+						if(sayAnd) msg += " and to the ";
+						msg += "north";
+					}
+					if((spriteYCoords[0] + spriteHeights[0]) > 848) {
+						if(sayAnd) msg += " and to the ";
+						msg += "south";
+					}
+					msg += " from the rock.";
+					messageWindowCentered(msg);
 				}
 			}
 		}
@@ -1187,7 +1207,7 @@ function parse(userInput) {
 		}
 		else if(doesInputMatchThis(enteredWords, ["get", "hammer"])) {
 			if(hasItem(1)) {
-				messageWindowCentered("You already have it in your inventory.", false);
+				messageWindowCentered(msgAlreadyHaveIt, false);
 			}
 			else {
 				if(
