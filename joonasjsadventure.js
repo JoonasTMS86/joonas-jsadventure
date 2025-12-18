@@ -31,14 +31,17 @@ var thirdScreenBuffer            = document.getElementById("thirdBuffer");
 var thirdScreenCtx               = thirdScreenBuffer.getContext("2d");
 var screen000picSprite           = document.getElementById("screen000pic");
 var screen001picSprite           = document.getElementById("screen001pic");
+var screen002picSprite           = document.getElementById("screen002pic");
 var priorityBuffer               = document.getElementById("priorityBuffer");
 var priorityBufferCtx            = priorityBuffer.getContext("2d");
 var priorityBufferSdata          = priorityBufferCtx.createImageData(1910, 909);
 var screen001priSprite           = document.getElementById("screen001pri");
+var screen002priSprite           = document.getElementById("screen002pri");
 var depthBuffer                  = document.getElementById("depthBuffer");
 var depthBufferCtx               = depthBuffer.getContext("2d");
 var depthBufferSdata             = depthBufferCtx.createImageData(1910, 909);
 var screen001depSprite           = document.getElementById("screen001dep");
+var screen002depSprite           = document.getElementById("screen002dep");
 var sprite000Buffer              = document.getElementById("sprite000Buffer");
 var sprite000Ctx                 = sprite000Buffer.getContext("2d");
 var sprite000Sdata               = sprite000Ctx.createImageData(85, 124);
@@ -1365,14 +1368,10 @@ window.onload = function() {
 		gameEngineFlags[pos] = 0;
 		gameEngineVariables[pos] = 0;
 	}
-	priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
-	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
 	mainFontCtx.drawImage(mainFontSprite, 0, 0);
 	mainFontSdata = mainFontCtx.getImageData(0, 0, mainFontBuffer.width, mainFontBuffer.height);
 	narrowFontCtx.drawImage(narrowFontSprite, 0, 0);
 	narrowFontSdata = narrowFontCtx.getImageData(0, 0, narrowFontBuffer.width, narrowFontBuffer.height);
-	depthBufferCtx.drawImage(screen001depSprite, 0, 0);
-	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
 	item01Ctx.drawImage(item01Sprite, 0, 0);
 	item01Sdata = item01Ctx.getImageData(0, 0, item01Buffer.width, item01Buffer.height);
 	item02Ctx.drawImage(item02Sprite, 0, 0);
@@ -1559,6 +1558,10 @@ function play(delta)
 	if(gameState == STATE_TITLE) {
 		if(keyDown) {
 			ctx.drawImage(screen001picSprite, 0, 0);
+			priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
+			priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+			depthBufferCtx.drawImage(screen001depSprite, 0, 0);
+			depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
 			imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			keyDown = false;
 			startedGame = true;
