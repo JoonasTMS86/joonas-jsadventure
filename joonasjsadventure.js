@@ -1023,7 +1023,7 @@ function checkBlockNS(objectX, objectY, objectWidth) {
 }
 
 function checkBlockEW(objectX, objectY) {
-	if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] == 0) {
+	if(priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)] != 0) {
 		return priorityBufferSdata.data[(objectY * rowStride) + (objectX * 4)];
 	}
 	return 0;
