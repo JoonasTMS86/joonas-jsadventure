@@ -1,296 +1,303 @@
-const screenWidth                = 1910;
-const screenHeight               = 909;
-const rowStride                  = screenWidth * 4;
-const messageWindowMarginWidth   = 10; // Message window margin width in pixels.
-const messageWindowMarginHeight  = 10; // Message window margin height in pixels.
-const STATE_TITLE                = 0;
-const STATE_GAME                 = 1;
-const STATE_INPUTWINDOW          = 2;
-const STATE_INVENTORY            = 3;
-const STATE_ITEMDESCRIPTION      = 4;
-const INPUTSTATE_COMMAND         = 0;
-const INPUTSTATE_GETITEM         = 1;
-const playerAnimDelay            = 8;
-const npcAnimDelay               = 8;
+const screenWidth                      = 1910;
+const screenHeight                     = 909;
+const rowStride                        = screenWidth * 4;
+const messageWindowMarginWidth         = 10; // Message window margin width in pixels.
+const messageWindowMarginHeight        = 10; // Message window margin height in pixels.
+const STATE_TITLE                      = 0;
+const STATE_GAME                       = 1;
+const STATE_INPUTWINDOW                = 2;
+const STATE_INVENTORY                  = 3;
+const STATE_ITEMDESCRIPTION            = 4;
+const INPUTSTATE_COMMAND               = 0;
+const INPUTSTATE_GETITEM               = 1;
+const FLAG_PLAYERCONTROLDISABLED       = 0; // Disable player control
+const FLAG_PLAYERCLIMBINGFENCE         = 1; // Player is climbing the fence
+const FLAG_PLAYERONOPPOSITESIDEOFFENCE = 2; // Player is not on the opposite side of the fence
+const FLAG_PLAYERCLIMBINGFROMN         = 3; // Player is climbing the fence from S
+const FLAG_BEANIEONROCK                = 4; // Beanie on rock
+const FLAG_SUNGLASSESONROCK            = 5; // Sunglasses on rock
+const FLAG_HEADPHONESONROCK            = 6; // Headphones on rock
+const playerAnimDelay                  = 8;
+const npcAnimDelay                     = 8;
 var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, 
 textInputY, inventorySelectedIndex, inputWinX, inputWinY, inputWinWidth, 
 inputWinHeight, inputWinText, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight,
 inputBoxOnlyNumericCharacters, inputBoxTextMaxLength, inputState;
-var goingup                      = false;
-var goingdown                    = false;
-var goingleft                    = false;
-var goingright                   = false;
-var spacePressed                 = false;
-var enterPressed                 = false;
-var enterTyped                   = false;
-var canvas                       = document.getElementById("myCanvas");
-var ctx                          = canvas.getContext("2d");
-var secondScreenBuffer           = document.getElementById("secondBuffer");
-var secondScreenCtx              = secondScreenBuffer.getContext("2d");
-var thirdScreenBuffer            = document.getElementById("thirdBuffer");
-var thirdScreenCtx               = thirdScreenBuffer.getContext("2d");
-var screen000picSprite           = document.getElementById("screen000pic");
-var screen001picSprite           = document.getElementById("screen001pic");
-var screen002picSprite           = document.getElementById("screen002pic");
-var priorityBuffer               = document.getElementById("priorityBuffer");
-var priorityBufferCtx            = priorityBuffer.getContext("2d");
-var priorityBufferSdata          = priorityBufferCtx.createImageData(1910, 909);
-var screen001priSprite           = document.getElementById("screen001pri");
-var screen002priSprite           = document.getElementById("screen002pri");
-var depthBuffer                  = document.getElementById("depthBuffer");
-var depthBufferCtx               = depthBuffer.getContext("2d");
-var depthBufferSdata             = depthBufferCtx.createImageData(1910, 909);
-var screen001depSprite           = document.getElementById("screen001dep");
-var screen002depSprite           = document.getElementById("screen002dep");
-var sprite000Buffer              = document.getElementById("sprite000Buffer");
-var sprite000Ctx                 = sprite000Buffer.getContext("2d");
-var sprite000Sdata               = sprite000Ctx.createImageData(85, 124);
-var sprite000Sprite              = document.getElementById("sprite000");
-var sprite001Buffer              = document.getElementById("sprite001Buffer");
-var sprite001Ctx                 = sprite001Buffer.getContext("2d");
-var sprite001Sdata               = sprite001Ctx.createImageData(85, 124);
-var sprite001Sprite              = document.getElementById("sprite001");
-var sprite002Buffer              = document.getElementById("sprite002Buffer");
-var sprite002Ctx                 = sprite002Buffer.getContext("2d");
-var sprite002Sdata               = sprite002Ctx.createImageData(85, 124);
-var sprite002Sprite              = document.getElementById("sprite002");
-var sprite003Buffer              = document.getElementById("sprite003Buffer");
-var sprite003Ctx                 = sprite003Buffer.getContext("2d");
-var sprite003Sdata               = sprite003Ctx.createImageData(85, 124);
-var sprite003Sprite              = document.getElementById("sprite003");
-var sprite004Buffer              = document.getElementById("sprite004Buffer");
-var sprite004Ctx                 = sprite004Buffer.getContext("2d");
-var sprite004Sdata               = sprite004Ctx.createImageData(85, 124);
-var sprite004Sprite              = document.getElementById("sprite004");
-var sprite005Buffer              = document.getElementById("sprite005Buffer");
-var sprite005Ctx                 = sprite005Buffer.getContext("2d");
-var sprite005Sdata               = sprite005Ctx.createImageData(85, 124);
-var sprite005Sprite              = document.getElementById("sprite005");
-var sprite006Buffer              = document.getElementById("sprite006Buffer");
-var sprite006Ctx                 = sprite006Buffer.getContext("2d");
-var sprite006Sdata               = sprite006Ctx.createImageData(85, 124);
-var sprite006Sprite              = document.getElementById("sprite006");
-var sprite007Buffer              = document.getElementById("sprite007Buffer");
-var sprite007Ctx                 = sprite007Buffer.getContext("2d");
-var sprite007Sdata               = sprite007Ctx.createImageData(85, 124);
-var sprite007Sprite              = document.getElementById("sprite007");
-var sprite008Buffer              = document.getElementById("sprite008Buffer");
-var sprite008Ctx                 = sprite008Buffer.getContext("2d");
-var sprite008Sdata               = sprite008Ctx.createImageData(85, 124);
-var sprite008Sprite              = document.getElementById("sprite008");
-var sprite009Buffer              = document.getElementById("sprite009Buffer");
-var sprite009Ctx                 = sprite009Buffer.getContext("2d");
-var sprite009Sdata               = sprite009Ctx.createImageData(85, 124);
-var sprite009Sprite              = document.getElementById("sprite009");
-var sprite010Buffer              = document.getElementById("sprite010Buffer");
-var sprite010Ctx                 = sprite010Buffer.getContext("2d");
-var sprite010Sdata               = sprite010Ctx.createImageData(85, 124);
-var sprite010Sprite              = document.getElementById("sprite010");
-var sprite011Buffer              = document.getElementById("sprite011Buffer");
-var sprite011Ctx                 = sprite011Buffer.getContext("2d");
-var sprite011Sdata               = sprite011Ctx.createImageData(85, 124);
-var sprite011Sprite              = document.getElementById("sprite011");
-var sprite012Buffer              = document.getElementById("sprite012Buffer");
-var sprite012Ctx                 = sprite012Buffer.getContext("2d");
-var sprite012Sdata               = sprite012Ctx.createImageData(85, 124);
-var sprite012Sprite              = document.getElementById("sprite012");
-var sprite013Buffer              = document.getElementById("sprite013Buffer");
-var sprite013Ctx                 = sprite013Buffer.getContext("2d");
-var sprite013Sdata               = sprite013Ctx.createImageData(85, 124);
-var sprite013Sprite              = document.getElementById("sprite013");
-var sprite014Buffer              = document.getElementById("sprite014Buffer");
-var sprite014Ctx                 = sprite014Buffer.getContext("2d");
-var sprite014Sdata               = sprite014Ctx.createImageData(85, 124);
-var sprite014Sprite              = document.getElementById("sprite014");
-var sprite015Buffer              = document.getElementById("sprite015Buffer");
-var sprite015Ctx                 = sprite015Buffer.getContext("2d");
-var sprite015Sdata               = sprite015Ctx.createImageData(85, 124);
-var sprite015Sprite              = document.getElementById("sprite015");
-var sprite016Buffer              = document.getElementById("sprite016Buffer");
-var sprite016Ctx                 = sprite016Buffer.getContext("2d");
-var sprite016Sdata               = sprite016Ctx.createImageData(85, 124);
-var sprite016Sprite              = document.getElementById("sprite016");
-var sprite017Buffer              = document.getElementById("sprite017Buffer");
-var sprite017Ctx                 = sprite017Buffer.getContext("2d");
-var sprite017Sdata               = sprite017Ctx.createImageData(85, 124);
-var sprite017Sprite              = document.getElementById("sprite017");
-var sprite018Buffer              = document.getElementById("sprite018Buffer");
-var sprite018Ctx                 = sprite018Buffer.getContext("2d");
-var sprite018Sdata               = sprite018Ctx.createImageData(85, 124);
-var sprite018Sprite              = document.getElementById("sprite018");
-var sprite019Buffer              = document.getElementById("sprite019Buffer");
-var sprite019Ctx                 = sprite019Buffer.getContext("2d");
-var sprite019Sdata               = sprite019Ctx.createImageData(85, 124);
-var sprite019Sprite              = document.getElementById("sprite019");
-var sprite020Buffer              = document.getElementById("sprite020Buffer");
-var sprite020Ctx                 = sprite020Buffer.getContext("2d");
-var sprite020Sdata               = sprite020Ctx.createImageData(85, 124);
-var sprite020Sprite              = document.getElementById("sprite020");
-var sprite021Buffer              = document.getElementById("sprite021Buffer");
-var sprite021Ctx                 = sprite021Buffer.getContext("2d");
-var sprite021Sdata               = sprite021Ctx.createImageData(85, 124);
-var sprite021Sprite              = document.getElementById("sprite021");
-var sprite022Buffer              = document.getElementById("sprite022Buffer");
-var sprite022Ctx                 = sprite022Buffer.getContext("2d");
-var sprite022Sdata               = sprite022Ctx.createImageData(85, 124);
-var sprite022Sprite              = document.getElementById("sprite022");
-var sprite023Buffer              = document.getElementById("sprite023Buffer");
-var sprite023Ctx                 = sprite023Buffer.getContext("2d");
-var sprite023Sdata               = sprite023Ctx.createImageData(85, 124);
-var sprite023Sprite              = document.getElementById("sprite023");
-var sprite024Buffer              = document.getElementById("sprite024Buffer");
-var sprite024Ctx                 = sprite024Buffer.getContext("2d");
-var sprite024Sdata               = sprite024Ctx.createImageData(85, 124);
-var sprite024Sprite              = document.getElementById("sprite024");
-var sprite025Buffer              = document.getElementById("sprite025Buffer");
-var sprite025Ctx                 = sprite025Buffer.getContext("2d");
-var sprite025Sdata               = sprite025Ctx.createImageData(85, 124);
-var sprite025Sprite              = document.getElementById("sprite025");
-var sprite026Buffer              = document.getElementById("sprite026Buffer");
-var sprite026Ctx                 = sprite026Buffer.getContext("2d");
-var sprite026Sdata               = sprite026Ctx.createImageData(85, 124);
-var sprite026Sprite              = document.getElementById("sprite026");
-var sprite027Buffer              = document.getElementById("sprite027Buffer");
-var sprite027Ctx                 = sprite027Buffer.getContext("2d");
-var sprite027Sdata               = sprite027Ctx.createImageData(85, 124);
-var sprite027Sprite              = document.getElementById("sprite027");
-var sprite028Buffer              = document.getElementById("sprite028Buffer");
-var sprite028Ctx                 = sprite028Buffer.getContext("2d");
-var sprite028Sdata               = sprite028Ctx.createImageData(85, 124);
-var sprite028Sprite              = document.getElementById("sprite028");
-var sprite029Buffer              = document.getElementById("sprite029Buffer");
-var sprite029Ctx                 = sprite029Buffer.getContext("2d");
-var sprite029Sdata               = sprite029Ctx.createImageData(85, 124);
-var sprite029Sprite              = document.getElementById("sprite029");
-var sprite030Buffer              = document.getElementById("sprite030Buffer");
-var sprite030Ctx                 = sprite030Buffer.getContext("2d");
-var sprite030Sdata               = sprite030Ctx.createImageData(85, 124);
-var sprite030Sprite              = document.getElementById("sprite030");
-var sprite031Buffer              = document.getElementById("sprite031Buffer");
-var sprite031Ctx                 = sprite031Buffer.getContext("2d");
-var sprite031Sdata               = sprite031Ctx.createImageData(85, 124);
-var sprite031Sprite              = document.getElementById("sprite031");
-var sprite032Buffer              = document.getElementById("sprite032Buffer");
-var sprite032Ctx                 = sprite032Buffer.getContext("2d");
-var sprite032Sdata               = sprite032Ctx.createImageData(85, 124);
-var sprite032Sprite              = document.getElementById("sprite032");
-var sprite033Buffer              = document.getElementById("sprite033Buffer");
-var sprite033Ctx                 = sprite033Buffer.getContext("2d");
-var sprite033Sdata               = sprite033Ctx.createImageData(85, 124);
-var sprite033Sprite              = document.getElementById("sprite033");
-var sprite034Buffer              = document.getElementById("sprite034Buffer");
-var sprite034Ctx                 = sprite034Buffer.getContext("2d");
-var sprite034Sdata               = sprite034Ctx.createImageData(85, 124);
-var sprite034Sprite              = document.getElementById("sprite034");
-var sprite035Buffer              = document.getElementById("sprite035Buffer");
-var sprite035Ctx                 = sprite035Buffer.getContext("2d");
-var sprite035Sdata               = sprite035Ctx.createImageData(85, 124);
-var sprite035Sprite              = document.getElementById("sprite035");
-var sprite036Buffer              = document.getElementById("sprite036Buffer");
-var sprite036Ctx                 = sprite036Buffer.getContext("2d");
-var sprite036Sdata               = sprite036Ctx.createImageData(85, 124);
-var sprite036Sprite              = document.getElementById("sprite036");
-var sprite037Buffer              = document.getElementById("sprite037Buffer");
-var sprite037Ctx                 = sprite037Buffer.getContext("2d");
-var sprite037Sdata               = sprite037Ctx.createImageData(85, 124);
-var sprite037Sprite              = document.getElementById("sprite037");
-var spriteBuffer                 = document.getElementById("spriteBuffer");
-var spriteCtx                    = spriteBuffer.getContext("2d");
-var spriteSdata                  = spriteCtx.createImageData(400, 400);
-var mainFontBuffer               = document.getElementById("mainFontBuffer");
-var mainFontCtx                  = mainFontBuffer.getContext("2d");
-var mainFontSdata                = mainFontCtx.createImageData(672, 168);
-var mainFontSprite               = document.getElementById("mainFont");
-var narrowFontBuffer             = document.getElementById("narrowFontBuffer");
-var narrowFontCtx                = narrowFontBuffer.getContext("2d");
-var narrowFontSdata              = narrowFontCtx.createImageData(416, 168);
-var narrowFontSprite             = document.getElementById("narrowFont");
-var item01Buffer                 = document.getElementById("item01Buffer");
-var item01Ctx                    = item01Buffer.getContext("2d");
-var item01Sdata                  = item01Ctx.createImageData(333, 333);
-var item01Sprite                 = document.getElementById("item01");
-var item02Buffer                 = document.getElementById("item02Buffer");
-var item02Ctx                    = item02Buffer.getContext("2d");
-var item02Sdata                  = item02Ctx.createImageData(333, 333);
-var item02Sprite                 = document.getElementById("item02");
-var item03Buffer                 = document.getElementById("item03Buffer");
-var item03Ctx                    = item03Buffer.getContext("2d");
-var item03Sdata                  = item03Ctx.createImageData(333, 333);
-var item03Sprite                 = document.getElementById("item03");
-var item04Buffer                 = document.getElementById("item04Buffer");
-var item04Ctx                    = item04Buffer.getContext("2d");
-var item04Sdata                  = item04Ctx.createImageData(333, 333);
-var item04Sprite                 = document.getElementById("item04");
-var item05Buffer                 = document.getElementById("item05Buffer");
-var item05Ctx                    = item05Buffer.getContext("2d");
-var item05Sdata                  = item05Ctx.createImageData(333, 333);
-var item05Sprite                 = document.getElementById("item05");
-var item06Buffer                 = document.getElementById("item06Buffer");
-var item06Ctx                    = item06Buffer.getContext("2d");
-var item06Sdata                  = item06Ctx.createImageData(333, 333);
-var item06Sprite                 = document.getElementById("item06");
-var item07Buffer                 = document.getElementById("item07Buffer");
-var item07Ctx                    = item07Buffer.getContext("2d");
-var item07Sdata                  = item07Ctx.createImageData(333, 333);
-var item07Sprite                 = document.getElementById("item07");
-var layer1Buffer                 = document.getElementById("layer1Buffer");
-var layer1Ctx                    = layer1Buffer.getContext("2d");
-var layer1Sdata                  = layer1Ctx.createImageData(248, 166);
-var layer1Sprite                 = document.getElementById("layer1");
-var layer2Buffer                 = document.getElementById("layer2Buffer");
-var layer2Ctx                    = layer2Buffer.getContext("2d");
-var layer2Sdata                  = layer2Ctx.createImageData(318, 254);
-var layer2Sprite                 = document.getElementById("layer2");
-var layer3Buffer                 = document.getElementById("layer3Buffer");
-var layer3Ctx                    = layer3Buffer.getContext("2d");
-var layer3Sdata                  = layer3Ctx.createImageData(301, 120);
-var layer3Sprite                 = document.getElementById("layer3");
-var object01Buffer               = document.getElementById("object01Buffer");
-var object01Ctx                  = object01Buffer.getContext("2d");
-var object01Sdata                = object01Ctx.createImageData(19, 12);
-var object01Sprite               = document.getElementById("object01");
+var goingup                            = false;
+var goingdown                          = false;
+var goingleft                          = false;
+var goingright                         = false;
+var spacePressed                       = false;
+var enterPressed                       = false;
+var enterTyped                         = false;
+var canvas                             = document.getElementById("myCanvas");
+var ctx                                = canvas.getContext("2d");
+var secondScreenBuffer                 = document.getElementById("secondBuffer");
+var secondScreenCtx                    = secondScreenBuffer.getContext("2d");
+var thirdScreenBuffer                  = document.getElementById("thirdBuffer");
+var thirdScreenCtx                     = thirdScreenBuffer.getContext("2d");
+var screen000picSprite                 = document.getElementById("screen000pic");
+var screen001picSprite                 = document.getElementById("screen001pic");
+var screen002picSprite                 = document.getElementById("screen002pic");
+var priorityBuffer                     = document.getElementById("priorityBuffer");
+var priorityBufferCtx                  = priorityBuffer.getContext("2d");
+var priorityBufferSdata                = priorityBufferCtx.createImageData(1910, 909);
+var screen001priSprite                 = document.getElementById("screen001pri");
+var screen002priSprite                 = document.getElementById("screen002pri");
+var depthBuffer                        = document.getElementById("depthBuffer");
+var depthBufferCtx                     = depthBuffer.getContext("2d");
+var depthBufferSdata                   = depthBufferCtx.createImageData(1910, 909);
+var screen001depSprite                 = document.getElementById("screen001dep");
+var screen002depSprite                 = document.getElementById("screen002dep");
+var sprite000Buffer                    = document.getElementById("sprite000Buffer");
+var sprite000Ctx                       = sprite000Buffer.getContext("2d");
+var sprite000Sdata                     = sprite000Ctx.createImageData(85, 124);
+var sprite000Sprite                    = document.getElementById("sprite000");
+var sprite001Buffer                    = document.getElementById("sprite001Buffer");
+var sprite001Ctx                       = sprite001Buffer.getContext("2d");
+var sprite001Sdata                     = sprite001Ctx.createImageData(85, 124);
+var sprite001Sprite                    = document.getElementById("sprite001");
+var sprite002Buffer                    = document.getElementById("sprite002Buffer");
+var sprite002Ctx                       = sprite002Buffer.getContext("2d");
+var sprite002Sdata                     = sprite002Ctx.createImageData(85, 124);
+var sprite002Sprite                    = document.getElementById("sprite002");
+var sprite003Buffer                    = document.getElementById("sprite003Buffer");
+var sprite003Ctx                       = sprite003Buffer.getContext("2d");
+var sprite003Sdata                     = sprite003Ctx.createImageData(85, 124);
+var sprite003Sprite                    = document.getElementById("sprite003");
+var sprite004Buffer                    = document.getElementById("sprite004Buffer");
+var sprite004Ctx                       = sprite004Buffer.getContext("2d");
+var sprite004Sdata                     = sprite004Ctx.createImageData(85, 124);
+var sprite004Sprite                    = document.getElementById("sprite004");
+var sprite005Buffer                    = document.getElementById("sprite005Buffer");
+var sprite005Ctx                       = sprite005Buffer.getContext("2d");
+var sprite005Sdata                     = sprite005Ctx.createImageData(85, 124);
+var sprite005Sprite                    = document.getElementById("sprite005");
+var sprite006Buffer                    = document.getElementById("sprite006Buffer");
+var sprite006Ctx                       = sprite006Buffer.getContext("2d");
+var sprite006Sdata                     = sprite006Ctx.createImageData(85, 124);
+var sprite006Sprite                    = document.getElementById("sprite006");
+var sprite007Buffer                    = document.getElementById("sprite007Buffer");
+var sprite007Ctx                       = sprite007Buffer.getContext("2d");
+var sprite007Sdata                     = sprite007Ctx.createImageData(85, 124);
+var sprite007Sprite                    = document.getElementById("sprite007");
+var sprite008Buffer                    = document.getElementById("sprite008Buffer");
+var sprite008Ctx                       = sprite008Buffer.getContext("2d");
+var sprite008Sdata                     = sprite008Ctx.createImageData(85, 124);
+var sprite008Sprite                    = document.getElementById("sprite008");
+var sprite009Buffer                    = document.getElementById("sprite009Buffer");
+var sprite009Ctx                       = sprite009Buffer.getContext("2d");
+var sprite009Sdata                     = sprite009Ctx.createImageData(85, 124);
+var sprite009Sprite                    = document.getElementById("sprite009");
+var sprite010Buffer                    = document.getElementById("sprite010Buffer");
+var sprite010Ctx                       = sprite010Buffer.getContext("2d");
+var sprite010Sdata                     = sprite010Ctx.createImageData(85, 124);
+var sprite010Sprite                    = document.getElementById("sprite010");
+var sprite011Buffer                    = document.getElementById("sprite011Buffer");
+var sprite011Ctx                       = sprite011Buffer.getContext("2d");
+var sprite011Sdata                     = sprite011Ctx.createImageData(85, 124);
+var sprite011Sprite                    = document.getElementById("sprite011");
+var sprite012Buffer                    = document.getElementById("sprite012Buffer");
+var sprite012Ctx                       = sprite012Buffer.getContext("2d");
+var sprite012Sdata                     = sprite012Ctx.createImageData(85, 124);
+var sprite012Sprite                    = document.getElementById("sprite012");
+var sprite013Buffer                    = document.getElementById("sprite013Buffer");
+var sprite013Ctx                       = sprite013Buffer.getContext("2d");
+var sprite013Sdata                     = sprite013Ctx.createImageData(85, 124);
+var sprite013Sprite                    = document.getElementById("sprite013");
+var sprite014Buffer                    = document.getElementById("sprite014Buffer");
+var sprite014Ctx                       = sprite014Buffer.getContext("2d");
+var sprite014Sdata                     = sprite014Ctx.createImageData(85, 124);
+var sprite014Sprite                    = document.getElementById("sprite014");
+var sprite015Buffer                    = document.getElementById("sprite015Buffer");
+var sprite015Ctx                       = sprite015Buffer.getContext("2d");
+var sprite015Sdata                     = sprite015Ctx.createImageData(85, 124);
+var sprite015Sprite                    = document.getElementById("sprite015");
+var sprite016Buffer                    = document.getElementById("sprite016Buffer");
+var sprite016Ctx                       = sprite016Buffer.getContext("2d");
+var sprite016Sdata                     = sprite016Ctx.createImageData(85, 124);
+var sprite016Sprite                    = document.getElementById("sprite016");
+var sprite017Buffer                    = document.getElementById("sprite017Buffer");
+var sprite017Ctx                       = sprite017Buffer.getContext("2d");
+var sprite017Sdata                     = sprite017Ctx.createImageData(85, 124);
+var sprite017Sprite                    = document.getElementById("sprite017");
+var sprite018Buffer                    = document.getElementById("sprite018Buffer");
+var sprite018Ctx                       = sprite018Buffer.getContext("2d");
+var sprite018Sdata                     = sprite018Ctx.createImageData(85, 124);
+var sprite018Sprite                    = document.getElementById("sprite018");
+var sprite019Buffer                    = document.getElementById("sprite019Buffer");
+var sprite019Ctx                       = sprite019Buffer.getContext("2d");
+var sprite019Sdata                     = sprite019Ctx.createImageData(85, 124);
+var sprite019Sprite                    = document.getElementById("sprite019");
+var sprite020Buffer                    = document.getElementById("sprite020Buffer");
+var sprite020Ctx                       = sprite020Buffer.getContext("2d");
+var sprite020Sdata                     = sprite020Ctx.createImageData(85, 124);
+var sprite020Sprite                    = document.getElementById("sprite020");
+var sprite021Buffer                    = document.getElementById("sprite021Buffer");
+var sprite021Ctx                       = sprite021Buffer.getContext("2d");
+var sprite021Sdata                     = sprite021Ctx.createImageData(85, 124);
+var sprite021Sprite                    = document.getElementById("sprite021");
+var sprite022Buffer                    = document.getElementById("sprite022Buffer");
+var sprite022Ctx                       = sprite022Buffer.getContext("2d");
+var sprite022Sdata                     = sprite022Ctx.createImageData(85, 124);
+var sprite022Sprite                    = document.getElementById("sprite022");
+var sprite023Buffer                    = document.getElementById("sprite023Buffer");
+var sprite023Ctx                       = sprite023Buffer.getContext("2d");
+var sprite023Sdata                     = sprite023Ctx.createImageData(85, 124);
+var sprite023Sprite                    = document.getElementById("sprite023");
+var sprite024Buffer                    = document.getElementById("sprite024Buffer");
+var sprite024Ctx                       = sprite024Buffer.getContext("2d");
+var sprite024Sdata                     = sprite024Ctx.createImageData(85, 124);
+var sprite024Sprite                    = document.getElementById("sprite024");
+var sprite025Buffer                    = document.getElementById("sprite025Buffer");
+var sprite025Ctx                       = sprite025Buffer.getContext("2d");
+var sprite025Sdata                     = sprite025Ctx.createImageData(85, 124);
+var sprite025Sprite                    = document.getElementById("sprite025");
+var sprite026Buffer                    = document.getElementById("sprite026Buffer");
+var sprite026Ctx                       = sprite026Buffer.getContext("2d");
+var sprite026Sdata                     = sprite026Ctx.createImageData(85, 124);
+var sprite026Sprite                    = document.getElementById("sprite026");
+var sprite027Buffer                    = document.getElementById("sprite027Buffer");
+var sprite027Ctx                       = sprite027Buffer.getContext("2d");
+var sprite027Sdata                     = sprite027Ctx.createImageData(85, 124);
+var sprite027Sprite                    = document.getElementById("sprite027");
+var sprite028Buffer                    = document.getElementById("sprite028Buffer");
+var sprite028Ctx                       = sprite028Buffer.getContext("2d");
+var sprite028Sdata                     = sprite028Ctx.createImageData(85, 124);
+var sprite028Sprite                    = document.getElementById("sprite028");
+var sprite029Buffer                    = document.getElementById("sprite029Buffer");
+var sprite029Ctx                       = sprite029Buffer.getContext("2d");
+var sprite029Sdata                     = sprite029Ctx.createImageData(85, 124);
+var sprite029Sprite                    = document.getElementById("sprite029");
+var sprite030Buffer                    = document.getElementById("sprite030Buffer");
+var sprite030Ctx                       = sprite030Buffer.getContext("2d");
+var sprite030Sdata                     = sprite030Ctx.createImageData(85, 124);
+var sprite030Sprite                    = document.getElementById("sprite030");
+var sprite031Buffer                    = document.getElementById("sprite031Buffer");
+var sprite031Ctx                       = sprite031Buffer.getContext("2d");
+var sprite031Sdata                     = sprite031Ctx.createImageData(85, 124);
+var sprite031Sprite                    = document.getElementById("sprite031");
+var sprite032Buffer                    = document.getElementById("sprite032Buffer");
+var sprite032Ctx                       = sprite032Buffer.getContext("2d");
+var sprite032Sdata                     = sprite032Ctx.createImageData(85, 124);
+var sprite032Sprite                    = document.getElementById("sprite032");
+var sprite033Buffer                    = document.getElementById("sprite033Buffer");
+var sprite033Ctx                       = sprite033Buffer.getContext("2d");
+var sprite033Sdata                     = sprite033Ctx.createImageData(85, 124);
+var sprite033Sprite                    = document.getElementById("sprite033");
+var sprite034Buffer                    = document.getElementById("sprite034Buffer");
+var sprite034Ctx                       = sprite034Buffer.getContext("2d");
+var sprite034Sdata                     = sprite034Ctx.createImageData(85, 124);
+var sprite034Sprite                    = document.getElementById("sprite034");
+var sprite035Buffer                    = document.getElementById("sprite035Buffer");
+var sprite035Ctx                       = sprite035Buffer.getContext("2d");
+var sprite035Sdata                     = sprite035Ctx.createImageData(85, 124);
+var sprite035Sprite                    = document.getElementById("sprite035");
+var sprite036Buffer                    = document.getElementById("sprite036Buffer");
+var sprite036Ctx                       = sprite036Buffer.getContext("2d");
+var sprite036Sdata                     = sprite036Ctx.createImageData(85, 124);
+var sprite036Sprite                    = document.getElementById("sprite036");
+var sprite037Buffer                    = document.getElementById("sprite037Buffer");
+var sprite037Ctx                       = sprite037Buffer.getContext("2d");
+var sprite037Sdata                     = sprite037Ctx.createImageData(85, 124);
+var sprite037Sprite                    = document.getElementById("sprite037");
+var spriteBuffer                       = document.getElementById("spriteBuffer");
+var spriteCtx                          = spriteBuffer.getContext("2d");
+var spriteSdata                        = spriteCtx.createImageData(400, 400);
+var mainFontBuffer                     = document.getElementById("mainFontBuffer");
+var mainFontCtx                        = mainFontBuffer.getContext("2d");
+var mainFontSdata                      = mainFontCtx.createImageData(672, 168);
+var mainFontSprite                     = document.getElementById("mainFont");
+var narrowFontBuffer                   = document.getElementById("narrowFontBuffer");
+var narrowFontCtx                      = narrowFontBuffer.getContext("2d");
+var narrowFontSdata                    = narrowFontCtx.createImageData(416, 168);
+var narrowFontSprite                   = document.getElementById("narrowFont");
+var item01Buffer                       = document.getElementById("item01Buffer");
+var item01Ctx                          = item01Buffer.getContext("2d");
+var item01Sdata                        = item01Ctx.createImageData(333, 333);
+var item01Sprite                       = document.getElementById("item01");
+var item02Buffer                       = document.getElementById("item02Buffer");
+var item02Ctx                          = item02Buffer.getContext("2d");
+var item02Sdata                        = item02Ctx.createImageData(333, 333);
+var item02Sprite                       = document.getElementById("item02");
+var item03Buffer                       = document.getElementById("item03Buffer");
+var item03Ctx                          = item03Buffer.getContext("2d");
+var item03Sdata                        = item03Ctx.createImageData(333, 333);
+var item03Sprite                       = document.getElementById("item03");
+var item04Buffer                       = document.getElementById("item04Buffer");
+var item04Ctx                          = item04Buffer.getContext("2d");
+var item04Sdata                        = item04Ctx.createImageData(333, 333);
+var item04Sprite                       = document.getElementById("item04");
+var item05Buffer                       = document.getElementById("item05Buffer");
+var item05Ctx                          = item05Buffer.getContext("2d");
+var item05Sdata                        = item05Ctx.createImageData(333, 333);
+var item05Sprite                       = document.getElementById("item05");
+var item06Buffer                       = document.getElementById("item06Buffer");
+var item06Ctx                          = item06Buffer.getContext("2d");
+var item06Sdata                        = item06Ctx.createImageData(333, 333);
+var item06Sprite                       = document.getElementById("item06");
+var item07Buffer                       = document.getElementById("item07Buffer");
+var item07Ctx                          = item07Buffer.getContext("2d");
+var item07Sdata                        = item07Ctx.createImageData(333, 333);
+var item07Sprite                       = document.getElementById("item07");
+var layer1Buffer                       = document.getElementById("layer1Buffer");
+var layer1Ctx                          = layer1Buffer.getContext("2d");
+var layer1Sdata                        = layer1Ctx.createImageData(248, 166);
+var layer1Sprite                       = document.getElementById("layer1");
+var layer2Buffer                       = document.getElementById("layer2Buffer");
+var layer2Ctx                          = layer2Buffer.getContext("2d");
+var layer2Sdata                        = layer2Ctx.createImageData(318, 254);
+var layer2Sprite                       = document.getElementById("layer2");
+var layer3Buffer                       = document.getElementById("layer3Buffer");
+var layer3Ctx                          = layer3Buffer.getContext("2d");
+var layer3Sdata                        = layer3Ctx.createImageData(301, 120);
+var layer3Sprite                       = document.getElementById("layer3");
+var object01Buffer                     = document.getElementById("object01Buffer");
+var object01Ctx                        = object01Buffer.getContext("2d");
+var object01Sdata                      = object01Ctx.createImageData(19, 12);
+var object01Sprite                     = document.getElementById("object01");
 
 // How many sprites have been set to be active on the current screen
-var numberOfSprites              = 9;
+var numberOfSprites                    = 9;
 // The coordinates of the sprites are in these arrays.
-var spriteXCoords                = [60, 130, 200, 270, 340, 410, 480, 550, 1322];
+var spriteXCoords                      = [60, 130, 200, 270, 340, 410, 480, 550, 1322];
 // The Y coordinates of where the sprites should be displayed on the screen.
-var spriteYCoords                = [60, 130, 200, 270, 340, 410, 480, 550, 233];
+var spriteYCoords                      = [60, 130, 200, 270, 340, 410, 480, 550, 233];
 // These sprite Y coordinates determine the "mask location" of each sprite, which can differ from the sprite display Y.
-var spriteMaskYCoords            = [60, 130, 200, 270, 340, 410, 480, 550, 233];
+var spriteMaskYCoords                  = [60, 130, 200, 270, 340, 410, 480, 550, 233];
 // Width and heights of the sprite images.
-var spriteWidths                 = [85, 85, 85, 85, 85, 85, 85, 85, 19];
-var spriteHeights                = [124, 124, 124, 124, 124, 124, 124, 124, 12];
+var spriteWidths                       = [85, 85, 85, 85, 85, 85, 85, 85, 19];
+var spriteHeights                      = [124, 124, 124, 124, 124, 124, 124, 124, 12];
 // Width of sprite when facing N or S.
-var spriteWidthsNS               = [26, 26, 26, 26, 26, 26, 26, 26];
+var spriteWidthsNS                     = [26, 26, 26, 26, 26, 26, 26, 26];
 // When we check for collisions, we only wish to check those pixels of the sprite that are not transparent.
 // The first solid pixels might not be at the leftmost side of the image but rather a few pixels away from it.
-var spriteCheckBlockOffsetsNS    = [29, 29, 29, 29, 29, 29, 29, 29];
-var spriteCheckBlockOffsetsE     = [55, 55, 55, 55, 55, 55, 55, 55];
-var spriteCheckBlockOffsetsW     = [28, 28, 28, 28, 28, 28, 28, 28];
-var spriteImages                 = [0, 0, 0, 0, 0, 0, 0, 0, 100];
-var playerAnimPos                = 0;
-var playerAnimFrame              = 0;
-var npcAnimPos                   = 0;
-var npcAnimFrame                 = 0;
-var mainFontStartXIndex          = [];
-var mainFontStartYIndex          = [];
-var mainFontWidthIndex           = [];
-var mainFontHeightIndex          = [];
-var narrowFontStartXIndex        = [];
-var narrowFontStartYIndex        = [];
-var narrowFontWidthIndex         = [];
-var narrowFontHeightIndex        = [];
-var waitingForEnterPress         = false;
-var startedGame                  = false;
-var typedKeyCode                 = 0;
-var typedKey                     = "";
-var keyDown                      = false;
-var gameState                    = STATE_TITLE;
-var ignoredWords                 = [
+var spriteCheckBlockOffsetsNS          = [29, 29, 29, 29, 29, 29, 29, 29];
+var spriteCheckBlockOffsetsE           = [55, 55, 55, 55, 55, 55, 55, 55];
+var spriteCheckBlockOffsetsW           = [28, 28, 28, 28, 28, 28, 28, 28];
+var spriteImages                       = [0, 0, 0, 0, 0, 0, 0, 0, 100];
+var playerAnimPos                      = 0;
+var playerAnimFrame                    = 0;
+var npcAnimPos                         = 0;
+var npcAnimFrame                       = 0;
+var mainFontStartXIndex                = [];
+var mainFontStartYIndex                = [];
+var mainFontWidthIndex                 = [];
+var mainFontHeightIndex                = [];
+var narrowFontStartXIndex              = [];
+var narrowFontStartYIndex              = [];
+var narrowFontWidthIndex               = [];
+var narrowFontHeightIndex              = [];
+var waitingForEnterPress               = false;
+var startedGame                        = false;
+var typedKeyCode                       = 0;
+var typedKey                           = "";
+var keyDown                            = false;
+var gameState                          = STATE_TITLE;
+var ignoredWords                       = [
 	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing"
 ];
-var synonyms                     = [
+var synonyms                           = [
 	"inventory", "inv", 0,
 	"get", "take", "pick", "grab", 0,
 	"look", "see", "watch", 0,
@@ -307,21 +314,21 @@ var synonyms                     = [
 	"hammer", 0,
 	"water", "sea", 0
 ];
-var gameEngineFlags              = [];
-var gameEngineVariables          = [];
-var npcDirections                = [0, true, true, true, true, true, true, true];
-var saidShowInventory            = false;
+var gameEngineFlags                    = [];
+var gameEngineVariables                = [];
+var npcDirections                      = [0, true, true, true, true, true, true, true];
+var saidShowInventory                  = false;
 // Inventory items are stored as item index numbers to the inventory array.
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
-var inventory                    = [];
-var inventoryItemNames           = [0, "Hammer", "Rock", "Watering Can", "Watering Can", "Beanie", "Headphones", "Sunglasses"];
-var score                        = 0;
+var inventory                          = [];
+var inventoryItemNames                 = [0, "Hammer", "Rock", "Watering Can", "Watering Can", "Beanie", "Headphones", "Sunglasses"];
+var score                              = 0;
 // The debug mode of the game engine is enabled by entering the command "debugdebug".
-var debugMode                    = false;
-var msgCommandNotUnderstood      = "I understand your words, but not what you're trying to say.";
-var msgAlreadyHaveIt             = "You have it in your inventory.";
-var showInputWindow              = false;
-var itemDescriptions             = [
+var debugMode                          = false;
+var msgCommandNotUnderstood            = "I understand your words, but not what you're trying to say.";
+var msgAlreadyHaveIt                   = "You have it in your inventory.";
+var showInputWindow                    = false;
+var itemDescriptions                   = [
 	0,
 	"Your trusty hammer has served you well\nfor several years now.",
 	"This is a smooth, round and slightly wet rock.",
@@ -331,7 +338,7 @@ var itemDescriptions             = [
 	"You have a pair of yellow headphones.",
 	"You found these sunglasses in the old, abandoned house."
 ];
-var room                         = 0;
+var room                               = 0;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -1280,16 +1287,16 @@ function parse(userInput) {
 			) {
 				// Disable player control while the protagonist is climbing the fence.
 				if(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) {
-					setFlag(0);   // Disable player control
-					setFlag(1);   // Player is climbing the fence
-					clearFlag(2); // Player is not on the opposite side of the fence
-					clearFlag(3); // Player is climbing the fence from S
+					setFlag(FLAG_PLAYERCONTROLDISABLED);   // Disable player control
+					setFlag(FLAG_PLAYERCLIMBINGFENCE);   // Player is climbing the fence
+					clearFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE); // Player is not on the opposite side of the fence
+					clearFlag(FLAG_PLAYERCLIMBINGFROMN); // Player is climbing the fence from S
 				}
 				else {
-					setFlag(0);   // Disable player control
-					setFlag(1);   // Player is climbing the fence
-					clearFlag(2); // Player is not on the opposite side of the fence
-					setFlag(3);   // Player is climbing the fence from N
+					setFlag(FLAG_PLAYERCONTROLDISABLED);   // Disable player control
+					setFlag(FLAG_PLAYERCLIMBINGFENCE);   // Player is climbing the fence
+					clearFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE); // Player is not on the opposite side of the fence
+					setFlag(FLAG_PLAYERCLIMBINGFROMN);   // Player is climbing the fence from N
 				}
 				playerAnimPos = 0;
 				gameEngineVariables[0] = 0;
@@ -1950,7 +1957,7 @@ function play(delta)
 						}
 						else {
 							spriteMaskYCoords[0] = spriteYCoords[0];
-							setFlag(2);
+							setFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE);
 							playerAnimPos = 0;
 						}
 					}
@@ -1969,8 +1976,8 @@ function play(delta)
 							spriteMaskYCoords[0] = spriteMaskYCoords[0] + 1;
 						}
 						else {
-							clearFlag(0);
-							clearFlag(1);
+							clearFlag(FLAG_PLAYERCONTROLDISABLED);
+							clearFlag(FLAG_PLAYERCLIMBINGFENCE);
 							spriteImages[0] = 12;
 						}
 					}
@@ -1992,7 +1999,7 @@ function play(delta)
 						}
 						else {
 							spriteMaskYCoords[0] = 430;
-							setFlag(2);
+							setFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE);
 							playerAnimPos = 0;
 						}
 					}
@@ -2010,8 +2017,8 @@ function play(delta)
 							spriteYCoords[0] = spriteYCoords[0] + 1;
 						}
 						else {
-							clearFlag(0);
-							clearFlag(1);
+							clearFlag(FLAG_PLAYERCONTROLDISABLED);
+							clearFlag(FLAG_PLAYERCLIMBINGFENCE);
 							spriteImages[0] = 8;
 						}
 					}
@@ -2269,7 +2276,18 @@ function play(delta)
 								break;
 						}
 						ctx.drawImage(spriteToDraw, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
-						messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
+
+						if(inventory[inventorySelectedIndex] == 2) {
+							if(getFlag(FLAG_SUNGLASSESONROCK)) ctx.drawImage(layer3Buffer, x + messageWindowMarginWidth + 3 + 22, y + messageWindowMarginHeight + 3 + 91);
+							if(getFlag(FLAG_HEADPHONESONROCK)) ctx.drawImage(layer2Buffer, x + messageWindowMarginWidth + 3 + 3, y + messageWindowMarginHeight + 3);
+							if(getFlag(FLAG_BEANIEONROCK))     ctx.drawImage(layer1Buffer, x + messageWindowMarginWidth + 3 + 40, y + messageWindowMarginHeight + 3);
+						}
+						if(getFlag(FLAG_BEANIEONROCK) || getFlag(FLAG_HEADPHONESONROCK) || getFlag(FLAG_SUNGLASSESONROCK) ) {
+							messageWindowHorizontallyCentered("You have put some objects on the rock.", 425, true);
+						}
+						else {
+							messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
+						}
 					}
 				}
 				else if(gameState == STATE_ITEMDESCRIPTION) {
