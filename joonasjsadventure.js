@@ -295,7 +295,7 @@ var typedKey                           = "";
 var keyDown                            = false;
 var gameState                          = STATE_TITLE;
 var ignoredWords                       = [
-	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing"
+	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing", "watering"
 ];
 var synonyms                           = [
 	"inventory", "inv", 0,
@@ -305,13 +305,19 @@ var synonyms                           = [
 	"climb", 0,
 	"drink", "swallow", 0,
 	"swim", 0,
+	"put", "drop", "set", 0,
 	"debugdebug", 0,
 	"item", 0,
+	"getallitems", 0,
 	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
 	"bush", 0,
 	"fence", "obstacle", "wall", 0,
 	"rock", "stone", 0,
 	"hammer", 0,
+	"can", 0,
+	"beanie", "hat", "headwear", 0,
+	"headphones", 0,
+	"sunglasses", 0,
 	"water", "sea", 0
 ];
 var gameEngineFlags                    = [];
@@ -327,6 +333,8 @@ var score                              = 0;
 var debugMode                          = false;
 var msgCommandNotUnderstood            = "I understand your words, but not what you're trying to say.";
 var msgAlreadyHaveIt                   = "You have it in your inventory.";
+var msgDontHaveSuchItem                = "You have no such item.";
+var msgWhatRock                        = "What rock? You don't have one.";
 var showInputWindow                    = false;
 var itemDescriptions                   = [
 	0,
@@ -1103,6 +1111,17 @@ function hasItem(itemNumber) {
 	return false;
 }
 
+function removeItem(itemNumber) {
+	var itemPos = 0;
+	for(var pos = 0; pos < inventory.length; pos++) {
+		if(inventory[pos] == itemNumber) {
+			itemPos = pos;
+			pos = inventory.length;
+		}
+	}
+	inventory.splice(itemPos, 1);
+}
+
 // Parse the user input.
 function parse(userInput) {
 	var enteredWords = [];
@@ -1309,6 +1328,69 @@ function parse(userInput) {
 			debugMode = true;
 				messageWindowCentered("Debug mode activated.", false);
 		}
+		else if(doesInputMatchThis(enteredWords, ["put", "beanie", "rock"])) {
+			if(!hasItem(2)) {
+				messageWindowCentered(msgWhatRock, false);
+			}
+			else {
+				if(getFlag(FLAG_BEANIEONROCK)) {
+					messageWindowCentered("The rock is already wearing the beanie.", false);
+				}
+				else {
+					if(!hasItem(5)) {
+						messageWindowCentered(msgDontHaveSuchItem, false);
+					}
+					else {
+						messageWindowCentered("You put the beanie on the rock.", false);
+						setFlag(FLAG_BEANIEONROCK);
+						removeItem(5);
+						score += 5;
+					}
+				}
+			}
+		}
+		else if(doesInputMatchThis(enteredWords, ["put", "headphones", "rock"])) {
+			if(!hasItem(2)) {
+				messageWindowCentered(msgWhatRock, false);
+			}
+			else {
+				if(getFlag(FLAG_HEADPHONESONROCK)) {
+					messageWindowCentered("The rock is already wearing headphones.", false);
+				}
+				else {
+					if(!hasItem(6)) {
+						messageWindowCentered(msgDontHaveSuchItem, false);
+					}
+					else {
+						messageWindowCentered("You put the headphones on the rock.", false);
+						setFlag(FLAG_HEADPHONESONROCK);
+						removeItem(6);
+						score += 5;
+					}
+				}
+			}
+		}
+		else if(doesInputMatchThis(enteredWords, ["put", "sunglasses", "rock"])) {
+			if(!hasItem(2)) {
+				messageWindowCentered(msgWhatRock, false);
+			}
+			else {
+				if(getFlag(FLAG_SUNGLASSESONROCK)) {
+					messageWindowCentered("The rock is already wearing sunglasses.", false);
+				}
+				else {
+					if(!hasItem(7)) {
+						messageWindowCentered(msgDontHaveSuchItem, false);
+					}
+					else {
+						messageWindowCentered("You put the sunglasses on the face... er, I mean, rock.", false);
+						setFlag(FLAG_SUNGLASSESONROCK);
+						removeItem(7);
+						score += 5;
+					}
+				}
+			}
+		}
 		else if(doesInputMatchThis(enteredWords, ["get", "item"])) {
 			if(debugMode) {
 				showInputWindow = true;
@@ -1321,6 +1403,17 @@ function parse(userInput) {
 				inputBoxWidth = 75;
 				inputBoxHeight = 25;
 				inputWinText = "Item number to get:";
+			}
+			else {
+				messageWindowCentered(msgCommandNotUnderstood, false);
+			}
+		}
+		else if(doesInputMatchThis(enteredWords, ["getallitems"])) {
+			if(debugMode) {
+				for(var pos = 1; pos < inventoryItemNames.length; pos++) {
+					inventory[inventory.length] = pos;
+				}
+				messageWindowCentered("You now have all items in your inventory.", false);
 			}
 			else {
 				messageWindowCentered(msgCommandNotUnderstood, false);
@@ -2281,9 +2374,12 @@ function play(delta)
 							if(getFlag(FLAG_SUNGLASSESONROCK)) ctx.drawImage(layer3Buffer, x + messageWindowMarginWidth + 3 + 22, y + messageWindowMarginHeight + 3 + 91);
 							if(getFlag(FLAG_HEADPHONESONROCK)) ctx.drawImage(layer2Buffer, x + messageWindowMarginWidth + 3 + 3, y + messageWindowMarginHeight + 3);
 							if(getFlag(FLAG_BEANIEONROCK))     ctx.drawImage(layer1Buffer, x + messageWindowMarginWidth + 3 + 40, y + messageWindowMarginHeight + 3);
-						}
-						if(getFlag(FLAG_BEANIEONROCK) || getFlag(FLAG_HEADPHONESONROCK) || getFlag(FLAG_SUNGLASSESONROCK) ) {
-							messageWindowHorizontallyCentered("You have put some objects on the rock.", 425, true);
+							if(getFlag(FLAG_BEANIEONROCK) || getFlag(FLAG_HEADPHONESONROCK) || getFlag(FLAG_SUNGLASSESONROCK) ) {
+								messageWindowHorizontallyCentered("You have put some objects on the rock.", 425, true);
+							}
+							else {
+								messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
+							}
 						}
 						else {
 							messageWindowHorizontallyCentered(itemDescriptions[inventory[inventorySelectedIndex]], 425, true);
