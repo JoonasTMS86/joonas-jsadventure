@@ -213,6 +213,38 @@ var item02Buffer                 = document.getElementById("item02Buffer");
 var item02Ctx                    = item02Buffer.getContext("2d");
 var item02Sdata                  = item02Ctx.createImageData(333, 333);
 var item02Sprite                 = document.getElementById("item02");
+var item03Buffer                 = document.getElementById("item03Buffer");
+var item03Ctx                    = item03Buffer.getContext("2d");
+var item03Sdata                  = item03Ctx.createImageData(333, 333);
+var item03Sprite                 = document.getElementById("item03");
+var item04Buffer                 = document.getElementById("item04Buffer");
+var item04Ctx                    = item04Buffer.getContext("2d");
+var item04Sdata                  = item04Ctx.createImageData(333, 333);
+var item04Sprite                 = document.getElementById("item04");
+var item05Buffer                 = document.getElementById("item05Buffer");
+var item05Ctx                    = item05Buffer.getContext("2d");
+var item05Sdata                  = item05Ctx.createImageData(333, 333);
+var item05Sprite                 = document.getElementById("item05");
+var item06Buffer                 = document.getElementById("item06Buffer");
+var item06Ctx                    = item06Buffer.getContext("2d");
+var item06Sdata                  = item06Ctx.createImageData(333, 333);
+var item06Sprite                 = document.getElementById("item06");
+var item07Buffer                 = document.getElementById("item07Buffer");
+var item07Ctx                    = item07Buffer.getContext("2d");
+var item07Sdata                  = item07Ctx.createImageData(333, 333);
+var item07Sprite                 = document.getElementById("item07");
+var layer1Buffer                 = document.getElementById("layer1Buffer");
+var layer1Ctx                    = layer1Buffer.getContext("2d");
+var layer1Sdata                  = layer1Ctx.createImageData(248, 166);
+var layer1Sprite                 = document.getElementById("layer1");
+var layer2Buffer                 = document.getElementById("layer2Buffer");
+var layer2Ctx                    = layer2Buffer.getContext("2d");
+var layer2Sdata                  = layer2Ctx.createImageData(318, 254);
+var layer2Sprite                 = document.getElementById("layer2");
+var layer3Buffer                 = document.getElementById("layer3Buffer");
+var layer3Ctx                    = layer3Buffer.getContext("2d");
+var layer3Sdata                  = layer3Ctx.createImageData(301, 120);
+var layer3Sprite                 = document.getElementById("layer3");
 var object01Buffer               = document.getElementById("object01Buffer");
 var object01Ctx                  = object01Buffer.getContext("2d");
 var object01Sdata                = object01Ctx.createImageData(19, 12);
@@ -282,7 +314,7 @@ var saidShowInventory            = false;
 // Inventory items are stored as item index numbers to the inventory array.
 // An inventory item name should consist of 29 characters at max, eg. "Very Long Inventory Item Name".
 var inventory                    = [];
-var inventoryItemNames           = [0, "Hammer", "Rock"];
+var inventoryItemNames           = [0, "Hammer", "Rock", "Watering Can", "Watering Can", "Beanie", "Headphones", "Sunglasses"];
 var score                        = 0;
 // The debug mode of the game engine is enabled by entering the command "debugdebug".
 var debugMode                    = false;
@@ -292,7 +324,12 @@ var showInputWindow              = false;
 var itemDescriptions             = [
 	0,
 	"Your trusty hammer has served you well\nfor several years now.",
-	"This is a smooth, round and slightly wet rock."
+	"This is a smooth, round and slightly wet rock.",
+	"The watering can is empty.",
+	"You have filled the watering can with water from the sea.",
+	"Beanies are something that always seem to be in fashion.",
+	"You have a pair of yellow headphones.",
+	"You found these sunglasses in the old, abandoned house."
 ];
 var room                         = 0;
 
@@ -1383,6 +1420,22 @@ window.onload = function() {
 	item01Sdata = item01Ctx.getImageData(0, 0, item01Buffer.width, item01Buffer.height);
 	item02Ctx.drawImage(item02Sprite, 0, 0);
 	item02Sdata = item02Ctx.getImageData(0, 0, item02Buffer.width, item02Buffer.height);
+	item03Ctx.drawImage(item03Sprite, 0, 0);
+	item03Sdata = item03Ctx.getImageData(0, 0, item03Buffer.width, item03Buffer.height);
+	item04Ctx.drawImage(item04Sprite, 0, 0);
+	item04Sdata = item04Ctx.getImageData(0, 0, item04Buffer.width, item04Buffer.height);
+	item05Ctx.drawImage(item05Sprite, 0, 0);
+	item05Sdata = item05Ctx.getImageData(0, 0, item05Buffer.width, item05Buffer.height);
+	item06Ctx.drawImage(item06Sprite, 0, 0);
+	item06Sdata = item06Ctx.getImageData(0, 0, item06Buffer.width, item06Buffer.height);
+	item07Ctx.drawImage(item07Sprite, 0, 0);
+	item07Sdata = item07Ctx.getImageData(0, 0, item07Buffer.width, item07Buffer.height);
+	layer1Ctx.drawImage(layer1Sprite, 0, 0);
+	layer1Sdata = layer1Ctx.getImageData(0, 0, layer1Buffer.width, layer1Buffer.height);
+	layer2Ctx.drawImage(layer2Sprite, 0, 0);
+	layer2Sdata = layer2Ctx.getImageData(0, 0, layer2Buffer.width, layer2Buffer.height);
+	layer3Ctx.drawImage(layer3Sprite, 0, 0);
+	layer3Sdata = layer3Ctx.getImageData(0, 0, layer3Buffer.width, layer3Buffer.height);
 
 	// We start the game with the title page.
 	ctx.drawImage(screen000picSprite, 0, 0);
@@ -1544,6 +1597,9 @@ window.onload = function() {
 	doSpriteTransparency(sprite036Ctx, sprite036Buffer, sprite036Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite037Ctx, sprite037Buffer, sprite037Sdata, 52, 90, 72);
 	doSpriteTransparency(object01Ctx, object01Buffer, object01Sdata, 72, 147, 15);
+	doSpriteTransparency(layer1Ctx, layer1Buffer, layer1Sdata, 72, 147, 15);
+	doSpriteTransparency(layer2Ctx, layer2Buffer, layer2Sdata, 72, 147, 15);
+	doSpriteTransparency(layer3Ctx, layer3Buffer, layer3Sdata, 72, 147, 15);
 	setIndicesAndTransparenciesForFont(0); // 0 = set indices and transparencies for main (default) font
 	setIndicesAndTransparenciesForFont(1); // 1 = set indices and transparencies for narrow font
 
@@ -2195,6 +2251,21 @@ function play(delta)
 								break;
 							case 2:
 								spriteToDraw = item02Sprite;
+								break;
+							case 3:
+								spriteToDraw = item03Sprite;
+								break;
+							case 4:
+								spriteToDraw = item04Sprite;
+								break;
+							case 5:
+								spriteToDraw = item05Sprite;
+								break;
+							case 6:
+								spriteToDraw = item06Sprite;
+								break;
+							case 7:
+								spriteToDraw = item07Sprite;
 								break;
 						}
 						ctx.drawImage(spriteToDraw, x + messageWindowMarginWidth + 3, y + messageWindowMarginHeight + 3);
