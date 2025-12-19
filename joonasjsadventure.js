@@ -201,6 +201,10 @@ var sprite037Buffer                    = document.getElementById("sprite037Buffe
 var sprite037Ctx                       = sprite037Buffer.getContext("2d");
 var sprite037Sdata                     = sprite037Ctx.createImageData(85, 124);
 var sprite037Sprite                    = document.getElementById("sprite037");
+var sprite038Buffer                    = document.getElementById("sprite038Buffer");
+var sprite038Ctx                       = sprite038Buffer.getContext("2d");
+var sprite038Sdata                     = sprite038Ctx.createImageData(104, 63);
+var sprite038Sprite                    = document.getElementById("sprite038");
 var spriteBuffer                       = document.getElementById("spriteBuffer");
 var spriteCtx                          = spriteBuffer.getContext("2d");
 var spriteSdata                        = spriteCtx.createImageData(400, 400);
@@ -260,7 +264,7 @@ var object01Sprite                     = document.getElementById("object01");
 // How many sprites have been set to be active on the current screen
 var numberOfSprites                    = 9;
 // The coordinates of the sprites are in these arrays.
-var spriteXCoords                      = [60, 130, 200, 270, 340, 410, 480, 550, 1322];
+var spriteXCoords                      = [1800, 130, 200, 270, 340, 410, 480, 550, 1322];
 // The Y coordinates of where the sprites should be displayed on the screen.
 var spriteYCoords                      = [60, 130, 200, 270, 340, 410, 480, 550, 233];
 // These sprite Y coordinates determine the "mask location" of each sprite, which can differ from the sprite display Y.
@@ -650,6 +654,9 @@ function drawSpriteOnScreen(spriteNumber) {
 			break;
 		case 37:
 			sData = sprite037Sdata;
+			break;
+		case 38:
+			sData = sprite038Sdata;
 			break;
 		case 100:
 			sData = object01Sdata;
@@ -1506,6 +1513,121 @@ function inputWindow(x, y, winWidth, winHeight, isCenteredHorizontally, isCenter
 	drawCursor(textInputX, textInputY, textInputText);
 }
 
+function screen1Load() {
+	room = 1;
+	numberOfSprites = 9;
+	if(hasItem(1)) {
+		numberOfSprites = 8;
+	}
+	spriteXCoords[0] = screenWidth - 85;
+
+	spriteXCoords[1] = 130;
+	spriteXCoords[2] = 200;
+	spriteXCoords[3] = 270;
+	spriteXCoords[4] = 340;
+	spriteXCoords[5] = 410;
+	spriteXCoords[6] = 480;
+	spriteXCoords[7] = 550;
+	spriteXCoords[8] = 1322;
+
+	spriteYCoords[1] = 130;
+	spriteYCoords[2] = 200;
+	spriteYCoords[3] = 270;
+	spriteYCoords[4] = 340;
+	spriteYCoords[5] = 410;
+	spriteYCoords[6] = 480;
+	spriteYCoords[7] = 550;
+	spriteYCoords[8] = 233;
+
+	spriteMaskYCoords[1] = 130;
+	spriteMaskYCoords[2] = 200;
+	spriteMaskYCoords[3] = 270;
+	spriteMaskYCoords[4] = 340;
+	spriteMaskYCoords[5] = 410;
+	spriteMaskYCoords[6] = 480;
+	spriteMaskYCoords[7] = 550;
+	spriteMaskYCoords[8] = 233;
+
+	spriteWidths[1] = 85;
+	spriteWidths[2] = 85;
+	spriteWidths[3] = 85;
+	spriteWidths[4] = 85;
+	spriteWidths[5] = 85;
+	spriteWidths[6] = 85;
+	spriteWidths[7] = 85;
+	spriteWidths[8] = 19;
+
+	spriteHeights[1] = 124;
+	spriteHeights[2] = 124;
+	spriteHeights[3] = 124;
+	spriteHeights[4] = 124;
+	spriteHeights[5] = 124;
+	spriteHeights[6] = 124;
+	spriteHeights[7] = 124;
+	spriteHeights[8] = 12;
+
+	spriteWidthsNS[1] = 26;
+	spriteWidthsNS[2] = 26;
+	spriteWidthsNS[3] = 26;
+	spriteWidthsNS[4] = 26;
+	spriteWidthsNS[5] = 26;
+	spriteWidthsNS[6] = 26;
+	spriteWidthsNS[7] = 26;
+
+	spriteCheckBlockOffsetsNS[1] = 29;
+	spriteCheckBlockOffsetsNS[2] = 29;
+	spriteCheckBlockOffsetsNS[3] = 29;
+	spriteCheckBlockOffsetsNS[4] = 29;
+	spriteCheckBlockOffsetsNS[5] = 29;
+	spriteCheckBlockOffsetsNS[6] = 29;
+	spriteCheckBlockOffsetsNS[7] = 29;
+
+	spriteCheckBlockOffsetsE[1] = 55;
+	spriteCheckBlockOffsetsE[2] = 55;
+	spriteCheckBlockOffsetsE[3] = 55;
+	spriteCheckBlockOffsetsE[4] = 55;
+	spriteCheckBlockOffsetsE[5] = 55;
+	spriteCheckBlockOffsetsE[6] = 55;
+	spriteCheckBlockOffsetsE[7] = 55;
+
+	spriteCheckBlockOffsetsW[1] = 28;
+	spriteCheckBlockOffsetsW[2] = 28;
+	spriteCheckBlockOffsetsW[3] = 28;
+	spriteCheckBlockOffsetsW[4] = 28;
+	spriteCheckBlockOffsetsW[5] = 28;
+	spriteCheckBlockOffsetsW[6] = 28;
+	spriteCheckBlockOffsetsW[7] = 28;
+
+	spriteImages[1] = 0;
+	spriteImages[2] = 0;
+	spriteImages[3] = 0;
+	spriteImages[4] = 0;
+	spriteImages[5] = 0;
+	spriteImages[6] = 0;
+	spriteImages[7] = 0;
+	spriteImages[8] = 100;
+
+	npcAnimPos = 0;
+
+	npcAnimFrame = 0;
+
+	npcDirections[1] = true;
+	npcDirections[2] = true;
+	npcDirections[3] = true;
+	npcDirections[4] = true;
+	npcDirections[5] = true;
+	npcDirections[6] = true;
+	npcDirections[7] = true;
+
+	ctx.drawImage(screen001picSprite, 0, 0);
+	priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
+	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+	depthBufferCtx.drawImage(screen001depSprite, 0, 0);
+	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	updateStatusBar();
+}
+
 window.onload = function() {
 	// Initialize all the 32,768 (8 bits * 4096 = 32,768 flags) game engine flags to "clear".
 	for(var pos = 0; pos < 4096; pos++) {
@@ -1655,6 +1777,9 @@ window.onload = function() {
 	sprite037Ctx.drawImage(sprite037Sprite, 0, 0);
 	sprite037Sdata = sprite037Ctx.getImageData(0, 0, sprite037Buffer.width, sprite037Buffer.height);
 
+	sprite038Ctx.drawImage(sprite038Sprite, 0, 0);
+	sprite038Sdata = sprite038Ctx.getImageData(0, 0, sprite038Buffer.width, sprite038Buffer.height);
+
 	object01Ctx.drawImage(object01Sprite, 0, 0);
 	object01Sdata = object01Ctx.getImageData(0, 0, object01Buffer.width, object01Buffer.height);
 
@@ -1720,17 +1845,10 @@ function play(delta)
 
 	if(gameState == STATE_TITLE) {
 		if(keyDown) {
-			room = 1;
-			ctx.drawImage(screen001picSprite, 0, 0);
-			priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
-			priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
-			depthBufferCtx.drawImage(screen001depSprite, 0, 0);
-			depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
-			imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			keyDown = false;
 			startedGame = true;
 			gameState = STATE_GAME;
-			updateStatusBar();
+			screen1Load();
 		}
 	}
 
@@ -1780,19 +1898,7 @@ function play(delta)
 							spriteXCoords[0] = spriteXCoords[0] - 1;
 							break;
 						case 16385:
-							room = 1;
-							numberOfSprites = 9;
-							if(hasItem(1)) {
-								numberOfSprites = 8;
-							}
-							spriteXCoords[0] = screenWidth - 85;
-							ctx.drawImage(screen001picSprite, 0, 0);
-							priorityBufferCtx.drawImage(screen001priSprite, 0, 0);
-							priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
-							depthBufferCtx.drawImage(screen001depSprite, 0, 0);
-							depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
-							imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-							updateStatusBar();
+							screen1Load();
 							break;
 					}
 				}
@@ -1833,8 +1939,14 @@ function play(delta)
 							break;
 						case 255:
 							room = 2;
-							numberOfSprites = 1;
+							numberOfSprites = 2;
 							spriteXCoords[0] = 6;
+							spriteXCoords[1] = 834;
+							spriteYCoords[1] = 359;
+							spriteMaskYCoords[1] = 412;
+							spriteWidths[1] = 104;
+							spriteHeights[1] = 63;
+							spriteImages[1] = 38;
 							ctx.drawImage(screen002picSprite, 0, 0);
 							priorityBufferCtx.drawImage(screen002priSprite, 0, 0);
 							priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
