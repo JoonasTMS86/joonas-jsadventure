@@ -25,12 +25,15 @@ const FLAG_GOTWATERINGCAN              = 8;  // Picked up watering can?
 const FLAG_GOTBEANIE                   = 9;  // Picked up beanie?
 const FLAG_GOTHEADPHONES               = 10; // Picked up headphones?
 const FLAG_GOTSUNGLASSES               = 11; // Picked up sunglasses?
+const FLAG_ROCKONGROUND                = 12; // Placed the rock on the ground at room 2?
+const FLAG_FILLEDWATERINGCAN           = 13; // You can always fill the watering can, but only the first time gives you points.
 const playerAnimDelay                  = 8;
 const npcAnimDelay                     = 8;
 var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, 
 textInputY, inventorySelectedIndex, inputWinX, inputWinY, inputWinWidth, 
 inputWinHeight, inputWinText, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight,
-inputBoxOnlyNumericCharacters, inputBoxTextMaxLength, inputState, roomToChangeTo;
+inputBoxOnlyNumericCharacters, inputBoxTextMaxLength, inputState, roomToChangeTo,
+rockX, rockY;
 var goingup                            = false;
 var goingdown                          = false;
 var goingleft                          = false;
@@ -231,6 +234,10 @@ var sprite042Buffer                    = document.getElementById("sprite042Buffe
 var sprite042Ctx                       = sprite042Buffer.getContext("2d");
 var sprite042Sdata                     = sprite042Ctx.createImageData(20, 8);
 var sprite042Sprite                    = document.getElementById("sprite042");
+var sprite043Buffer                    = document.getElementById("sprite043Buffer");
+var sprite043Ctx                       = sprite043Buffer.getContext("2d");
+var sprite043Sdata                     = sprite043Ctx.createImageData(24, 25);
+var sprite043Sprite                    = document.getElementById("sprite043");
 var spriteBuffer                       = document.getElementById("spriteBuffer");
 var spriteCtx                          = spriteBuffer.getContext("2d");
 var spriteSdata                        = spriteCtx.createImageData(400, 400);
@@ -340,6 +347,8 @@ var synonyms                           = [
 	"enter", "exit", "go", 0,
 	"open", 0,
 	"unlock", 0,
+	"fill", 0,
+	"use", 0,
 	"check", "chk", 0,
 	"set", 0,
 	"clear", 0,
@@ -377,6 +386,7 @@ var msgCommandNotUnderstood            = "I understand your words, but not what 
 var msgAlreadyHaveIt                   = "You have it in your inventory.";
 var msgDontHaveSuchItem                = "You have no such item.";
 var msgWhatRock                        = "What rock? You don't have one.";
+var msgNotCloseEnoughToDoor            = "You need to get closer to the door to do anything with it.";
 var msgNotCloseEnoughToWindow          = "You're not close enough to the window.";
 var msgNotCloseEnoughToTable           = "You're not close enough to the table.";
 var msgNoSuchObjectOnTable             = "There is no such object on the table.";
@@ -712,6 +722,9 @@ function drawSpriteOnScreen(spriteNumber) {
 			break;
 		case 42:
 			sData = sprite042Sdata;
+			break;
+		case 43:
+			sData = sprite043Sdata;
 			break;
 		case 100:
 			sData = object01Sdata;
@@ -1193,6 +1206,15 @@ function removeItem(itemNumber) {
 	inventory.splice(itemPos, 1);
 }
 
+function replaceItem(itemToReplace, newItemNumber) {
+	for(var pos = 0; pos < inventory.length; pos++) {
+		if(inventory[pos] == itemToReplace) {
+			inventory[pos] = newItemNumber;
+			pos = inventory.length;
+		}
+	}
+}
+
 // *** ROOM LOGIC FUNCTIONS ***
 
 // ### GLOBAL LOGIC ###
@@ -1511,6 +1533,31 @@ function logicRoom001(enteredWords) {
 			messageWindowCentered(msgWhatRock, false);
 		}
 	}
+	else if(
+		doesInputMatchThis(enteredWords, ["fill", "can"]) ||
+		doesInputMatchThis(enteredWords, ["fill", "can", "water"]) ||
+		doesInputMatchThis(enteredWords, ["use", "can", "water"])
+	) {
+		if(spriteYCoords[0] >= 612) {
+			if(hasItem(3)) {
+				messageWindowCentered("You fill your watering can with water.", false);
+				replaceItem(3, 4);
+				if(!getFlag(FLAG_FILLEDWATERINGCAN)) {
+					setFlag(FLAG_FILLEDWATERINGCAN);
+					score += 20;
+				}
+			}
+			else if(hasItem(4)) {
+				messageWindowCentered("Your watering can is already full of water.", false);
+			}
+			else {
+				messageWindowCentered("You don't have such an item in your possession.", false);
+			}
+		}
+		else {
+			messageWindowCentered("You need to get closer to the water.", false);
+		}
+	}
 	else {
 		messageWindowCentered(msgCommandNotUnderstood, false);
 	}
@@ -1518,7 +1565,33 @@ function logicRoom001(enteredWords) {
 
 // ROOM 2
 function logicRoom002(enteredWords) {
-	if(doesInputMatchThis(enteredWords, ["open", "window"])) {
+	if(doesInputMatchThis(enteredWords, ["open", "door"])) {
+		if(
+			spriteXCoords[0] >= 712 &&
+			spriteXCoords[0] <= 790 &&
+			spriteYCoords[0] >= 352 &&
+			spriteYCoords[0] <= 365
+		) {
+			messageWindowCentered("The door is securely closed and locked.\nAnd there is no key for it in this game.", false);
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToDoor, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["unlock", "door"])) {
+		if(
+			spriteXCoords[0] >= 712 &&
+			spriteXCoords[0] <= 790 &&
+			spriteYCoords[0] >= 352 &&
+			spriteYCoords[0] <= 365
+		) {
+			messageWindowCentered("You don't have the key for this door. You need to think of\nsomething else if you wish to get in.", false);
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToDoor, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["open", "window"])) {
 		if(
 			spriteXCoords[0] >= 777 &&
 			spriteXCoords[0] <= 914 &&
@@ -1590,22 +1663,64 @@ function logicRoom002(enteredWords) {
 		doesInputMatchThis(enteredWords, ["put", "rock"]) ||
 		doesInputMatchThis(enteredWords, ["put", "rock", "ground"])
 	) {
-		if(hasItem(2)) {
-			if(
-				getFlag(FLAG_BEANIEONROCK) &&
-				getFlag(FLAG_HEADPHONESONROCK) &&
-				getFlag(FLAG_SUNGLASSESONROCK)
-			) {
-				messageWindowCentered("Good thinking! You place the rock on the ground.", false);
-				removeItem(2);
-				score += 20;
+		if(getFlag(FLAG_ROCKONGROUND)) {
+			messageWindowCentered("Your rock, which is now wearing a beanie, headphones\nand sunglasses, is on the ground. What are you going\nto do with it?", false);
+		}
+		else {
+			if(hasItem(2)) {
+				if(
+					getFlag(FLAG_BEANIEONROCK) &&
+					getFlag(FLAG_HEADPHONESONROCK) &&
+					getFlag(FLAG_SUNGLASSESONROCK)
+				) {
+					messageWindowCentered("Good thinking! You place the rock on the ground.", false);
+					setFlag(FLAG_ROCKONGROUND);
+					spriteXCoords[1] = spriteXCoords[0] + 25;
+					spriteYCoords[1] = spriteYCoords[0] + 124;
+					spriteMaskYCoords[1] = spriteYCoords[1];
+					rockX = spriteXCoords[1];
+					rockY = spriteYCoords[1];
+					spriteEnabled[1] = true;
+					spriteImages[1] = 43;
+					spriteWidths[1] = 24;
+					spriteHeights[1] = 25;
+					spriteWidthsNS[1] = 24;
+					spriteCheckBlockOffsetsNS[1] = 0;
+					removeItem(2);
+					score += 20;
+				}
+				else {
+					messageWindowCentered("You feel that you should put three strange items\non the rock first.", false);
+				}
 			}
 			else {
-				messageWindowCentered("You feel that you should put three strange items\non the rock first.", false);
+				messageWindowCentered(msgWhatRock, false);
+			}
+		}
+	}
+	else if(
+		doesInputMatchThis(enteredWords, ["fill", "can"]) ||
+		doesInputMatchThis(enteredWords, ["fill", "can", "water"]) ||
+		doesInputMatchThis(enteredWords, ["use", "can", "water"])
+	) {
+		if(spriteYCoords[0] >= 612) {
+			if(hasItem(3)) {
+				messageWindowCentered("You fill your watering can with water.", false);
+				replaceItem(3, 4);
+				if(!getFlag(FLAG_FILLEDWATERINGCAN)) {
+					setFlag(FLAG_FILLEDWATERINGCAN);
+					score += 20;
+				}
+			}
+			else if(hasItem(4)) {
+				messageWindowCentered("Your watering can is already full of water.", false);
+			}
+			else {
+				messageWindowCentered("You don't have such an item in your possession.", false);
 			}
 		}
 		else {
-			messageWindowCentered(msgWhatRock, false);
+			messageWindowCentered("You need to get closer to the water.", false);
 		}
 	}
 	else {
@@ -2108,8 +2223,28 @@ function screen1Load() {
 function screen2Load() {
 	room = 2;
 	spriteEnabled[1] = true;
-	if(getFlag(FLAG_WINDOWSMASHED)) {
+	if(!getFlag(FLAG_WINDOWSMASHED)) {
+		spriteEnabled[1] = true;
+		spriteXCoords[1] = 834;
+		spriteYCoords[1] = 359;
+		spriteMaskYCoords[1] = 412;
+		spriteWidths[1] = 104;
+		spriteHeights[1] = 63;
+		spriteImages[1] = 38;
+	}
+	else {
 		spriteEnabled[1] = false;
+	}
+	if(getFlag(FLAG_ROCKONGROUND)) {
+		spriteEnabled[1] = true;
+		spriteXCoords[1] = rockX;
+		spriteYCoords[1] = rockY;
+		spriteMaskYCoords[1] = spriteYCoords[1];
+		spriteImages[1] = 43;
+		spriteWidths[1] = 24;
+		spriteHeights[1] = 25;
+		spriteWidthsNS[1] = 24;
+		spriteCheckBlockOffsetsNS[1] = 0;
 	}
 	spriteEnabled[2] = false;
 	spriteEnabled[3] = false;
@@ -2118,12 +2253,6 @@ function screen2Load() {
 	spriteEnabled[6] = false;
 	spriteEnabled[7] = false;
 	spriteEnabled[8] = false;
-	spriteXCoords[1] = 834;
-	spriteYCoords[1] = 359;
-	spriteMaskYCoords[1] = 412;
-	spriteWidths[1] = 104;
-	spriteHeights[1] = 63;
-	spriteImages[1] = 38;
 	ctx.drawImage(screen002picSprite, 0, 0);
 	priorityBufferCtx.drawImage(screen002priSprite, 0, 0);
 	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
@@ -2297,6 +2426,9 @@ window.onload = function() {
 	sprite042Ctx.drawImage(sprite042Sprite, 0, 0);
 	sprite042Sdata = sprite042Ctx.getImageData(0, 0, sprite042Buffer.width, sprite042Buffer.height);
 
+	sprite043Ctx.drawImage(sprite043Sprite, 0, 0);
+	sprite043Sdata = sprite043Ctx.getImageData(0, 0, sprite043Buffer.width, sprite043Buffer.height);
+
 	object01Ctx.drawImage(object01Sprite, 0, 0);
 	object01Sdata = object01Ctx.getImageData(0, 0, object01Buffer.width, object01Buffer.height);
 
@@ -2342,6 +2474,7 @@ window.onload = function() {
 	doSpriteTransparency(sprite040Ctx, sprite040Buffer, sprite040Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite041Ctx, sprite041Buffer, sprite041Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite042Ctx, sprite042Buffer, sprite042Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite043Ctx, sprite043Buffer, sprite043Sdata, 52, 90, 72);
 	doSpriteTransparency(object01Ctx, object01Buffer, object01Sdata, 72, 147, 15);
 	doSpriteTransparency(layer1Ctx, layer1Buffer, layer1Sdata, 72, 147, 15);
 	doSpriteTransparency(layer2Ctx, layer2Buffer, layer2Sdata, 72, 147, 15);
