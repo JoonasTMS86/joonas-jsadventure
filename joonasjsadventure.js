@@ -400,7 +400,7 @@ var itemDescriptions                   = [
 	"You have filled the watering can with water from the sea.",
 	"Beanies are something that always seem to be in fashion.",
 	"You have a pair of yellow headphones.",
-	"You found these sunglasses in the old, abandoned house."
+	"You found these sunglasses in the old, abandoned shed."
 ];
 var room                               = 0;
 var changeRoomAfterMessageWindow       = false;
@@ -1386,10 +1386,10 @@ function globalLogic(enteredWords) {
 function logicRoom001(enteredWords) {
 	if(doesInputMatchThis(enteredWords, ["look"])) {
 		if(!hasItem(1)) {
-			messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
+			messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned shed.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
 		}
 		else {
-			messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.", false);
+			messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned shed.", false);
 		}
 		return true;
 	}
@@ -1622,7 +1622,7 @@ function logicRoom002(enteredWords) {
 		) {
 			if(hasItem(1)) {
 				if(!getFlag(FLAG_WINDOWSMASHED)) {
-					messageWindowCentered("You smash the window with your hammer.\nNow you can enter the house.", false);
+					messageWindowCentered("You smash the window with your hammer.\nNow you can enter the shed.", false);
 					spriteEnabled[1] = false;
 					score += 10;
 					setFlag(FLAG_WINDOWSMASHED);
@@ -1652,7 +1652,7 @@ function logicRoom002(enteredWords) {
 			else {
 				changeRoomAfterMessageWindow = true;
 				roomToChangeTo = 3;
-				messageWindowCentered("You enter the house through the window.", false);
+				messageWindowCentered("You enter the shed through the window.", false);
 			}
 		}
 		else {
@@ -1721,6 +1721,29 @@ function logicRoom002(enteredWords) {
 		}
 		else {
 			messageWindowCentered("You need to get closer to the water.", false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["water", "rock"])) {
+		if(getFlag(FLAG_ROCKONGROUND)) {
+			if(
+				spriteXCoords[0] >= (rockX - 91) &&
+				spriteXCoords[0] <= (rockX + 27) &&
+				spriteYCoords[0] >= (rockY - 121) &&
+				spriteYCoords[0] <= (rockY - 76)
+			) {
+				if(hasItem(4)) {
+					messageWindowCentered("As you water the rock with your watering can,\nsomething strange happens to it.\nThe rock transforms into a human being!", false);
+				}
+				else {
+					messageWindowCentered("How are you going to do that?", false);
+				}
+			}
+			else {
+				messageWindowCentered("You need to get closer to the rock in order to accomplish that.", false);
+			}
+		}
+		else {
+			messageWindowCentered("There is no rock on the ground here.", false);
 		}
 	}
 	else {
