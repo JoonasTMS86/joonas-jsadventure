@@ -1733,6 +1733,7 @@ function logicRoom002(enteredWords) {
 			) {
 				if(hasItem(4)) {
 					messageWindowCentered("As you water the rock with your watering can,\nsomething strange happens to it.\nThe rock transforms into a human being!", false);
+					score += 10;
 				}
 				else {
 					messageWindowCentered("How are you going to do that?", false);
@@ -2085,7 +2086,7 @@ function updateStatusBar() {
 		}
 	}
 	ctx.putImageData(imgData, 0, 0);
-	putTextOnScreen(30, 0, "Score: " + score + " of 500", 0);
+	putTextOnScreen(30, 0, "Score: " + score + " of 93", 0);
 	putTextOnScreen(765, 0, "Joonas' JS Adventure", 0);
 }
 
@@ -2532,7 +2533,7 @@ function play(delta)
 	else {
 		if(startedGame) {
 			startedGame = false;
-			messageWindowCentered("Joonas' JS Adventure is a Work In Progress.\nI hope you'll enjoy this game.\n2025 Joonas Lindberg.\n\nThis project is free and open source.\nFor the latest version of the project, please use the GitHub repository:\ngithub.com/JoonasTMS86/joonas-jsadventure", false);
+			messageWindowCentered("Your goal in this game is to unlock the doorway to a mysterious realm.\nThe key to this realm is held by a famous stand up comedian, but\nunfortunately, he has mysteriously disappeared. Rumor has it that the\ncomedian has been transformed into an inanimate object by a crazy\nwizard.\nYou need to find the inanimate object which is actually the famous\nstand up comedian.\nOnce you find him, he will give you good advice and the key to the\nmysterious realm. Good luck!", false);
 		}
 		else if(!waitingForEnterPress) {
 			drawAllSprites();
