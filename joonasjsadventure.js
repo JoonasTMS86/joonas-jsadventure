@@ -10,14 +10,21 @@ const STATE_INVENTORY                  = 3;
 const STATE_ITEMDESCRIPTION            = 4;
 const INPUTSTATE_COMMAND               = 0;
 const INPUTSTATE_GETITEM               = 1;
-const FLAG_PLAYERCONTROLDISABLED       = 0; // Disable player control
-const FLAG_PLAYERCLIMBINGFENCE         = 1; // Player is climbing the fence
-const FLAG_PLAYERONOPPOSITESIDEOFFENCE = 2; // Player is not on the opposite side of the fence
-const FLAG_PLAYERCLIMBINGFROMN         = 3; // Player is climbing the fence from S
-const FLAG_BEANIEONROCK                = 4; // Beanie on rock
-const FLAG_SUNGLASSESONROCK            = 5; // Sunglasses on rock
-const FLAG_HEADPHONESONROCK            = 6; // Headphones on rock
-const FLAG_WINDOWSMASHED               = 7; // Window smashed?
+const INPUTSTATE_CHECKFLAG             = 2;
+const INPUTSTATE_SETFLAG               = 3;
+const INPUTSTATE_CLEARFLAG             = 4;
+const FLAG_PLAYERCONTROLDISABLED       = 0;  // Disable player control
+const FLAG_PLAYERCLIMBINGFENCE         = 1;  // Player is climbing the fence
+const FLAG_PLAYERONOPPOSITESIDEOFFENCE = 2;  // Player is not on the opposite side of the fence
+const FLAG_PLAYERCLIMBINGFROMN         = 3;  // Player is climbing the fence from S
+const FLAG_BEANIEONROCK                = 4;  // Beanie on rock
+const FLAG_SUNGLASSESONROCK            = 5;  // Sunglasses on rock
+const FLAG_HEADPHONESONROCK            = 6;  // Headphones on rock
+const FLAG_WINDOWSMASHED               = 7;  // Window smashed?
+const FLAG_GOTWATERINGCAN              = 8;  // Picked up watering can?
+const FLAG_GOTBEANIE                   = 9;  // Picked up beanie?
+const FLAG_GOTHEADPHONES               = 10; // Picked up headphones?
+const FLAG_GOTSUNGLASSES               = 11; // Picked up sunglasses?
 const playerAnimDelay                  = 8;
 const npcAnimDelay                     = 8;
 var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, 
@@ -208,6 +215,22 @@ var sprite038Buffer                    = document.getElementById("sprite038Buffe
 var sprite038Ctx                       = sprite038Buffer.getContext("2d");
 var sprite038Sdata                     = sprite038Ctx.createImageData(104, 63);
 var sprite038Sprite                    = document.getElementById("sprite038");
+var sprite039Buffer                    = document.getElementById("sprite039Buffer");
+var sprite039Ctx                       = sprite039Buffer.getContext("2d");
+var sprite039Sdata                     = sprite039Ctx.createImageData(41, 28);
+var sprite039Sprite                    = document.getElementById("sprite039");
+var sprite040Buffer                    = document.getElementById("sprite040Buffer");
+var sprite040Ctx                       = sprite040Buffer.getContext("2d");
+var sprite040Sdata                     = sprite040Ctx.createImageData(15, 11);
+var sprite040Sprite                    = document.getElementById("sprite040");
+var sprite041Buffer                    = document.getElementById("sprite041Buffer");
+var sprite041Ctx                       = sprite041Buffer.getContext("2d");
+var sprite041Sdata                     = sprite041Ctx.createImageData(26, 21);
+var sprite041Sprite                    = document.getElementById("sprite041");
+var sprite042Buffer                    = document.getElementById("sprite042Buffer");
+var sprite042Ctx                       = sprite042Buffer.getContext("2d");
+var sprite042Sdata                     = sprite042Ctx.createImageData(20, 8);
+var sprite042Sprite                    = document.getElementById("sprite042");
 var spriteBuffer                       = document.getElementById("spriteBuffer");
 var spriteCtx                          = spriteBuffer.getContext("2d");
 var spriteSdata                        = spriteCtx.createImageData(400, 400);
@@ -312,14 +335,20 @@ var synonyms                           = [
 	"climb", 0,
 	"drink", "swallow", 0,
 	"swim", 0,
-	"put", "drop", "set", 0,
+	"put", "drop", "place", 0,
 	"smash", "break", "hit", 0,
 	"enter", "exit", "go", 0,
 	"open", 0,
 	"unlock", 0,
+	"check", "chk", 0,
+	"set", 0,
+	"clear", 0,
 	"debugdebug", 0,
 	"item", 0,
 	"getallitems", 0,
+	"flag", 0,
+	"all", "everything", 0,
+	"ground", "floor", "soil", 0,
 	"people", "guys", "crowd", "men", "women", "person", "guy", "man", "woman", 0,
 	"bush", 0,
 	"fence", "obstacle", "wall", 0,
@@ -349,6 +378,9 @@ var msgAlreadyHaveIt                   = "You have it in your inventory.";
 var msgDontHaveSuchItem                = "You have no such item.";
 var msgWhatRock                        = "What rock? You don't have one.";
 var msgNotCloseEnoughToWindow          = "You're not close enough to the window.";
+var msgNotCloseEnoughToTable           = "You're not close enough to the table.";
+var msgNoSuchObjectOnTable             = "There is no such object on the table.";
+var msgInvalidFlagNumber               = "Invalid flag number.\nValid flags are: 0 to 32767.";
 var showInputWindow                    = false;
 var itemDescriptions                   = [
 	0,
@@ -669,6 +701,18 @@ function drawSpriteOnScreen(spriteNumber) {
 		case 38:
 			sData = sprite038Sdata;
 			break;
+		case 39:
+			sData = sprite039Sdata;
+			break;
+		case 40:
+			sData = sprite040Sdata;
+			break;
+		case 41:
+			sData = sprite041Sdata;
+			break;
+		case 42:
+			sData = sprite042Sdata;
+			break;
 		case 100:
 			sData = object01Sdata;
 			break;
@@ -715,15 +759,15 @@ function drawAllSprites() {
 			}
 		}
 	}
-	if(spriteEnabled[0]) drawSpriteOnScreen(spriteDrawOrder[0]);
-	if(spriteEnabled[1]) drawSpriteOnScreen(spriteDrawOrder[1]);
-	if(spriteEnabled[2]) drawSpriteOnScreen(spriteDrawOrder[2]);
-	if(spriteEnabled[3]) drawSpriteOnScreen(spriteDrawOrder[3]);
-	if(spriteEnabled[4]) drawSpriteOnScreen(spriteDrawOrder[4]);
-	if(spriteEnabled[5]) drawSpriteOnScreen(spriteDrawOrder[5]);
-	if(spriteEnabled[6]) drawSpriteOnScreen(spriteDrawOrder[6]);
-	if(spriteEnabled[7]) drawSpriteOnScreen(spriteDrawOrder[7]);
-	if(spriteEnabled[8]) drawSpriteOnScreen(spriteDrawOrder[8]);
+	if(spriteDrawOrder.length > 0 && spriteEnabled[spriteDrawOrder[0]]) drawSpriteOnScreen(spriteDrawOrder[0]);
+	if(spriteDrawOrder.length > 1 && spriteEnabled[spriteDrawOrder[1]]) drawSpriteOnScreen(spriteDrawOrder[1]);
+	if(spriteDrawOrder.length > 2 && spriteEnabled[spriteDrawOrder[2]]) drawSpriteOnScreen(spriteDrawOrder[2]);
+	if(spriteDrawOrder.length > 3 && spriteEnabled[spriteDrawOrder[3]]) drawSpriteOnScreen(spriteDrawOrder[3]);
+	if(spriteDrawOrder.length > 4 && spriteEnabled[spriteDrawOrder[4]]) drawSpriteOnScreen(spriteDrawOrder[4]);
+	if(spriteDrawOrder.length > 5 && spriteEnabled[spriteDrawOrder[5]]) drawSpriteOnScreen(spriteDrawOrder[5]);
+	if(spriteDrawOrder.length > 6 && spriteEnabled[spriteDrawOrder[6]]) drawSpriteOnScreen(spriteDrawOrder[6]);
+	if(spriteDrawOrder.length > 7 && spriteEnabled[spriteDrawOrder[7]]) drawSpriteOnScreen(spriteDrawOrder[7]);
+	if(spriteDrawOrder.length > 8 && spriteEnabled[spriteDrawOrder[8]]) drawSpriteOnScreen(spriteDrawOrder[8]);
 }
 
 function setIndicesAndTransparenciesForFont(whichFont) {
@@ -1164,6 +1208,7 @@ function globalLogic(enteredWords) {
 	}
 	else if(doesInputMatchThis(enteredWords, ["get", "item"])) {
 		if(debugMode) {
+			inputState = INPUTSTATE_GETITEM;
 			showInputWindow = true;
 			// Input window is centered horizontally, so we don't need to define the X pos.
 			inputWinY = 822;
@@ -1189,6 +1234,126 @@ function globalLogic(enteredWords) {
 		}
 		else {
 			messageWindowCentered(msgCommandNotUnderstood, false);
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["check", "flag"])) {
+		if(debugMode) {
+			inputState = INPUTSTATE_CHECKFLAG;
+			showInputWindow = true;
+			inputWinY = 822;
+			inputWinWidth = 480;
+			inputWinHeight = 75;
+			inputBoxX = 10;
+			inputBoxY = 32;
+			inputBoxWidth = 75;
+			inputBoxHeight = 25;
+			inputWinText = "Number of flag to check:";
+		}
+		else {
+			messageWindowCentered(msgCommandNotUnderstood, false);
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["set", "flag"])) {
+		if(debugMode) {
+			inputState = INPUTSTATE_SETFLAG;
+			showInputWindow = true;
+			inputWinY = 822;
+			inputWinWidth = 440;
+			inputWinHeight = 75;
+			inputBoxX = 10;
+			inputBoxY = 32;
+			inputBoxWidth = 75;
+			inputBoxHeight = 25;
+			inputWinText = "Number of flag to set:";
+		}
+		else {
+			messageWindowCentered(msgCommandNotUnderstood, false);
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["clear", "flag"])) {
+		if(debugMode) {
+			inputState = INPUTSTATE_CLEARFLAG;
+			showInputWindow = true;
+			inputWinY = 822;
+			inputWinWidth = 480;
+			inputWinHeight = 75;
+			inputBoxX = 10;
+			inputBoxY = 32;
+			inputBoxWidth = 75;
+			inputBoxHeight = 25;
+			inputWinText = "Number of flag to clear:";
+		}
+		else {
+			messageWindowCentered(msgCommandNotUnderstood, false);
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["put", "beanie", "rock"])) {
+		if(!hasItem(2)) {
+			messageWindowCentered(msgWhatRock, false);
+		}
+		else {
+			if(getFlag(FLAG_BEANIEONROCK)) {
+				messageWindowCentered("The rock is already wearing the beanie.", false);
+			}
+			else {
+				if(!hasItem(5)) {
+					messageWindowCentered(msgDontHaveSuchItem, false);
+				}
+				else {
+					messageWindowCentered("You put the beanie on the rock.", false);
+					setFlag(FLAG_BEANIEONROCK);
+					removeItem(5);
+					score += 5;
+				}
+			}
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["put", "headphones", "rock"])) {
+		if(!hasItem(2)) {
+			messageWindowCentered(msgWhatRock, false);
+		}
+		else {
+			if(getFlag(FLAG_HEADPHONESONROCK)) {
+				messageWindowCentered("The rock is already wearing headphones.", false);
+			}
+			else {
+				if(!hasItem(6)) {
+					messageWindowCentered(msgDontHaveSuchItem, false);
+				}
+				else {
+					messageWindowCentered("You put the headphones on the rock.", false);
+					setFlag(FLAG_HEADPHONESONROCK);
+					removeItem(6);
+					score += 5;
+				}
+			}
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["put", "sunglasses", "rock"])) {
+		if(!hasItem(2)) {
+			messageWindowCentered(msgWhatRock, false);
+		}
+		else {
+			if(getFlag(FLAG_SUNGLASSESONROCK)) {
+				messageWindowCentered("The rock is already wearing sunglasses.", false);
+			}
+			else {
+				if(!hasItem(7)) {
+					messageWindowCentered(msgDontHaveSuchItem, false);
+				}
+				else {
+					messageWindowCentered("You put the sunglasses on the face... er, I mean, rock.", false);
+					setFlag(FLAG_SUNGLASSESONROCK);
+					removeItem(7);
+					score += 5;
+				}
+			}
 		}
 		return true;
 	}
@@ -1335,67 +1500,15 @@ function logicRoom001(enteredWords) {
 			messageWindowCentered("You need to get closer to the climbing wall to climb it.", false);
 		}
 	}
-	else if(doesInputMatchThis(enteredWords, ["put", "beanie", "rock"])) {
-		if(!hasItem(2)) {
-			messageWindowCentered(msgWhatRock, false);
+	else if(
+		doesInputMatchThis(enteredWords, ["put", "rock"]) ||
+		doesInputMatchThis(enteredWords, ["put", "rock", "ground"])
+	) {
+		if(hasItem(2)) {
+			messageWindowCentered("Good idea, but this doesn't quite seem to be\nthe right place to do that.", false);
 		}
 		else {
-			if(getFlag(FLAG_BEANIEONROCK)) {
-				messageWindowCentered("The rock is already wearing the beanie.", false);
-			}
-			else {
-				if(!hasItem(5)) {
-					messageWindowCentered(msgDontHaveSuchItem, false);
-				}
-				else {
-					messageWindowCentered("You put the beanie on the rock.", false);
-					setFlag(FLAG_BEANIEONROCK);
-					removeItem(5);
-					score += 5;
-				}
-			}
-		}
-	}
-	else if(doesInputMatchThis(enteredWords, ["put", "headphones", "rock"])) {
-		if(!hasItem(2)) {
 			messageWindowCentered(msgWhatRock, false);
-		}
-		else {
-			if(getFlag(FLAG_HEADPHONESONROCK)) {
-				messageWindowCentered("The rock is already wearing headphones.", false);
-			}
-			else {
-				if(!hasItem(6)) {
-					messageWindowCentered(msgDontHaveSuchItem, false);
-				}
-				else {
-					messageWindowCentered("You put the headphones on the rock.", false);
-					setFlag(FLAG_HEADPHONESONROCK);
-					removeItem(6);
-					score += 5;
-				}
-			}
-		}
-	}
-	else if(doesInputMatchThis(enteredWords, ["put", "sunglasses", "rock"])) {
-		if(!hasItem(2)) {
-			messageWindowCentered(msgWhatRock, false);
-		}
-		else {
-			if(getFlag(FLAG_SUNGLASSESONROCK)) {
-				messageWindowCentered("The rock is already wearing sunglasses.", false);
-			}
-			else {
-				if(!hasItem(7)) {
-					messageWindowCentered(msgDontHaveSuchItem, false);
-				}
-				else {
-					messageWindowCentered("You put the sunglasses on the face... er, I mean, rock.", false);
-					setFlag(FLAG_SUNGLASSESONROCK);
-					removeItem(7);
-					score += 5;
-				}
-			}
 		}
 	}
 	else {
@@ -1473,10 +1586,239 @@ function logicRoom002(enteredWords) {
 			messageWindowCentered(msgNotCloseEnoughToWindow, false);
 		}
 	}
+	else if(
+		doesInputMatchThis(enteredWords, ["put", "rock"]) ||
+		doesInputMatchThis(enteredWords, ["put", "rock", "ground"])
+	) {
+		if(hasItem(2)) {
+			if(
+				getFlag(FLAG_BEANIEONROCK) &&
+				getFlag(FLAG_HEADPHONESONROCK) &&
+				getFlag(FLAG_SUNGLASSESONROCK)
+			) {
+				messageWindowCentered("Good thinking! You place the rock on the ground.", false);
+				removeItem(2);
+				score += 20;
+			}
+			else {
+				messageWindowCentered("You feel that you should put three strange items\non the rock first.", false);
+			}
+		}
+		else {
+			messageWindowCentered(msgWhatRock, false);
+		}
+	}
+	else {
+		messageWindowCentered(msgCommandNotUnderstood, false);
+	}
 }
 
 // ROOM 3
 function logicRoom003(enteredWords) {
+	if(doesInputMatchThis(enteredWords, ["enter", "window"])) {
+		if(
+			spriteXCoords[0] < 1001 &&
+			spriteYCoords[0] < 397
+		) {
+			changeRoomAfterMessageWindow = true;
+			roomToChangeTo = 2;
+			messageWindowCentered("You leave the shed.", false);
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToWindow, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["look"])) {
+		var numberOfObjectsToDescribe = 0;
+		var objectsOnTable = "";
+		var thereAreObjectsOnTheTable = false;
+		var objectsDescription = "";
+		if(!getFlag(FLAG_GOTWATERINGCAN)) numberOfObjectsToDescribe++;
+		if(!getFlag(FLAG_GOTBEANIE)) numberOfObjectsToDescribe++;
+		if(!getFlag(FLAG_GOTHEADPHONES)) numberOfObjectsToDescribe++;
+		if(!getFlag(FLAG_GOTSUNGLASSES)) numberOfObjectsToDescribe++;
+		if(numberOfObjectsToDescribe > 0) thereAreObjectsOnTheTable = true;
+		if(!getFlag(FLAG_GOTWATERINGCAN)) {
+			objectsOnTable += "a watering can";
+			numberOfObjectsToDescribe--;
+			if(numberOfObjectsToDescribe == 1) {
+				objectsOnTable += " and ";
+			}
+			if(numberOfObjectsToDescribe > 1) {
+				objectsOnTable += ", ";
+			}
+		}
+		if(numberOfObjectsToDescribe > 0) {
+			if(!getFlag(FLAG_GOTBEANIE)) {
+				objectsOnTable += "a beanie";
+				numberOfObjectsToDescribe--;
+				if(numberOfObjectsToDescribe == 1) {
+					objectsOnTable += " and ";
+				}
+				if(numberOfObjectsToDescribe > 1) {
+					objectsOnTable += ", ";
+				}
+			}
+			if(numberOfObjectsToDescribe > 0 && !getFlag(FLAG_GOTHEADPHONES)) {
+				objectsOnTable += "headphones";
+				numberOfObjectsToDescribe--;
+				if(numberOfObjectsToDescribe == 1) {
+					objectsOnTable += " and ";
+				}
+				if(numberOfObjectsToDescribe > 1) {
+					objectsOnTable += ", ";
+				}
+			}
+			if(numberOfObjectsToDescribe > 0 && !getFlag(FLAG_GOTSUNGLASSES)) {
+				objectsOnTable += "sunglasses";
+				numberOfObjectsToDescribe--;
+				if(numberOfObjectsToDescribe == 1) {
+					objectsOnTable += " and ";
+				}
+				if(numberOfObjectsToDescribe > 1) {
+					objectsOnTable += ", ";
+				}
+			}
+		}
+		if(thereAreObjectsOnTheTable) {
+			objectsDescription = "\nYou can see\n" + objectsOnTable + " on the table.";
+		}
+		messageWindowCentered("You are in an old, tiny shed." + objectsDescription, false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "can"])) {
+		if(
+			spriteXCoords[0] < 878
+		) {
+			if(!getFlag(FLAG_GOTWATERINGCAN)) {
+				messageWindowCentered("You pick up the watering can.", false);
+				setFlag(FLAG_GOTWATERINGCAN);
+				spriteEnabled[1] = false;
+				inventory[inventory.length] = 3;
+				score += 2;
+			}
+			else {
+				messageWindowCentered(msgNoSuchObjectOnTable, false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToTable, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "beanie"])) {
+		if(
+			spriteXCoords[0] < 878
+		) {
+			if(!getFlag(FLAG_GOTBEANIE)) {
+				messageWindowCentered("You pick up the beanie.", false);
+				setFlag(FLAG_GOTBEANIE);
+				spriteEnabled[2] = false;
+				inventory[inventory.length] = 5;
+				score += 2;
+			}
+			else {
+				messageWindowCentered(msgNoSuchObjectOnTable, false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToTable, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "headphones"])) {
+		if(
+			spriteXCoords[0] < 878
+		) {
+			if(!getFlag(FLAG_GOTHEADPHONES)) {
+				messageWindowCentered("You pick up the headphones.", false);
+				setFlag(FLAG_GOTHEADPHONES);
+				spriteEnabled[3] = false;
+				inventory[inventory.length] = 6;
+				score += 2;
+			}
+			else {
+				messageWindowCentered(msgNoSuchObjectOnTable, false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToTable, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "sunglasses"])) {
+		if(
+			spriteXCoords[0] < 878
+		) {
+			if(!getFlag(FLAG_GOTSUNGLASSES)) {
+				messageWindowCentered("You pick up the sunglasses.", false);
+				setFlag(FLAG_GOTSUNGLASSES);
+				spriteEnabled[4] = false;
+				inventory[inventory.length] = 7;
+				score += 2;
+			}
+			else {
+				messageWindowCentered(msgNoSuchObjectOnTable, false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToTable, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "all"])) {
+		if(
+			spriteXCoords[0] < 878
+		) {
+			if(
+				!getFlag(FLAG_GOTBEANIE) ||
+				!getFlag(FLAG_GOTHEADPHONES) ||
+				!getFlag(FLAG_GOTSUNGLASSES) ||
+				!getFlag(FLAG_GOTWATERINGCAN)
+			) {
+				messageWindowCentered("You take all the items on the table.", false);
+				spriteEnabled[1] = false;
+				spriteEnabled[2] = false;
+				spriteEnabled[3] = false;
+				spriteEnabled[4] = false;
+				if(!getFlag(FLAG_GOTWATERINGCAN)) {
+					inventory[inventory.length] = 3;
+					score += 2;
+				}
+				if(!getFlag(FLAG_GOTBEANIE)) {
+					inventory[inventory.length] = 5;
+					score += 2;
+				}
+				if(!getFlag(FLAG_GOTHEADPHONES)) {
+					inventory[inventory.length] = 6;
+					score += 2;
+				}
+				if(!getFlag(FLAG_GOTSUNGLASSES)) {
+					inventory[inventory.length] = 7;
+					score += 2;
+				}
+				setFlag(FLAG_GOTBEANIE);
+				setFlag(FLAG_GOTHEADPHONES);
+				setFlag(FLAG_GOTSUNGLASSES);
+				setFlag(FLAG_GOTWATERINGCAN);
+			}
+			else {
+				messageWindowCentered("There are no items on the table.", false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToTable, false);
+		}
+	}
+	else if(
+		doesInputMatchThis(enteredWords, ["put", "rock"]) ||
+		doesInputMatchThis(enteredWords, ["put", "rock", "ground"])
+	) {
+		if(hasItem(2)) {
+			messageWindowCentered("Not here. You have a feeling that it will\nprove more useful to put the rock down\noutdoors.", false);
+		}
+		else {
+			messageWindowCentered(msgWhatRock, false);
+		}
+	}
+	else {
+		messageWindowCentered(msgCommandNotUnderstood, false);
+	}
 }
 
 // ************
@@ -1763,6 +2105,34 @@ function screen1Load() {
 	updateStatusBar();
 }
 
+function screen2Load() {
+	room = 2;
+	spriteEnabled[1] = true;
+	if(getFlag(FLAG_WINDOWSMASHED)) {
+		spriteEnabled[1] = false;
+	}
+	spriteEnabled[2] = false;
+	spriteEnabled[3] = false;
+	spriteEnabled[4] = false;
+	spriteEnabled[5] = false;
+	spriteEnabled[6] = false;
+	spriteEnabled[7] = false;
+	spriteEnabled[8] = false;
+	spriteXCoords[1] = 834;
+	spriteYCoords[1] = 359;
+	spriteMaskYCoords[1] = 412;
+	spriteWidths[1] = 104;
+	spriteHeights[1] = 63;
+	spriteImages[1] = 38;
+	ctx.drawImage(screen002picSprite, 0, 0);
+	priorityBufferCtx.drawImage(screen002priSprite, 0, 0);
+	priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+	depthBufferCtx.drawImage(screen002depSprite, 0, 0);
+	depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+	imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	updateStatusBar();
+}
+
 window.onload = function() {
 	// Initialize all the 32,768 (8 bits * 4096 = 32,768 flags) game engine flags to "clear".
 	for(var pos = 0; pos < 4096; pos++) {
@@ -1915,6 +2285,18 @@ window.onload = function() {
 	sprite038Ctx.drawImage(sprite038Sprite, 0, 0);
 	sprite038Sdata = sprite038Ctx.getImageData(0, 0, sprite038Buffer.width, sprite038Buffer.height);
 
+	sprite039Ctx.drawImage(sprite039Sprite, 0, 0);
+	sprite039Sdata = sprite039Ctx.getImageData(0, 0, sprite039Buffer.width, sprite039Buffer.height);
+
+	sprite040Ctx.drawImage(sprite040Sprite, 0, 0);
+	sprite040Sdata = sprite040Ctx.getImageData(0, 0, sprite040Buffer.width, sprite040Buffer.height);
+
+	sprite041Ctx.drawImage(sprite041Sprite, 0, 0);
+	sprite041Sdata = sprite041Ctx.getImageData(0, 0, sprite041Buffer.width, sprite041Buffer.height);
+
+	sprite042Ctx.drawImage(sprite042Sprite, 0, 0);
+	sprite042Sdata = sprite042Ctx.getImageData(0, 0, sprite042Buffer.width, sprite042Buffer.height);
+
 	object01Ctx.drawImage(object01Sprite, 0, 0);
 	object01Sdata = object01Ctx.getImageData(0, 0, object01Buffer.width, object01Buffer.height);
 
@@ -1956,6 +2338,10 @@ window.onload = function() {
 	doSpriteTransparency(sprite035Ctx, sprite035Buffer, sprite035Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite036Ctx, sprite036Buffer, sprite036Sdata, 52, 90, 72);
 	doSpriteTransparency(sprite037Ctx, sprite037Buffer, sprite037Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite039Ctx, sprite039Buffer, sprite039Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite040Ctx, sprite040Buffer, sprite040Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite041Ctx, sprite041Buffer, sprite041Sdata, 52, 90, 72);
+	doSpriteTransparency(sprite042Ctx, sprite042Buffer, sprite042Sdata, 52, 90, 72);
 	doSpriteTransparency(object01Ctx, object01Buffer, object01Sdata, 72, 147, 15);
 	doSpriteTransparency(layer1Ctx, layer1Buffer, layer1Sdata, 72, 147, 15);
 	doSpriteTransparency(layer2Ctx, layer2Buffer, layer2Sdata, 72, 147, 15);
@@ -2071,32 +2457,8 @@ function play(delta)
 							spriteXCoords[0] = spriteXCoords[0] + 1;
 							break;
 						case 255:
-							room = 2;
-							spriteEnabled[1] = true;
-							if(getFlag(FLAG_WINDOWSMASHED)) {
-								spriteEnabled[1] = false;
-							}
-							spriteEnabled[2] = false;
-							spriteEnabled[3] = false;
-							spriteEnabled[4] = false;
-							spriteEnabled[5] = false;
-							spriteEnabled[6] = false;
-							spriteEnabled[7] = false;
-							spriteEnabled[8] = false;
 							spriteXCoords[0] = 6;
-							spriteXCoords[1] = 834;
-							spriteYCoords[1] = 359;
-							spriteMaskYCoords[1] = 412;
-							spriteWidths[1] = 104;
-							spriteHeights[1] = 63;
-							spriteImages[1] = 38;
-							ctx.drawImage(screen002picSprite, 0, 0);
-							priorityBufferCtx.drawImage(screen002priSprite, 0, 0);
-							priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
-							depthBufferCtx.drawImage(screen002depSprite, 0, 0);
-							depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
-							imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-							updateStatusBar();
+							screen2Load();
 							break;
 					}
 				}
@@ -2217,7 +2579,6 @@ function play(delta)
 					waitingForEnterPress = true;
 					secondScreenCtx.putImageData(imgDataWithoutSprites, 0, 0);
 					gameState = STATE_INPUTWINDOW;
-					inputState = INPUTSTATE_GETITEM;
 					typedKey = "";
 					inputWindow(0, inputWinY, inputWinWidth, inputWinHeight, true, false, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight, true, 3, inputWinText);
 				}
@@ -2679,38 +3040,114 @@ function play(delta)
 									}
 								}
 								break;
+							case INPUTSTATE_CHECKFLAG:
+								if(textInputText.length > 0) {
+									var flagNumber = parseInt(textInputText);
+									if(flagNumber > 32767) {
+										messageWindowCentered(msgInvalidFlagNumber);
+									}
+									else {
+										if(getFlag(flagNumber)) {
+											messageWindowCentered("Flag " + flagNumber + " = SET");
+										}
+										else {
+											messageWindowCentered("Flag " + flagNumber + " = CLEAR");
+										}
+									}
+								}
+								break;
+							case INPUTSTATE_SETFLAG:
+								if(textInputText.length > 0) {
+									var flagNumber = parseInt(textInputText);
+									if(flagNumber > 32767) {
+										messageWindowCentered(msgInvalidFlagNumber);
+									}
+									else {
+										setFlag(flagNumber);
+									}
+								}
+								break;
+							case INPUTSTATE_CLEARFLAG:
+								if(textInputText.length > 0) {
+									var flagNumber = parseInt(textInputText);
+									if(flagNumber > 32767) {
+										messageWindowCentered(msgInvalidFlagNumber);
+									}
+									else {
+										clearFlag(flagNumber);
+									}
+								}
+								break;
 						}
 					}
 					else if(changeRoomAfterMessageWindow) {
 						changeRoomAfterMessageWindow = false;
-						room = 3;
-						spriteEnabled[1] = false;
-						spriteEnabled[2] = false;
-						spriteEnabled[3] = false;
-						spriteEnabled[4] = false;
-						spriteEnabled[5] = false;
-						spriteEnabled[6] = false;
-						spriteEnabled[7] = false;
-						spriteEnabled[8] = false;
-						spriteXCoords[0] = 928;
-						spriteYCoords[0] = 379;
-						spriteMaskYCoords[0] = 379;
-						spriteImages[0] = 12;
-						ctx.drawImage(screen003picSprite, 0, 0);
-						priorityBufferCtx.drawImage(screen003priSprite, 0, 0);
-						priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
-						depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
-						for(var pos = 0; pos < (depthBuffer.width * 4 * depthBuffer.height); pos += 4) {
-							depthBufferSdata.data[pos + 0] = 0;
-							depthBufferSdata.data[pos + 1] = 0;
-							depthBufferSdata.data[pos + 2] = 0;
+						switch(roomToChangeTo) {
+							case 2:
+								spriteXCoords[0] = 842;
+								spriteYCoords[0] = 352;
+								spriteMaskYCoords[0] = 352;
+								spriteImages[0] = 12;
+								screen2Load();
+								break;
+							case 3:
+								room = 3;
+								spriteEnabled[1] = true;
+								spriteEnabled[2] = true;
+								spriteEnabled[3] = true;
+								spriteEnabled[4] = true;
+								if(getFlag(FLAG_GOTWATERINGCAN)) spriteEnabled[1] = false;
+								if(getFlag(FLAG_GOTBEANIE)) spriteEnabled[2] = false;
+								if(getFlag(FLAG_GOTHEADPHONES)) spriteEnabled[3] = false;
+								if(getFlag(FLAG_GOTSUNGLASSES)) spriteEnabled[4] = false;
+								spriteEnabled[5] = false;
+								spriteEnabled[6] = false;
+								spriteEnabled[7] = false;
+								spriteEnabled[8] = false;
+								spriteXCoords[0] = 928;
+								spriteYCoords[0] = 379;
+								spriteXCoords[1] = 760;
+								spriteYCoords[1] = 445;
+								spriteXCoords[2] = 814;
+								spriteYCoords[2] = 459;
+								spriteXCoords[3] = 843;
+								spriteYCoords[3] = 451;
+								spriteXCoords[4] = 884;
+								spriteYCoords[4] = 464;
+								spriteMaskYCoords[0] = 379;
+								spriteMaskYCoords[1] = 445;
+								spriteMaskYCoords[2] = 459;
+								spriteMaskYCoords[3] = 451;
+								spriteMaskYCoords[4] = 464;
+								spriteWidths[1] = 41;
+								spriteWidths[2] = 15;
+								spriteWidths[3] = 26;
+								spriteWidths[4] = 20;
+								spriteHeights[1] = 28;
+								spriteHeights[2] = 11;
+								spriteHeights[3] = 21;
+								spriteHeights[4] = 8;
+								spriteImages[0] = 12;
+								spriteImages[1] = 39;
+								spriteImages[2] = 40;
+								spriteImages[3] = 41;
+								spriteImages[4] = 42;
+								ctx.drawImage(screen003picSprite, 0, 0);
+								priorityBufferCtx.drawImage(screen003priSprite, 0, 0);
+								priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+								depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+								for(var pos = 0; pos < (depthBuffer.width * 4 * depthBuffer.height); pos += 4) {
+									depthBufferSdata.data[pos + 0] = 0;
+									depthBufferSdata.data[pos + 1] = 0;
+									depthBufferSdata.data[pos + 2] = 0;
+								}
+								imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+								updateStatusBar();
+								break;
 						}
-						imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-						updateStatusBar();
 					}
 				}
 			}
-
 		}
 	}
 }
