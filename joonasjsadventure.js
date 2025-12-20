@@ -265,7 +265,7 @@ var object01Sdata                      = object01Ctx.createImageData(19, 12);
 var object01Sprite                     = document.getElementById("object01");
 
 // How many sprites have been set to be active on the current screen
-var numberOfSprites                    = 9;
+var spriteEnabled                      = [true, false, false, false, false, false, false, false, false];
 // The coordinates of the sprites are in these arrays.
 var spriteXCoords                      = [1800, 130, 200, 270, 340, 410, 480, 550, 1322];
 // The Y coordinates of where the sprites should be displayed on the screen.
@@ -692,10 +692,19 @@ function drawSpriteOnScreen(spriteNumber) {
 }
 
 function drawAllSprites() {
-	var spriteDrawOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+	var spriteDrawOrder = [];
+	if(spriteEnabled[0]) spriteDrawOrder[spriteDrawOrder.length] = 0;
+	if(spriteEnabled[1]) spriteDrawOrder[spriteDrawOrder.length] = 1;
+	if(spriteEnabled[2]) spriteDrawOrder[spriteDrawOrder.length] = 2;
+	if(spriteEnabled[3]) spriteDrawOrder[spriteDrawOrder.length] = 3;
+	if(spriteEnabled[4]) spriteDrawOrder[spriteDrawOrder.length] = 4;
+	if(spriteEnabled[5]) spriteDrawOrder[spriteDrawOrder.length] = 5;
+	if(spriteEnabled[6]) spriteDrawOrder[spriteDrawOrder.length] = 6;
+	if(spriteEnabled[7]) spriteDrawOrder[spriteDrawOrder.length] = 7;
+	if(spriteEnabled[8]) spriteDrawOrder[spriteDrawOrder.length] = 8;
 	// Draw the sprite with the lowest Y value first and the one with the highest Y value last.
-	for(var placePos = 0; placePos < numberOfSprites; placePos++) {
-		for(var checkPos = placePos + 1; checkPos < numberOfSprites; checkPos++) {
+	for(var placePos = 0; placePos < spriteDrawOrder.length; placePos++) {
+		for(var checkPos = placePos + 1; checkPos < spriteDrawOrder.length; checkPos++) {
 			if(
 				(spriteMaskYCoords[spriteDrawOrder[checkPos]] + spriteHeights[spriteDrawOrder[checkPos]]) < 
 				(spriteMaskYCoords[spriteDrawOrder[placePos]] + spriteHeights[spriteDrawOrder[placePos]])
@@ -706,15 +715,15 @@ function drawAllSprites() {
 			}
 		}
 	}
-	drawSpriteOnScreen(spriteDrawOrder[0]);
-	if(numberOfSprites > 1) drawSpriteOnScreen(spriteDrawOrder[1]);
-	if(numberOfSprites > 2) drawSpriteOnScreen(spriteDrawOrder[2]);
-	if(numberOfSprites > 3) drawSpriteOnScreen(spriteDrawOrder[3]);
-	if(numberOfSprites > 4) drawSpriteOnScreen(spriteDrawOrder[4]);
-	if(numberOfSprites > 5) drawSpriteOnScreen(spriteDrawOrder[5]);
-	if(numberOfSprites > 6) drawSpriteOnScreen(spriteDrawOrder[6]);
-	if(numberOfSprites > 7) drawSpriteOnScreen(spriteDrawOrder[7]);
-	if(numberOfSprites > 8) drawSpriteOnScreen(spriteDrawOrder[8]);
+	if(spriteEnabled[0]) drawSpriteOnScreen(spriteDrawOrder[0]);
+	if(spriteEnabled[1]) drawSpriteOnScreen(spriteDrawOrder[1]);
+	if(spriteEnabled[2]) drawSpriteOnScreen(spriteDrawOrder[2]);
+	if(spriteEnabled[3]) drawSpriteOnScreen(spriteDrawOrder[3]);
+	if(spriteEnabled[4]) drawSpriteOnScreen(spriteDrawOrder[4]);
+	if(spriteEnabled[5]) drawSpriteOnScreen(spriteDrawOrder[5]);
+	if(spriteEnabled[6]) drawSpriteOnScreen(spriteDrawOrder[6]);
+	if(spriteEnabled[7]) drawSpriteOnScreen(spriteDrawOrder[7]);
+	if(spriteEnabled[8]) drawSpriteOnScreen(spriteDrawOrder[8]);
 }
 
 function setIndicesAndTransparenciesForFont(whichFont) {
@@ -1293,7 +1302,7 @@ function logicRoom001(enteredWords) {
 			) {
 				messageWindowCentered("Why is your trusty hammer lying here on the ground?\nAnyway, you pick it up and carry it with you.", false);
 				inventory[inventory.length] = 1;
-				numberOfSprites--;
+				spriteEnabled[8] = false;
 				score += 5;
 			}
 			else {
@@ -1428,7 +1437,7 @@ function logicRoom002(enteredWords) {
 			if(hasItem(1)) {
 				if(!getFlag(FLAG_WINDOWSMASHED)) {
 					messageWindowCentered("You smash the window with your hammer.\nNow you can enter the house.", false);
-					numberOfSprites--;
+					spriteEnabled[1] = false;
 					score += 10;
 					setFlag(FLAG_WINDOWSMASHED);
 				}
@@ -1634,9 +1643,16 @@ function inputWindow(x, y, winWidth, winHeight, isCenteredHorizontally, isCenter
 
 function screen1Load() {
 	room = 1;
-	numberOfSprites = 9;
+	spriteEnabled[1] = true;
+	spriteEnabled[2] = true;
+	spriteEnabled[3] = true;
+	spriteEnabled[4] = true;
+	spriteEnabled[5] = true;
+	spriteEnabled[6] = true;
+	spriteEnabled[7] = true;
+	spriteEnabled[8] = true;
 	if(hasItem(1)) {
-		numberOfSprites = 8;
+		spriteEnabled[8] = false;
 	}
 	spriteXCoords[0] = screenWidth - 85;
 
@@ -1998,10 +2014,9 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsW[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-					var howManyToCheck = numberOfSprites;
-					if(numberOfSprites > 8) howManyToCheck = 8;
-					for(var pos = 1; pos < howManyToCheck; pos++) {
+					for(var pos = 1; pos < 9; pos++) {
 						if(
+							spriteEnabled[pos] &&
 							playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsE[pos]) && 
 							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 						) {
@@ -2038,10 +2053,9 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsE[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 1;
-					var howManyToCheck = numberOfSprites;
-					if(numberOfSprites > 8) howManyToCheck = 8;
-					for(var pos = 1; pos < howManyToCheck; pos++) {
+					for(var pos = 1; pos < 9; pos++) {
 						if(
+							spriteEnabled[pos] &&
 							playerFeetX == (spriteXCoords[pos] + spriteCheckBlockOffsetsW[pos]) && 
 							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 						) {
@@ -2058,10 +2072,17 @@ function play(delta)
 							break;
 						case 255:
 							room = 2;
-							numberOfSprites = 2;
+							spriteEnabled[1] = true;
 							if(getFlag(FLAG_WINDOWSMASHED)) {
-								numberOfSprites = 1;
+								spriteEnabled[1] = false;
 							}
+							spriteEnabled[2] = false;
+							spriteEnabled[3] = false;
+							spriteEnabled[4] = false;
+							spriteEnabled[5] = false;
+							spriteEnabled[6] = false;
+							spriteEnabled[7] = false;
+							spriteEnabled[8] = false;
 							spriteXCoords[0] = 6;
 							spriteXCoords[1] = 834;
 							spriteYCoords[1] = 359;
@@ -2098,11 +2119,11 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0] - 2;
-					var howManyToCheck = numberOfSprites;
-					if(numberOfSprites > 8) howManyToCheck = 8;
-					for(var pos = 1; pos < howManyToCheck; pos++) {
+					for(var pos = 1; pos < 9; pos++) {
 						if(
-							(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+							(
+							spriteEnabled[pos] &&
+							playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
 							playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
 							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 						) {
@@ -2137,11 +2158,11 @@ function play(delta)
 					var canMove = true;
 					var playerFeetX = spriteXCoords[0] + spriteCheckBlockOffsetsNS[0];
 					var playerFeetY = spriteYCoords[0] + spriteHeights[0];
-					var howManyToCheck = numberOfSprites;
-					if(numberOfSprites > 8) howManyToCheck = 8;
-					for(var pos = 1; pos < howManyToCheck; pos++) {
+					for(var pos = 1; pos < 9; pos++) {
 						if(
-							(playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
+							(
+							spriteEnabled[pos] &&
+							playerFeetX + spriteWidthsNS[0] - 1) >= (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos]) && 
 							playerFeetX < (spriteXCoords[pos] + spriteCheckBlockOffsetsNS[pos] + spriteWidthsNS[pos] - 1) &&
 							playerFeetY == (spriteYCoords[pos] + spriteHeights[pos] - 1)
 						) {
@@ -2663,7 +2684,14 @@ function play(delta)
 					else if(changeRoomAfterMessageWindow) {
 						changeRoomAfterMessageWindow = false;
 						room = 3;
-						numberOfSprites = 1;
+						spriteEnabled[1] = false;
+						spriteEnabled[2] = false;
+						spriteEnabled[3] = false;
+						spriteEnabled[4] = false;
+						spriteEnabled[5] = false;
+						spriteEnabled[6] = false;
+						spriteEnabled[7] = false;
+						spriteEnabled[8] = false;
 						spriteXCoords[0] = 928;
 						spriteYCoords[0] = 379;
 						spriteMaskYCoords[0] = 379;
