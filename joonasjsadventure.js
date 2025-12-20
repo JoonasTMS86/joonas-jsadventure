@@ -17,12 +17,13 @@ const FLAG_PLAYERCLIMBINGFROMN         = 3; // Player is climbing the fence from
 const FLAG_BEANIEONROCK                = 4; // Beanie on rock
 const FLAG_SUNGLASSESONROCK            = 5; // Sunglasses on rock
 const FLAG_HEADPHONESONROCK            = 6; // Headphones on rock
+const FLAG_WINDOWSMASHED               = 7; // Window smashed?
 const playerAnimDelay                  = 8;
 const npcAnimDelay                     = 8;
 var imgData, imgDataWithoutSprites, canTypeKey, textInputText, textInputX, 
 textInputY, inventorySelectedIndex, inputWinX, inputWinY, inputWinWidth, 
 inputWinHeight, inputWinText, inputBoxX, inputBoxY, inputBoxWidth, inputBoxHeight,
-inputBoxOnlyNumericCharacters, inputBoxTextMaxLength, inputState;
+inputBoxOnlyNumericCharacters, inputBoxTextMaxLength, inputState, roomToChangeTo;
 var goingup                            = false;
 var goingdown                          = false;
 var goingleft                          = false;
@@ -39,11 +40,13 @@ var thirdScreenCtx                     = thirdScreenBuffer.getContext("2d");
 var screen000picSprite                 = document.getElementById("screen000pic");
 var screen001picSprite                 = document.getElementById("screen001pic");
 var screen002picSprite                 = document.getElementById("screen002pic");
+var screen003picSprite                 = document.getElementById("screen003pic");
 var priorityBuffer                     = document.getElementById("priorityBuffer");
 var priorityBufferCtx                  = priorityBuffer.getContext("2d");
 var priorityBufferSdata                = priorityBufferCtx.createImageData(1910, 909);
 var screen001priSprite                 = document.getElementById("screen001pri");
 var screen002priSprite                 = document.getElementById("screen002pri");
+var screen003priSprite                 = document.getElementById("screen003pri");
 var depthBuffer                        = document.getElementById("depthBuffer");
 var depthBufferCtx                     = depthBuffer.getContext("2d");
 var depthBufferSdata                   = depthBufferCtx.createImageData(1910, 909);
@@ -299,7 +302,7 @@ var typedKey                           = "";
 var keyDown                            = false;
 var gameState                          = STATE_TITLE;
 var ignoredWords                       = [
-	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "up", "into", "through", "thru", "climbing", "watering"
+	"a", "an", "the", "to", "in", "on", "at", "of", "over", "from", "with", "up", "into", "through", "thru", "climbing", "watering"
 ];
 var synonyms                           = [
 	"inventory", "inv", 0,
@@ -310,6 +313,10 @@ var synonyms                           = [
 	"drink", "swallow", 0,
 	"swim", 0,
 	"put", "drop", "set", 0,
+	"smash", "break", "hit", 0,
+	"enter", "exit", "go", 0,
+	"open", 0,
+	"unlock", 0,
 	"debugdebug", 0,
 	"item", 0,
 	"getallitems", 0,
@@ -322,7 +329,9 @@ var synonyms                           = [
 	"beanie", "hat", "headwear", 0,
 	"headphones", 0,
 	"sunglasses", 0,
-	"water", "sea", 0
+	"water", "sea", 0,
+	"window", "glass", 0,
+	"door", 0
 ];
 var gameEngineFlags                    = [];
 var gameEngineVariables                = [];
@@ -339,6 +348,7 @@ var msgCommandNotUnderstood            = "I understand your words, but not what 
 var msgAlreadyHaveIt                   = "You have it in your inventory.";
 var msgDontHaveSuchItem                = "You have no such item.";
 var msgWhatRock                        = "What rock? You don't have one.";
+var msgNotCloseEnoughToWindow          = "You're not close enough to the window.";
 var showInputWindow                    = false;
 var itemDescriptions                   = [
 	0,
@@ -351,6 +361,7 @@ var itemDescriptions                   = [
 	"You found these sunglasses in the old, abandoned house."
 ];
 var room                               = 0;
+var changeRoomAfterMessageWindow       = false;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -1129,6 +1140,338 @@ function removeItem(itemNumber) {
 	inventory.splice(itemPos, 1);
 }
 
+// *** ROOM LOGIC FUNCTIONS ***
+
+// ### GLOBAL LOGIC ###
+function globalLogic(enteredWords) {
+	if(doesInputMatchThis(enteredWords, ["inventory"])) {
+		saidShowInventory = true;
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["debugdebug"])) {
+		debugMode = true;
+		messageWindowCentered("Debug mode activated.", false);
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "item"])) {
+		if(debugMode) {
+			showInputWindow = true;
+			// Input window is centered horizontally, so we don't need to define the X pos.
+			inputWinY = 822;
+			inputWinWidth = 380;
+			inputWinHeight = 75;
+			inputBoxX = 10;
+			inputBoxY = 32;
+			inputBoxWidth = 75;
+			inputBoxHeight = 25;
+			inputWinText = "Item number to get:";
+		}
+		else {
+			messageWindowCentered(msgCommandNotUnderstood, false);
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["getallitems"])) {
+		if(debugMode) {
+			for(var pos = 1; pos < inventoryItemNames.length; pos++) {
+				inventory[inventory.length] = pos;
+			}
+			messageWindowCentered("You now have all items in your inventory.", false);
+		}
+		else {
+			messageWindowCentered(msgCommandNotUnderstood, false);
+		}
+		return true;
+	}
+	return false;
+}
+
+// ROOM 1
+function logicRoom001(enteredWords) {
+	if(doesInputMatchThis(enteredWords, ["look"])) {
+		if(!hasItem(1)) {
+			messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
+		}
+		else {
+			messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.", false);
+		}
+		return true;
+	}
+	else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
+		messageWindowCentered("You see seven clones of yourself.\nThey really seem to enjoy walking back and forth.\nYou wonder who has created these guys.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["look", "bush"])) {
+		messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["look", "fence"])) {
+		messageWindowCentered("The climbing wall makes you wonder whether this place\nwas once planned to be somekind of an obstacle course.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["look", "hammer"])) {
+		if(hasItem(1)) {
+			messageWindowCentered(msgAlreadyHaveIt, false);
+		}
+		else {
+			messageWindowCentered("Your hammer is not where you expected it to be.\nIt's lying here on the ground!", false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["look", "rock"])) {
+		if(hasItem(2)) {
+			messageWindowCentered(msgAlreadyHaveIt, false);
+		}
+		else {
+			messageWindowCentered("You can indeed see a rock under the water.", false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["look", "water"])) {
+		messageWindowCentered("The water here is clean and crystal clear.\nYou would love to go swimming, but you need\nto complete your quest first.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "water"]) || doesInputMatchThis(enteredWords, ["drink", "water"])) {
+		messageWindowCentered("Good idea, but you're not thirsty at the moment.");
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "rock"])) {
+		if(hasItem(2)) {
+			messageWindowCentered(msgAlreadyHaveIt, false);
+		}
+		else {
+			// Rock at X,Y coords 802,767.
+			if(
+				(spriteXCoords[0] + spriteWidths[0]) >= 796 &&
+				spriteXCoords[0] <= 808 &&
+				(spriteYCoords[0] + spriteHeights[0]) >= 826 &&
+				(spriteYCoords[0] + spriteHeights[0]) <= 848
+			) {
+				messageWindowCentered("You pick up the underwater rock.");
+				inventory[inventory.length] = 2;
+				score += 5;
+			}
+			else {
+				var msg = "To pick up the underwater rock, you need to get closer to it.\nYou are too far to the ";
+				var sayAnd = false;
+				if((spriteXCoords[0] + spriteWidths[0]) < 796) {
+					sayAnd = true;
+					msg += "west";
+				}
+				if(spriteXCoords[0] > 808) {
+					sayAnd = true;
+					msg += "east";
+				}
+				if((spriteYCoords[0] + spriteHeights[0]) < 826) {
+					if(sayAnd) msg += " and to the ";
+					msg += "north";
+				}
+				if((spriteYCoords[0] + spriteHeights[0]) > 848) {
+					if(sayAnd) msg += " and to the ";
+					msg += "south";
+				}
+				msg += " from the rock.";
+				messageWindowCentered(msg);
+			}
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["swim"])) {
+		messageWindowCentered("You have no time to go swimming right now.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
+		messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "people"])) {
+		messageWindowCentered("You are not a bodybuilder. Therefore, you don't have the required\nstrength to lift a grown-up person up.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "bush"])) {
+		messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.", false);
+	}
+	else if(doesInputMatchThis(enteredWords, ["get", "hammer"])) {
+		if(hasItem(1)) {
+			messageWindowCentered(msgAlreadyHaveIt, false);
+		}
+		else {
+			if(
+				(spriteXCoords[0] + spriteWidths[0]) >= (spriteXCoords[8] - 6) &&
+				spriteXCoords[0] <= (spriteXCoords[8] + spriteWidths[8] + 6) &&
+				(spriteYCoords[0] + spriteHeights[0]) >= (spriteYCoords[8] - 11) &&
+				(spriteYCoords[0] + spriteHeights[0]) <= (spriteYCoords[8] + spriteHeights[8] + 11)
+			) {
+				messageWindowCentered("Why is your trusty hammer lying here on the ground?\nAnyway, you pick it up and carry it with you.", false);
+				inventory[inventory.length] = 1;
+				numberOfSprites--;
+				score += 5;
+			}
+			else {
+				messageWindowCentered("You need to get closer to it.", false);
+			}
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["climb", "fence"])) {
+		if(spriteXCoords[0] >= 546 && spriteXCoords[0] <= 1117 && 
+			(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) ||
+			(spriteYCoords[0] >= 422 && spriteYCoords[0] <= 424)
+		) {
+			// Disable player control while the protagonist is climbing the fence.
+			if(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) {
+				setFlag(FLAG_PLAYERCONTROLDISABLED);   // Disable player control
+				setFlag(FLAG_PLAYERCLIMBINGFENCE);   // Player is climbing the fence
+				clearFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE); // Player is not on the opposite side of the fence
+				clearFlag(FLAG_PLAYERCLIMBINGFROMN); // Player is climbing the fence from S
+			}
+			else {
+				setFlag(FLAG_PLAYERCONTROLDISABLED);   // Disable player control
+				setFlag(FLAG_PLAYERCLIMBINGFENCE);   // Player is climbing the fence
+				clearFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE); // Player is not on the opposite side of the fence
+				setFlag(FLAG_PLAYERCLIMBINGFROMN);   // Player is climbing the fence from N
+			}
+			playerAnimPos = 0;
+			gameEngineVariables[0] = 0;
+		}
+		else {
+			messageWindowCentered("You need to get closer to the climbing wall to climb it.", false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["put", "beanie", "rock"])) {
+		if(!hasItem(2)) {
+			messageWindowCentered(msgWhatRock, false);
+		}
+		else {
+			if(getFlag(FLAG_BEANIEONROCK)) {
+				messageWindowCentered("The rock is already wearing the beanie.", false);
+			}
+			else {
+				if(!hasItem(5)) {
+					messageWindowCentered(msgDontHaveSuchItem, false);
+				}
+				else {
+					messageWindowCentered("You put the beanie on the rock.", false);
+					setFlag(FLAG_BEANIEONROCK);
+					removeItem(5);
+					score += 5;
+				}
+			}
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["put", "headphones", "rock"])) {
+		if(!hasItem(2)) {
+			messageWindowCentered(msgWhatRock, false);
+		}
+		else {
+			if(getFlag(FLAG_HEADPHONESONROCK)) {
+				messageWindowCentered("The rock is already wearing headphones.", false);
+			}
+			else {
+				if(!hasItem(6)) {
+					messageWindowCentered(msgDontHaveSuchItem, false);
+				}
+				else {
+					messageWindowCentered("You put the headphones on the rock.", false);
+					setFlag(FLAG_HEADPHONESONROCK);
+					removeItem(6);
+					score += 5;
+				}
+			}
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["put", "sunglasses", "rock"])) {
+		if(!hasItem(2)) {
+			messageWindowCentered(msgWhatRock, false);
+		}
+		else {
+			if(getFlag(FLAG_SUNGLASSESONROCK)) {
+				messageWindowCentered("The rock is already wearing sunglasses.", false);
+			}
+			else {
+				if(!hasItem(7)) {
+					messageWindowCentered(msgDontHaveSuchItem, false);
+				}
+				else {
+					messageWindowCentered("You put the sunglasses on the face... er, I mean, rock.", false);
+					setFlag(FLAG_SUNGLASSESONROCK);
+					removeItem(7);
+					score += 5;
+				}
+			}
+		}
+	}
+	else {
+		messageWindowCentered(msgCommandNotUnderstood, false);
+	}
+}
+
+// ROOM 2
+function logicRoom002(enteredWords) {
+	if(doesInputMatchThis(enteredWords, ["open", "window"])) {
+		if(
+			spriteXCoords[0] >= 777 &&
+			spriteXCoords[0] <= 914 &&
+			spriteYCoords[0] >= 352 &&
+			spriteYCoords[0] <= 360
+		) {
+			if(!getFlag(FLAG_WINDOWSMASHED)) {
+				messageWindowCentered("The window is tightly shut.", false);
+			}
+			else {
+				messageWindowCentered("You smashed the window, so, in a way you could say\nthat now it is permanently open.", false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToWindow, false);
+		}
+	}
+	else if(
+		doesInputMatchThis(enteredWords, ["smash", "window"]) ||
+		doesInputMatchThis(enteredWords, ["smash", "window", "hammer"]) ||
+		doesInputMatchThis(enteredWords, ["use", "hammer", "window"])
+	) {
+		if(
+			spriteXCoords[0] >= 777 &&
+			spriteXCoords[0] <= 914 &&
+			spriteYCoords[0] >= 352 &&
+			spriteYCoords[0] <= 360
+		) {
+			if(hasItem(1)) {
+				if(!getFlag(FLAG_WINDOWSMASHED)) {
+					messageWindowCentered("You smash the window with your hammer.\nNow you can enter the house.", false);
+					numberOfSprites--;
+					score += 10;
+					setFlag(FLAG_WINDOWSMASHED);
+				}
+				else {
+					messageWindowCentered("The window is already broken.", false);
+				}
+			}
+			else {
+				messageWindowCentered("With your bare hands? You should rather use\nsome tool for it.", false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToWindow, false);
+		}
+	}
+	else if(doesInputMatchThis(enteredWords, ["enter", "window"])) {
+		if(
+			spriteXCoords[0] >= 777 &&
+			spriteXCoords[0] <= 914 &&
+			spriteYCoords[0] >= 352 &&
+			spriteYCoords[0] <= 360
+		) {
+			if(!getFlag(FLAG_WINDOWSMASHED)) {
+				messageWindowCentered("The closed window blocks your way.", false);
+			}
+			else {
+				changeRoomAfterMessageWindow = true;
+				roomToChangeTo = 3;
+				messageWindowCentered("You enter the house through the window.", false);
+			}
+		}
+		else {
+			messageWindowCentered(msgNotCloseEnoughToWindow, false);
+		}
+	}
+}
+
+// ROOM 3
+function logicRoom003(enteredWords) {
+}
+
+// ************
+
 // Parse the user input.
 function parse(userInput) {
 	var enteredWords = [];
@@ -1191,243 +1534,19 @@ function parse(userInput) {
 		}
 	}
 	if(knownWord) {
-		if(doesInputMatchThis(enteredWords, ["inventory"])) {
-			saidShowInventory = true;
-		}
-		else if(doesInputMatchThis(enteredWords, ["look"])) {
-			if(!hasItem(1)) {
-				messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.\nFor some reason, your trusty hammer is also here, lying on the ground.", false);
+		var executedGlobalCommand = globalLogic(enteredWords);
+		if(!executedGlobalCommand) {
+			switch(room) {
+				case 1:
+					logicRoom001(enteredWords);
+					break;
+				case 2:
+					logicRoom002(enteredWords);
+					break;
+				case 3:
+					logicRoom003(enteredWords);
+					break;
 			}
-			else {
-				messageWindowCentered("You are at a beach where the only elements you can see are seven\nclones of yourself who march back and forth, a climbing wall and a\nbush.\nTo the east you can see an old, abandoned house.", false);
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["look", "people"])) {
-			messageWindowCentered("You see seven clones of yourself.\nThey really seem to enjoy walking back and forth.\nYou wonder who has created these guys.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["look", "bush"])) {
-			messageWindowCentered("It's an ordinary looking bush. It seems the soil\naround here is fertile enough for vegetation to grow.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["look", "fence"])) {
-			messageWindowCentered("The climbing wall makes you wonder whether this place\nwas once planned to be somekind of an obstacle course.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["look", "hammer"])) {
-			if(hasItem(1)) {
-				messageWindowCentered(msgAlreadyHaveIt, false);
-			}
-			else {
-				messageWindowCentered("Your hammer is not where you expected it to be.\nIt's lying here on the ground!", false);
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["look", "rock"])) {
-			if(hasItem(2)) {
-				messageWindowCentered(msgAlreadyHaveIt, false);
-			}
-			else {
-				messageWindowCentered("You can indeed see a rock under the water.", false);
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["look", "water"])) {
-			messageWindowCentered("The water here is clean and crystal clear.\nYou would love to go swimming, but you need\nto complete your quest first.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["get", "water"]) || doesInputMatchThis(enteredWords, ["drink", "water"])) {
-			messageWindowCentered("Good idea, but you're not thirsty at the moment.");
-		}
-		else if(doesInputMatchThis(enteredWords, ["get", "rock"])) {
-			if(hasItem(2)) {
-				messageWindowCentered(msgAlreadyHaveIt, false);
-			}
-			else {
-				// Rock at X,Y coords 802,767.
-				if(
-					(spriteXCoords[0] + spriteWidths[0]) >= 796 &&
-					spriteXCoords[0] <= 808 &&
-					(spriteYCoords[0] + spriteHeights[0]) >= 826 &&
-					(spriteYCoords[0] + spriteHeights[0]) <= 848
-				) {
-					messageWindowCentered("You pick up the underwater rock.");
-					inventory[inventory.length] = 2;
-					score += 5;
-				}
-				else {
-					var msg = "To pick up the underwater rock, you need to get closer to it.\nYou are too far to the ";
-					var sayAnd = false;
-					if((spriteXCoords[0] + spriteWidths[0]) < 796) {
-						sayAnd = true;
-						msg += "west";
-					}
-					if(spriteXCoords[0] > 808) {
-						sayAnd = true;
-						msg += "east";
-					}
-					if((spriteYCoords[0] + spriteHeights[0]) < 826) {
-						if(sayAnd) msg += " and to the ";
-						msg += "north";
-					}
-					if((spriteYCoords[0] + spriteHeights[0]) > 848) {
-						if(sayAnd) msg += " and to the ";
-						msg += "south";
-					}
-					msg += " from the rock.";
-					messageWindowCentered(msg);
-				}
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["swim"])) {
-			messageWindowCentered("You have no time to go swimming right now.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["talk", "people"])) {
-			messageWindowCentered("You talk to the Joonas clones.\n\"Hey Joonas clones!\", you say. \"What exactly is my goal in this game?\"\nTo which they reply:\n\"The purpose of this game is to tell all the essential things about Joonas.\nYou probably already know a lot about him, but if there's something you\ndidn't yet know about Joonas, you will learn it upon playing this game.\nIf you get stuck on any of the puzzles of this game, please let me know\nand I can give you a hint file.\"", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["get", "people"])) {
-			messageWindowCentered("You are not a bodybuilder. Therefore, you don't have the required\nstrength to lift a grown-up person up.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["get", "bush"])) {
-			messageWindowCentered("You see no need to carry any vegetation around, so you decide to\nleave the bush alone.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["get", "hammer"])) {
-			if(hasItem(1)) {
-				messageWindowCentered(msgAlreadyHaveIt, false);
-			}
-			else {
-				if(
-					(spriteXCoords[0] + spriteWidths[0]) >= (spriteXCoords[8] - 6) &&
-					spriteXCoords[0] <= (spriteXCoords[8] + spriteWidths[8] + 6) &&
-					(spriteYCoords[0] + spriteHeights[0]) >= (spriteYCoords[8] - 11) &&
-					(spriteYCoords[0] + spriteHeights[0]) <= (spriteYCoords[8] + spriteHeights[8] + 11)
-				) {
-					messageWindowCentered("Why is your trusty hammer lying here on the ground?\nAnyway, you pick it up and carry it with you.", false);
-					inventory[inventory.length] = 1;
-					numberOfSprites--;
-					score += 5;
-				}
-				else {
-					messageWindowCentered("You need to get closer to it.", false);
-				}
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["climb", "fence"])) {
-			if(spriteXCoords[0] >= 546 && spriteXCoords[0] <= 1117 && 
-				(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) ||
-				(spriteYCoords[0] >= 422 && spriteYCoords[0] <= 424)
-			) {
-				// Disable player control while the protagonist is climbing the fence.
-				if(spriteYCoords[0] >= 430 && spriteYCoords[0] <= 432) {
-					setFlag(FLAG_PLAYERCONTROLDISABLED);   // Disable player control
-					setFlag(FLAG_PLAYERCLIMBINGFENCE);   // Player is climbing the fence
-					clearFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE); // Player is not on the opposite side of the fence
-					clearFlag(FLAG_PLAYERCLIMBINGFROMN); // Player is climbing the fence from S
-				}
-				else {
-					setFlag(FLAG_PLAYERCONTROLDISABLED);   // Disable player control
-					setFlag(FLAG_PLAYERCLIMBINGFENCE);   // Player is climbing the fence
-					clearFlag(FLAG_PLAYERONOPPOSITESIDEOFFENCE); // Player is not on the opposite side of the fence
-					setFlag(FLAG_PLAYERCLIMBINGFROMN);   // Player is climbing the fence from N
-				}
-				playerAnimPos = 0;
-				gameEngineVariables[0] = 0;
-			}
-			else {
-				messageWindowCentered("You need to get closer to the climbing wall to climb it.", false);
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["debugdebug"])) {
-			debugMode = true;
-				messageWindowCentered("Debug mode activated.", false);
-		}
-		else if(doesInputMatchThis(enteredWords, ["put", "beanie", "rock"])) {
-			if(!hasItem(2)) {
-				messageWindowCentered(msgWhatRock, false);
-			}
-			else {
-				if(getFlag(FLAG_BEANIEONROCK)) {
-					messageWindowCentered("The rock is already wearing the beanie.", false);
-				}
-				else {
-					if(!hasItem(5)) {
-						messageWindowCentered(msgDontHaveSuchItem, false);
-					}
-					else {
-						messageWindowCentered("You put the beanie on the rock.", false);
-						setFlag(FLAG_BEANIEONROCK);
-						removeItem(5);
-						score += 5;
-					}
-				}
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["put", "headphones", "rock"])) {
-			if(!hasItem(2)) {
-				messageWindowCentered(msgWhatRock, false);
-			}
-			else {
-				if(getFlag(FLAG_HEADPHONESONROCK)) {
-					messageWindowCentered("The rock is already wearing headphones.", false);
-				}
-				else {
-					if(!hasItem(6)) {
-						messageWindowCentered(msgDontHaveSuchItem, false);
-					}
-					else {
-						messageWindowCentered("You put the headphones on the rock.", false);
-						setFlag(FLAG_HEADPHONESONROCK);
-						removeItem(6);
-						score += 5;
-					}
-				}
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["put", "sunglasses", "rock"])) {
-			if(!hasItem(2)) {
-				messageWindowCentered(msgWhatRock, false);
-			}
-			else {
-				if(getFlag(FLAG_SUNGLASSESONROCK)) {
-					messageWindowCentered("The rock is already wearing sunglasses.", false);
-				}
-				else {
-					if(!hasItem(7)) {
-						messageWindowCentered(msgDontHaveSuchItem, false);
-					}
-					else {
-						messageWindowCentered("You put the sunglasses on the face... er, I mean, rock.", false);
-						setFlag(FLAG_SUNGLASSESONROCK);
-						removeItem(7);
-						score += 5;
-					}
-				}
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["get", "item"])) {
-			if(debugMode) {
-				showInputWindow = true;
-				// Input window is centered horizontally, so we don't need to define the X pos.
-				inputWinY = 822;
-				inputWinWidth = 380;
-				inputWinHeight = 75;
-				inputBoxX = 10;
-				inputBoxY = 32;
-				inputBoxWidth = 75;
-				inputBoxHeight = 25;
-				inputWinText = "Item number to get:";
-			}
-			else {
-				messageWindowCentered(msgCommandNotUnderstood, false);
-			}
-		}
-		else if(doesInputMatchThis(enteredWords, ["getallitems"])) {
-			if(debugMode) {
-				for(var pos = 1; pos < inventoryItemNames.length; pos++) {
-					inventory[inventory.length] = pos;
-				}
-				messageWindowCentered("You now have all items in your inventory.", false);
-			}
-			else {
-				messageWindowCentered(msgCommandNotUnderstood, false);
-			}
-		}
-		else {
-			messageWindowCentered(msgCommandNotUnderstood, false);
 		}
 	}
 	else if(currentWord != "") {
@@ -1940,6 +2059,9 @@ function play(delta)
 						case 255:
 							room = 2;
 							numberOfSprites = 2;
+							if(getFlag(FLAG_WINDOWSMASHED)) {
+								numberOfSprites = 1;
+							}
 							spriteXCoords[0] = 6;
 							spriteXCoords[1] = 834;
 							spriteYCoords[1] = 359;
@@ -2538,8 +2660,29 @@ function play(delta)
 								break;
 						}
 					}
+					else if(changeRoomAfterMessageWindow) {
+						changeRoomAfterMessageWindow = false;
+						room = 3;
+						numberOfSprites = 1;
+						spriteXCoords[0] = 928;
+						spriteYCoords[0] = 379;
+						spriteMaskYCoords[0] = 379;
+						spriteImages[0] = 12;
+						ctx.drawImage(screen003picSprite, 0, 0);
+						priorityBufferCtx.drawImage(screen003priSprite, 0, 0);
+						priorityBufferSdata = priorityBufferCtx.getImageData(0, 0, priorityBuffer.width, priorityBuffer.height);
+						depthBufferSdata = depthBufferCtx.getImageData(0, 0, depthBuffer.width, depthBuffer.height);
+						for(var pos = 0; pos < (depthBuffer.width * 4 * depthBuffer.height); pos += 4) {
+							depthBufferSdata.data[pos + 0] = 0;
+							depthBufferSdata.data[pos + 1] = 0;
+							depthBufferSdata.data[pos + 2] = 0;
+						}
+						imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+						updateStatusBar();
+					}
 				}
 			}
+
 		}
 	}
 }
